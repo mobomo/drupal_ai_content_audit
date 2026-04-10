@@ -84,8 +84,10 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
    */
   public function processItem(mixed $data): void {
     $logger = $this->loggerFactory->get('ai_content_audit');
-    $nid    = $data['nid'] ?? NULL;
-    $options = $data['options'] ?? [];
+
+    // Support both array and stdClass queue item shapes.
+    $nid     = is_array($data) ? ($data['nid'] ?? NULL) : ($data->nid ?? NULL);
+    $options = is_array($data) ? ($data['options'] ?? []) : ($data->options ?? []);
 
     if (!$nid) {
       // Malformed item — log and discard permanently.
@@ -103,6 +105,25 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
       $logger->warning('Queue item for nid @nid skipped: node not found.', [
         '@nid' => $nid,
       ]);
+      return;
+    }
+
+    // Idempotent deduplication: if an assessment for this node was created
+    // within the last 5 minutes, the queue item is a duplicate (e.g. from
+    // rapid successive saves).  Consume the item without re-assessing.
+    $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
+    $recentCount = (int) $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('target_node', $nid)
+      ->condition('created', \Drupal::time()->getRequestTime() - 300, '>')
+      ->count()
+      ->execute();
+
+    if ($recentCount > 0) {
+      $logger->debug(
+        'Skipping node @nid — assessed within the last 5 minutes.',
+        ['@nid' => $nid],
+      );
       return;
     }
 

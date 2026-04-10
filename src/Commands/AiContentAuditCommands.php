@@ -7,6 +7,7 @@ namespace Drupal\ai_content_audit\Commands;
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleInstallerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drush\Attributes\Command;
 use Drush\Attributes\Help;
@@ -21,6 +22,8 @@ use Drush\Commands\DrushCommands;
  *   drush ai_content_audit:assess --nid=42
  *   drush ai_content_audit:assess --all
  *   drush ai_content_audit:assess --all --type=article
+ *   drush ai_content_audit:purge
+ *   drush ai_content_audit:reinstall
  */
 final class AiContentAuditCommands extends DrushCommands {
 
@@ -29,6 +32,7 @@ final class AiContentAuditCommands extends DrushCommands {
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly QueueFactory $queueFactory,
     private readonly ConfigFactoryInterface $configFactory,
+    private readonly ModuleInstallerInterface $moduleInstaller,
   ) {
     parent::__construct();
   }
@@ -78,10 +82,97 @@ final class AiContentAuditCommands extends DrushCommands {
   #[Command(name: 'ai_content_audit:site-audit', aliases: ['acsa'])]
   #[Help(description: 'This command has been removed. Use `drush ai_content_audit:assess --all` for bulk node assessment.')]
   public function siteAudit(): void {
-    throw new \RuntimeException('The site-wide audit workflow has been removed. Use `drush ai_content_audit:assess --all` to enqueue node assessments.');
+    throw new \RuntimeException('The site-wide audit command has moved to the ai_site_audit submodule. Use `drush ai_site_audit:analyze` for sitewide analysis, or `drush ai_content_audit:assess --all` to enqueue individual node assessments.');
+  }
+
+  /**
+   * Purge all ai_content_assessment entities to allow safe module uninstall.
+   */
+  #[Command(name: 'ai_content_audit:purge', aliases: ['aca:purge'])]
+  #[Help(description: 'Delete all AI Content Assessment entities, enabling safe module uninstall.')]
+  #[Usage(name: 'drush aca:purge', description: 'Purge all assessment entities (prompts for confirmation).')]
+  #[Usage(name: 'drush aca:purge --yes', description: 'Purge all assessment entities without prompting.')]
+  public function purge(): void {
+    $deleted = $this->doPurge();
+    if ($deleted === NULL) {
+      // Cancelled or nothing to do — doPurge() already output the message.
+      return;
+    }
+    $this->io()->success(sprintf('Purged %d AI Content Assessment entity(ies).', $deleted));
+  }
+
+  /**
+   * Purge all assessments, uninstall, and re-enable the module (dev workflow).
+   */
+  #[Command(name: 'ai_content_audit:reinstall', aliases: ['aca:reinstall'])]
+  #[Help(description: 'Purge all assessments, uninstall, and re-enable ai_content_audit (dev convenience).')]
+  #[Usage(name: 'drush aca:reinstall', description: 'Full purge + uninstall + reinstall of the ai_content_audit module.')]
+  public function reinstall(): void {
+    $this->io()->section('Step 1/4: Purging all AI Content Assessment entities…');
+    $deleted = $this->doPurge();
+    if ($deleted === NULL) {
+      // User cancelled — abort the reinstall.
+      return;
+    }
+    $this->io()->text(sprintf('Purged %d entity(ies).', $deleted));
+
+    $this->io()->section('Step 2/4: Uninstalling ai_content_audit…');
+    $this->moduleInstaller->uninstall(['ai_content_audit']);
+    $this->io()->text('Module uninstalled.');
+
+    $this->io()->section('Step 3/4: Re-enabling ai_content_audit…');
+    $this->moduleInstaller->install(['ai_content_audit']);
+    $this->io()->text('Module re-enabled.');
+
+    $this->io()->section('Step 4/4: Clearing all caches…');
+    drupal_flush_all_caches();
+
+    $this->io()->success('ai_content_audit reinstalled successfully.');
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
+
+  /**
+   * Deletes all ai_content_assessment entities in batches.
+   *
+   * Prompts for confirmation before deleting. Returns the number of entities
+   * deleted on success, or NULL if the operation was cancelled or there was
+   * nothing to delete.
+   */
+  private function doPurge(): ?int {
+    $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->execute();
+
+    $count = count($ids);
+
+    if ($count === 0) {
+      $this->io()->success('No AI Content Assessment entities found. Nothing to purge.');
+      return NULL;
+    }
+
+    if (!$this->io()->confirm(sprintf('This will delete %d assessment(s). Continue?', $count))) {
+      $this->io()->text('Purge cancelled.');
+      return NULL;
+    }
+
+    $batch_size = 50;
+    $deleted = 0;
+
+    $this->io()->progressStart($count);
+
+    foreach (array_chunk($ids, $batch_size) as $chunk) {
+      $entities = $storage->loadMultiple($chunk);
+      $storage->delete($entities);
+      $deleted += count($entities);
+      $this->io()->progressAdvance(count($entities));
+    }
+
+    $this->io()->progressFinish();
+
+    return $deleted;
+  }
 
   /**
    * Runs an AI assessment on a single node synchronously.

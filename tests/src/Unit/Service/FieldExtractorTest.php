@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_content_audit\Unit\Service;
 
-use Drupal\ai_content_audit\Service\FieldExtractor;
+use Drupal\ai_content_audit\Plugin\ContentExtractor\FieldExtractor;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
@@ -13,10 +13,10 @@ use Drupal\node\NodeInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Unit tests for FieldExtractor.
+ * Unit tests for FieldExtractor plugin.
  *
  * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\FieldExtractor
+ * @coversDefaultClass \Drupal\ai_content_audit\Plugin\ContentExtractor\FieldExtractor
  */
 class FieldExtractorTest extends TestCase {
 
@@ -27,6 +27,9 @@ class FieldExtractorTest extends TestCase {
     parent::setUp();
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->extractor = new FieldExtractor(
+      [],
+      'field_text',
+      ['render_mode' => 'text'],
       $this->entityTypeManager,
     );
   }
@@ -161,7 +164,7 @@ class FieldExtractorTest extends TestCase {
 
     // Anonymous subclass: override extractFieldText() to return predictable
     // values so we can verify concatenation without touching FieldItemList.
-    $extractor = new class($entityTypeManager) extends FieldExtractor {
+    $extractor = new class([], 'field_text', ['render_mode' => 'text'], $entityTypeManager) extends FieldExtractor {
 
       protected function extractFieldText(NodeInterface $node, string $field_name, string $field_type): string {
         return match ($field_name) {

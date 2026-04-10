@@ -1,0 +1,10 @@
+ai_site_audit.dashboard:
+  title: 'Site Dashboard'
+  route_name: ai_site_audit.dashboard
+  base_route: ai_site_audit.dashboard
+
+ai_site_audit.settings_tab:
+  title: 'Settings'
+  route_name: ai_site_audit.settings
+  base_route: ai_site_audit.dashboard
+  weight: 10

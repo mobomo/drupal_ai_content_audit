@@ -1,0 +1,147 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Primary module hooks for AI Site Audit module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function ai_site_audit_theme(): array {
+  return [
+    'ai_site_audit_dashboard' => [
+      'variables' => [
+        'stats' => NULL,
+        'score_distribution' => NULL,
+        'content_type_breakdown' => NULL,
+        'coverage' => NULL,
+        'top_nodes' => NULL,
+        'bottom_nodes' => NULL,
+        'rollup' => NULL,
+        'ai_insights' => NULL,
+        'technical_audit' => NULL,
+        'analysis_state' => NULL,
+        'config' => NULL,
+      ],
+      'template' => 'ai-site-audit-dashboard',
+    ],
+    'ai_site_audit_stats_cards' => [
+      'variables' => [
+        'stats' => NULL,
+        'coverage' => NULL,
+      ],
+      'template' => 'ai-site-audit-stats-cards',
+    ],
+    'ai_site_audit_score_distribution' => [
+      'variables' => [
+        'distribution' => NULL,
+      ],
+      'template' => 'ai-site-audit-score-distribution',
+    ],
+    'ai_site_audit_content_type_table' => [
+      'variables' => [
+        'content_types' => NULL,
+      ],
+      'template' => 'ai-site-audit-content-type-table',
+    ],
+    'ai_site_audit_ai_insights' => [
+      'variables' => [
+        'insights' => NULL,
+        'analysis_state' => NULL,
+        'can_run_analysis' => FALSE,
+      ],
+      'template' => 'ai-site-audit-ai-insights',
+    ],
+    'ai_site_audit_technical_summary' => [
+      'variables' => [
+        'results' => NULL,
+      ],
+      'template' => 'ai-site-audit-technical-summary',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Triggers periodic sitewide analysis based on configuration.
+ * Takes trend snapshots if enabled.
+ */
+function ai_site_audit_cron(): void {
+  $config = \Drupal::config('ai_site_audit.settings');
+
+  // Cron-based analysis.
+  if ($config->get('enable_cron_analysis')) {
+    $state = \Drupal::state();
+    $last = (int) $state->get('ai_site_audit.last_ai_analysis_time', 0);
+    $frequency = (int) ($config->get('cron_analysis_frequency_hours') ?: 24);
+
+    if ((time() - $last) >= ($frequency * 3600)) {
+      $currentState = $state->get('ai_site_audit.analysis_state', 'idle');
+      if (in_array($currentState, ['idle', 'complete', 'failed'], TRUE)) {
+        /** @var \Drupal\ai_site_audit\Service\AnalysisOrchestrator $orchestrator */
+        $orchestrator = \Drupal::service('ai_site_audit.orchestrator');
+        $tier = $config->get('analysis_tier_default') ?: 'tier_2';
+        $orchestrator->enqueueAnalysis($tier);
+        \Drupal::logger('ai_site_audit')->info('Cron-triggered sitewide analysis enqueued at tier @tier.', ['@tier' => $tier]);
+      }
+    }
+  }
+
+  // Trend snapshots.
+  if ($config->get('enable_trend_snapshots')) {
+    $state = \Drupal::state();
+    $lastSnapshot = $state->get('ai_site_audit.last_snapshot_date', '');
+    $today = date('Ymd');
+
+    if ($lastSnapshot !== $today) {
+      try {
+        /** @var \Drupal\ai_site_audit\Service\SiteAggregationService $aggregation */
+        $aggregation = \Drupal::service('ai_site_audit.aggregation');
+        $stats = $aggregation->getOverallStats();
+        $coverage = $aggregation->getCoverageStats();
+        $distribution = $aggregation->getScoreDistribution();
+
+        $snapshot = [
+          'date' => $today,
+          'timestamp' => time(),
+          'avg_score' => $stats['avg_score'] ?? NULL,
+          'median_score' => $stats['median_score'] ?? NULL,
+          'total_assessed' => $stats['total_assessed'] ?? 0,
+          'ai_ready' => $stats['ai_ready'] ?? 0,
+          'improving' => $stats['improving'] ?? 0,
+          'needs_work' => $stats['needs_work'] ?? 0,
+          'coverage_pct' => $coverage['coverage_pct'] ?? 0,
+          'score_distribution' => $distribution,
+        ];
+
+        /** @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface $kvFactory */
+        $kvFactory = \Drupal::service('keyvalue');
+        $kvTrends = $kvFactory->get('ai_site_audit.trends');
+        $kvTrends->set('snapshot_' . $today, $snapshot);
+        $state->set('ai_site_audit.last_snapshot_date', $today);
+
+        // Prune old snapshots beyond retention.
+        $retentionDays = (int) ($config->get('trend_snapshot_retention_days') ?: 90);
+        $cutoffDate = date('Ymd', strtotime("-{$retentionDays} days"));
+        $allKeys = $kvTrends->getAll();
+        foreach ($allKeys as $key => $value) {
+          if (str_starts_with($key, 'snapshot_')) {
+            $snapshotDate = substr($key, 9);
+            if ($snapshotDate < $cutoffDate) {
+              $kvTrends->delete($key);
+            }
+          }
+        }
+
+        \Drupal::logger('ai_site_audit')->info('Daily trend snapshot recorded for @date.', ['@date' => $today]);
+      }
+      catch (\Exception $e) {
+        \Drupal::logger('ai_site_audit')->error('Failed to record trend snapshot: @message', ['@message' => $e->getMessage()]);
+      }
+    }
+  }
+}

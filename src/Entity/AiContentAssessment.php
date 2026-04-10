@@ -6,6 +6,7 @@ namespace Drupal\ai_content_audit\Entity;
 
 use Drupal\ai_content_audit\AiContentAssessmentAccessControlHandler;
 use Drupal\ai_content_audit\AiContentAssessmentListBuilder;
+use Drupal\ai_content_audit\AiContentAssessmentViewsData;
 use Drupal\Core\Entity\Attribute\ContentEntityType;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -34,14 +35,15 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
    handlers: [
      'access'       => AiContentAssessmentAccessControlHandler::class,
      'list_builder' => AiContentAssessmentListBuilder::class,
+     'views_data'   => AiContentAssessmentViewsData::class,
      'form' => [
        'delete' => 'Drupal\ai_content_audit\Form\AiContentAssessmentDeleteForm',
      ],
    ],
    links: [
-     'canonical' => 'entity.ai_content_assessment.canonical',
-     'delete-form' => 'entity.ai_content_assessment.delete_form',
-     'collection' => 'entity.ai_content_assessment.collection',
+     'canonical'   => '/admin/content/ai-assessments/{ai_content_assessment}',
+     'delete-form' => '/admin/content/ai-assessments/{ai_content_assessment}/delete',
+     'collection'  => '/admin/content/ai-assessments',
    ],
   admin_permission: 'administer ai content audit',
   base_table: 'ai_content_assessment',
@@ -295,6 +297,9 @@ class AiContentAssessment extends ContentEntityBase {
       ->setSetting('min', 0)
       ->setSetting('max', 100)
       ->setDefaultValue(0)
+      ->addPropertyConstraints('value', [
+        'Range' => ['min' => 0, 'max' => 100],
+      ])
       ->setDisplayOptions('view', [
         'label'  => 'inline',
         'type'   => 'number_integer',
@@ -306,7 +311,8 @@ class AiContentAssessment extends ContentEntityBase {
     $fields['result_json'] = BaseFieldDefinition::create('string_long')
       ->setLabel(new TranslatableMarkup('Parsed JSON result'))
       ->setDescription(new TranslatableMarkup('The structured JSON assessment result from the LLM.'))
-      ->setRequired(FALSE);
+      ->setRequired(FALSE)
+      ->addPropertyConstraints('value', ['ValidJson' => []]);
 
     // Raw unprocessed LLM text output.
     $fields['raw_output'] = BaseFieldDefinition::create('string_long')
@@ -330,28 +336,32 @@ class AiContentAssessment extends ContentEntityBase {
       ->setLabel(new TranslatableMarkup('Sub-scores'))
       ->setDescription(new TranslatableMarkup('JSON array of dimension score breakdowns.'))
       ->setRequired(FALSE)
-      ->setDefaultValue(NULL);
+      ->setDefaultValue(NULL)
+      ->addPropertyConstraints('value', ['ValidJson' => []]);
 
     // JSON array of checkpoint pass/fail/warning items (v2 schema).
     $fields['checkpoints'] = BaseFieldDefinition::create('string_long')
       ->setLabel(new TranslatableMarkup('Checkpoints'))
       ->setDescription(new TranslatableMarkup('JSON array of checkpoint audit items.'))
       ->setRequired(FALSE)
-      ->setDefaultValue(NULL);
+      ->setDefaultValue(NULL)
+      ->addPropertyConstraints('value', ['ValidJson' => []]);
 
     // JSON array of prioritised action items (v2 schema).
     $fields['action_items'] = BaseFieldDefinition::create('string_long')
       ->setLabel(new TranslatableMarkup('Action items'))
       ->setDescription(new TranslatableMarkup('JSON array of recommended action items.'))
       ->setRequired(FALSE)
-      ->setDefaultValue(NULL);
+      ->setDefaultValue(NULL)
+      ->addPropertyConstraints('value', ['ValidJson' => []]);
 
     // JSON object tracking per-item completion state.
     $fields['action_items_status'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Action items status'))
       ->setDescription(t('JSON object tracking per-item completion state.'))
       ->setRequired(FALSE)
-      ->setDefaultValue(NULL);
+      ->setDefaultValue(NULL)
+      ->addPropertyConstraints('value', ['ValidJson' => []]);
 
     // Point change from the previous assessment for the same node.
     $fields['score_trend_delta'] = BaseFieldDefinition::create('integer')

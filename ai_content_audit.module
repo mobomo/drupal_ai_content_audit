@@ -82,6 +82,14 @@ function ai_content_audit_theme(): array {
       ],
       'template' => 'ai-action-items-tab',
     ],
+    'ai_action_item_card' => [
+      'variables' => [
+        'item' => [],
+        'status' => NULL,
+        'node_id' => NULL,
+      ],
+      'template' => 'ai-action-item-card',
+    ],
     'ai_technical_audit_tab' => [
       'variables' => [
         'checks'      => [],
@@ -420,6 +428,10 @@ function ai_content_audit_node_update(\Drupal\node\NodeInterface $node): void {
 
 /**
  * Helper: enqueues a node for AI assessment if on-save triggering is enabled.
+ *
+ * Deduplication is handled inside AiAssessmentQueueWorker::processItem() via
+ * an idempotent check against recent AiContentAssessment entities, so items
+ * are always enqueued here without a pre-queue LIKE query on the queue table.
  */
 function _ai_content_audit_maybe_enqueue(\Drupal\node\NodeInterface $node): void {
   $config = \Drupal::config('ai_content_audit.settings');
@@ -432,21 +444,9 @@ function _ai_content_audit_maybe_enqueue(\Drupal\node\NodeInterface $node): void
     return;
   }
 
-  // M-3: Deduplicate — skip enqueueing if a queue item for this node already
-  // exists, preventing duplicate AI API calls on rapid successive saves.
-  $db = \Drupal::database();
-  $existing = $db->select('queue', 'q')
-    ->fields('q', ['item_id'])
-    ->condition('q.name', 'ai_content_audit_assessment')
-    ->condition('q.data', '%' . $db->escapeLike('"nid";i:' . $node->id()) . '%', 'LIKE')
-    ->execute()
-    ->fetchField();
-
-  if (!$existing) {
-    \Drupal::queue('ai_content_audit_assessment')->createItem([
-      'nid' => (int) $node->id(),
-    ]);
-  }
+  \Drupal::queue('ai_content_audit_assessment')->createItem([
+    'nid' => (int) $node->id(),
+  ]);
 }
 
 /**
@@ -487,138 +487,18 @@ function ai_content_audit_ai_operation_types_alter(array &$operation_types): voi
 }
 
 /**
- * Implements hook_views_data().
- *
- * Exposes the ai_content_assessment base table and its fields to Views so
- * site builders can create dashboards and custom reports from assessment data.
- *
- * Column names follow Drupal's DefaultTableMapping convention for a
- * ContentEntityBase with no revision or translation support:
- *  - Entity key fields (id, uuid, label) use the bare field name.
- *  - entity_reference fields use {fieldname}_target_id.
- *  - integer/string/timestamp fields use {fieldname}_value.
- */
-function ai_content_audit_views_data(): array {
-  $data = [];
-
-  // ── Table metadata ──────────────────────────────────────────────────────────
-  $data['ai_content_assessment']['table']['group'] = t('AI Content Assessment');
-  $data['ai_content_assessment']['table']['base'] = [
-    'field'  => 'id',
-    'title'  => t('AI Content Assessment'),
-    'help'   => t('AI-generated content quality assessments.'),
-    'weight' => -10,
-  ];
-
-  // ── id (entity key, serial integer) ─────────────────────────────────────────
-  $data['ai_content_assessment']['id'] = [
-    'title'    => t('Assessment ID'),
-    'help'     => t('The unique ID of the assessment.'),
-    'field'    => ['id' => 'numeric'],
-    'filter'   => ['id' => 'numeric'],
-    'sort'     => ['id' => 'standard'],
-    'argument' => ['id' => 'numeric'],
-  ];
-
-  // ── label (entity key, string) ───────────────────────────────────────────────
-  $data['ai_content_assessment']['label'] = [
-    'title'  => t('Assessment label'),
-    'help'   => t('Auto-generated human-readable label for the assessment.'),
-    'field'  => ['id' => 'standard'],
-    'filter' => ['id' => 'string'],
-    'sort'   => ['id' => 'standard'],
-  ];
-
-  // ── target_node_target_id (entity_reference → node) ─────────────────────────
-  $data['ai_content_assessment']['target_node_target_id'] = [
-    'title'        => t('Assessed node ID'),
-    'help'         => t('The ID of the node that was assessed.'),
-    'field'        => ['id' => 'numeric'],
-    'filter'       => ['id' => 'numeric'],
-    'sort'         => ['id' => 'standard'],
-    'argument'     => ['id' => 'numeric'],
-    'relationship' => [
-      'base'       => 'node_field_data',
-      'base field' => 'nid',
-      'id'         => 'standard',
-      'label'      => t('Assessed node'),
-    ],
-  ];
-
-  // ── score_value (integer 0–100) ──────────────────────────────────────────────
-  $data['ai_content_assessment']['score_value'] = [
-    'title'    => t('AI Readiness Score'),
-    'help'     => t('Overall AI readiness score, 0 (poor) to 100 (excellent).'),
-    'field'    => ['id' => 'numeric'],
-    'filter'   => ['id' => 'numeric'],
-    'sort'     => ['id' => 'standard'],
-    'argument' => ['id' => 'numeric'],
-  ];
-
-  // ── result_json_value (string_long — stores structured JSON summary) ─────────
-  $data['ai_content_assessment']['result_json_value'] = [
-    'title'  => t('Assessment JSON'),
-    'help'   => t('Structured JSON result from the AI assessment, including suggestions.'),
-    'field'  => ['id' => 'standard'],
-    'filter' => ['id' => 'string'],
-    'sort'   => ['id' => 'standard'],
-  ];
-
-  // ── created_value (created timestamp) ────────────────────────────────────────
-  $data['ai_content_assessment']['created_value'] = [
-    'title'    => t('Created'),
-    'help'     => t('Timestamp when the assessment was created.'),
-    'field'    => ['id' => 'date'],
-    'filter'   => ['id' => 'date'],
-    'sort'     => ['id' => 'date'],
-    'argument' => ['id' => 'date'],
-  ];
-
-  // ── run_by_target_id (entity_reference → user) ───────────────────────────────
-  $data['ai_content_assessment']['run_by_target_id'] = [
-    'title'        => t('Run by (user ID)'),
-    'help'         => t('The user who triggered the assessment (NULL for queue/cron runs).'),
-    'field'        => ['id' => 'numeric'],
-    'filter'       => ['id' => 'numeric'],
-    'sort'         => ['id' => 'standard'],
-    'argument'     => ['id' => 'numeric'],
-    'relationship' => [
-      'base'       => 'users_field_data',
-      'base field' => 'uid',
-      'id'         => 'standard',
-      'label'      => t('Run by user'),
-    ],
-  ];
-
-  // ── provider_id_value (string — AI provider machine name) ────────────────────
-  $data['ai_content_assessment']['provider_id_value'] = [
-    'title'    => t('AI provider'),
-    'help'     => t('Machine name of the AI provider used (e.g. "openai").'),
-    'field'    => ['id' => 'standard'],
-    'filter'   => ['id' => 'string'],
-    'sort'     => ['id' => 'standard'],
-    'argument' => ['id' => 'string'],
-  ];
-
-  // ── model_id_value (string — AI model identifier) ────────────────────────────
-  $data['ai_content_assessment']['model_id_value'] = [
-    'title'    => t('AI model'),
-    'help'     => t('Model identifier used for the assessment (e.g. "gpt-4o").'),
-    'field'    => ['id' => 'standard'],
-    'filter'   => ['id' => 'string'],
-    'sort'     => ['id' => 'standard'],
-    'argument' => ['id' => 'string'],
-  ];
-
-  return $data;
-}
-
-/**
  * Implements hook_cron().
  *
- * Purges excess ai_content_assessment records per node when
- * max_assessments_per_node is set to a positive integer.
- * The newest $max assessments per node are retained; older ones are deleted.
+ * Identifies excess ai_content_assessment records per node when
+ * max_assessments_per_node is set to a positive integer and enqueues
+ * their IDs (in chunks of 50) to the ai_content_audit_purge queue.
+ *
+ * The actual deletion is performed by AiAssessmentPurgeWorker so that
+ * each cron run stays fast (ID collection only) and heavy deletion work
+ * is spread across bounded queue-worker invocations — preventing PHP
+ * memory / timeout issues on large sites.
+ *
+ * The newest $max assessments per node are retained; older ones are purged.
  */
 function ai_content_audit_cron(): void {
   $max = (int) \Drupal::config('ai_content_audit.settings')
@@ -646,23 +526,41 @@ function ai_content_audit_cron(): void {
 
   $storage = \Drupal::entityTypeManager()->getStorage('ai_content_assessment');
 
+  // Collect all entity IDs that should be purged across all over-limit nodes.
+  $purge_ids = [];
   foreach ($node_ids as $nid) {
-    // Load IDs for this node, newest first via the entity query API.
+    // Retrieve only IDs (no entity loads) for this node, newest first.
     $ids = $storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('target_node', $nid)
       ->sort('created', 'DESC')
       ->execute();
 
-    // Everything beyond the retention limit should be deleted.
-    $to_delete = array_slice(array_values($ids), $max);
-    if (!empty($to_delete)) {
-      $entities = $storage->loadMultiple($to_delete);
-      $storage->delete($entities);
-      \Drupal::logger('ai_content_audit')->info(
-        'Pruned @count old assessment(s) for node @nid (retention limit: @max).',
-        ['@count' => count($to_delete), '@nid' => $nid, '@max' => $max],
-      );
+    // Everything beyond the retention window should be purged.
+    $excess = array_slice(array_values($ids), $max);
+    foreach ($excess as $id) {
+      $purge_ids[] = $id;
     }
   }
+
+  if (empty($purge_ids)) {
+    return;
+  }
+
+  // Enqueue IDs in chunks of 50 so the queue worker deletes in small,
+  // memory-bounded batches instead of one massive loadMultiple() call.
+  $queue = \Drupal::queue('ai_content_audit_purge');
+  foreach (array_chunk($purge_ids, 50) as $chunk) {
+    $queue->createItem(['ids' => $chunk]);
+  }
+
+  \Drupal::logger('ai_content_audit')->info(
+    'Enqueued @total excess assessment ID(s) across @nodes node(s) for purging (retention limit: @max, chunks: @chunks).',
+    [
+      '@total'  => count($purge_ids),
+      '@nodes'  => count($node_ids),
+      '@max'    => $max,
+      '@chunks' => count(array_chunk($purge_ids, 50)),
+    ],
+  );
 }

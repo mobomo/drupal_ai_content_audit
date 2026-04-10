@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Service;
 
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\State\StateInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\node\NodeInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
@@ -27,8 +28,9 @@ class TechnicalAuditService {
     protected ClientInterface $httpClient,
     protected ConfigFactoryInterface $configFactory,
     protected LoggerInterface $logger,
-    protected StateInterface $state,
+    protected CacheBackendInterface $cacheData,
     protected RequestStack $requestStack,
+    protected ModuleHandlerInterface $moduleHandler,
   ) {}
 
   /**
@@ -269,8 +271,7 @@ class TechnicalAuditService {
    */
   public function checkCanonicalUrl(): TechnicalAuditResult {
     // Check if the canonical URL module/metatag is likely configured
-    $moduleHandler = \Drupal::moduleHandler();
-    $hasMetatag = $moduleHandler->moduleExists('metatag');
+    $hasMetatag = $this->moduleHandler->moduleExists('metatag');
 
     if ($hasMetatag) {
       return new TechnicalAuditResult(
@@ -372,18 +373,14 @@ TXT;
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult[]|null
    */
   protected function getCachedResults(): ?array {
-    $cached = $this->state->get('ai_content_audit.technical_audit');
-    if (!$cached || !isset($cached['timestamp']) || !isset($cached['results'])) {
-      return NULL;
-    }
-
-    if ((time() - $cached['timestamp']) > static::CACHE_TTL) {
+    $cached = $this->cacheData->get('ai_content_audit:technical_audit');
+    if (!$cached) {
       return NULL;
     }
 
     // Reconstruct value objects from cached arrays
     $results = [];
-    foreach ($cached['results'] as $data) {
+    foreach ($cached->data as $data) {
       $results[] = new TechnicalAuditResult(
         check: $data['check'],
         label: $data['label'],
@@ -399,16 +396,13 @@ TXT;
   }
 
   /**
-   * Caches audit results in State API.
+   * Caches audit results using Cache API.
    *
    * @param \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult[] $results
    */
   protected function cacheResults(array $results): void {
     $serialized = array_map(fn(TechnicalAuditResult $r) => $r->toArray(), $results);
-    $this->state->set('ai_content_audit.technical_audit', [
-      'results' => $serialized,
-      'timestamp' => time(),
-    ]);
+    $this->cacheData->set('ai_content_audit:technical_audit', $serialized, time() + static::CACHE_TTL);
   }
 
 }

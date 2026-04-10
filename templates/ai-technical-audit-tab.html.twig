@@ -4,8 +4,14 @@
  * Technical Audit tab content for the AIRO panel.
  *
  * Variables:
- * - checks: Array of check result arrays with keys: check, label, status,
- *   current_content, recommended_content, description, details.
+ * - checks: Array of check result arrays, each with keys:
+ *   - check: Machine name of the check.
+ *   - label: Human-readable label.
+ *   - status: One of 'pass', 'fail', 'warning'.
+ *   - current_content: Current content string, or NULL.
+ *   - recommended_content: Recommended content string, or NULL.
+ *   - description: Description of what was checked.
+ *   - details: Array of additional key-value detail pairs.
  * - pass_count: Number of passing checks.
  * - total_count: Total number of checks.
  * - node_id: The node ID.
@@ -13,90 +19,85 @@
 #}
 <div class="airo-audit" data-node-id="{{ node_id }}">
 
-  {# Summary #}
+  {# Summary header #}
   <div class="airo-audit__summary">
     <div class="airo-audit__summary-score">
       <span class="airo-audit__summary-number">{{ pass_count }}/{{ total_count }}</span>
-      <span class="airo-audit__summary-label">{{ 'checks passing'|t }}</span>
+      <span class="airo-audit__summary-label">{{ 'checks passed'|t }}</span>
     </div>
-    <button type="button" class="airo-audit__refresh button button--small">
-      {{ 'Re-check'|t }}
-    </button>
   </div>
 
-  {# Check Cards #}
-  {% for check in checks %}
-  <div class="airo-audit__check airo-audit__check--{{ check.status }}">
-    <div class="airo-audit__check-header">
-      <div class="airo-audit__check-status">
-        {% if check.status == 'pass' %}
-          <span class="airo-audit__status-icon airo-audit__status-icon--pass">✓</span>
-        {% elseif check.status == 'fail' %}
-          <span class="airo-audit__status-icon airo-audit__status-icon--fail">✗</span>
-        {% else %}
-          <span class="airo-audit__status-icon airo-audit__status-icon--warning">⚠</span>
+  {% if checks is not empty %}
+    {% for check in checks %}
+      <div class="airo-audit__check airo-audit__check--{{ check.status }}">
+
+        {# Check header: icon + label + description #}
+        <div class="airo-audit__check-header">
+          <div class="airo-audit__check-status">
+            <span class="airo-audit__status-icon airo-audit__status-icon--{{ check.status }}"
+              aria-label="{{ check.status }}">
+              {% if check.status == 'pass' %}✓
+              {% elseif check.status == 'fail' %}✗
+              {% else %}!{% endif %}
+            </span>
+          </div>
+          <div class="airo-audit__check-info">
+            <span class="airo-audit__check-label">{{ check.label }}</span>
+            <span class="airo-audit__check-description">{{ check.description }}</span>
+          </div>
+        </div>
+
+        {# Current content block #}
+        {% if check.current_content is not null and check.current_content != '' %}
+          <div class="airo-audit__content-block airo-audit__content-block--current">
+            <div class="airo-audit__content-header">
+              <span class="airo-audit__content-label">{{ 'Current'|t }}</span>
+            </div>
+            <pre class="airo-audit__code-block"><code>{{ check.current_content }}</code></pre>
+          </div>
         {% endif %}
-      </div>
-      <div class="airo-audit__check-info">
-        <span class="airo-audit__check-label">{{ check.label }}</span>
-        <span class="airo-audit__check-description">{{ check.description }}</span>
-      </div>
-    </div>
 
-    {# Current Content Block #}
-    {% if check.current_content %}
-    <div class="airo-audit__content-block">
-      <div class="airo-audit__content-header">
-        <span class="airo-audit__content-label">{{ 'Current'|t }}</span>
-        <button type="button" class="airo-audit__copy-btn button button--small"
-          data-copy-text="{{ check.current_content|e('html_attr') }}">
-          {{ 'Copy'|t }}
-        </button>
+        {# Recommended content block #}
+        {% if check.recommended_content is not null and check.recommended_content != '' %}
+          <div class="airo-audit__content-block airo-audit__content-block--recommended">
+            <div class="airo-audit__content-header">
+              <span class="airo-audit__content-label">{{ 'Recommended'|t }}</span>
+              <button type="button"
+                class="airo-audit__copy-btn button button--extrasmall"
+                data-copy-target="airo-code-{{ check.check }}">
+                {{ 'Copy'|t }}
+              </button>
+            </div>
+            <pre class="airo-audit__code-block airo-audit__code-block--recommended"
+              id="airo-code-{{ check.check }}"><code>{{ check.recommended_content }}</code></pre>
+          </div>
+        {% endif %}
+
+        {# Additional details row #}
+        {% if check.details is not empty %}
+          <div class="airo-audit__details">
+            {% for key, value in check.details %}
+              <div class="airo-audit__detail">
+                <span class="airo-audit__detail-key">{{ key }}:</span>
+                <span class="airo-audit__detail-value
+                  {% if value == true or value == 'yes' %} airo-audit__detail-yes
+                  {% elseif value == false or value == 'no' %} airo-audit__detail-no
+                  {% endif %}">
+                  {% if value == true %}{{ 'Yes'|t }}
+                  {% elseif value == false %}{{ 'No'|t }}
+                  {% else %}{{ value }}{% endif %}
+                </span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
       </div>
-      <pre class="airo-audit__code-block"><code>{{ check.current_content }}</code></pre>
+    {% endfor %}
+  {% else %}
+    <div class="airo-audit__empty">
+      <p>{{ 'No technical audit data available.'|t }}</p>
     </div>
-    {% endif %}
-
-    {# Recommended Content Block #}
-    {% if check.recommended_content %}
-    <div class="airo-audit__content-block airo-audit__content-block--recommended">
-      <div class="airo-audit__content-header">
-        <span class="airo-audit__content-label">{{ 'Recommended'|t }}</span>
-        <button type="button" class="airo-audit__copy-btn button button--small"
-          data-copy-text="{{ check.recommended_content|e('html_attr') }}">
-          {{ 'Copy'|t }}
-        </button>
-      </div>
-      <pre class="airo-audit__code-block airo-audit__code-block--recommended"><code>{{ check.recommended_content }}</code></pre>
-    </div>
-    {% endif %}
-
-    {# Details (if any) #}
-    {% if check.details is not empty %}
-    <div class="airo-audit__details">
-      {% for key, value in check.details %}
-        <span class="airo-audit__detail">
-          <span class="airo-audit__detail-key">{{ key|replace({'_': ' '})|capitalize }}:</span>
-          <span class="airo-audit__detail-value">
-            {% if value is same as(true) %}
-              <span class="airo-audit__detail-yes">{{ 'Yes'|t }}</span>
-            {% elseif value is same as(false) %}
-              <span class="airo-audit__detail-no">{{ 'No'|t }}</span>
-            {% else %}
-              {{ value }}
-            {% endif %}
-          </span>
-        </span>
-      {% endfor %}
-    </div>
-    {% endif %}
-  </div>
-  {% endfor %}
-
-  {% if checks is empty %}
-  <div class="airo-audit__empty">
-    <p>{{ 'No technical audit data available. Click Re-check to run an audit.'|t }}</p>
-  </div>
   {% endif %}
 
 </div>

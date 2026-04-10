@@ -1,0 +1,92 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @file
+ * Install, update, and uninstall functions for AI Site Audit module.
+ */
+
+/**
+ * Implements hook_install().
+ *
+ * Adds performance indexes on the parent ai_content_assessment table.
+ */
+function ai_site_audit_install(): void {
+  $schema = \Drupal::database()->schema();
+  $table = 'ai_content_assessment';
+
+  // Index for fast latest-assessment-per-node subqueries.
+  if (!$schema->indexExists($table, 'idx_target_node_id')) {
+    $schema->addIndex($table, 'idx_target_node_id', ['target_node', 'id'], [
+      'fields' => [
+        'target_node' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+        'id' => ['type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE],
+      ],
+    ]);
+  }
+
+  // Index for fast score distribution queries.
+  if (!$schema->indexExists($table, 'idx_score')) {
+    $schema->addIndex($table, 'idx_score', ['score'], [
+      'fields' => [
+        'score' => ['type' => 'int', 'not null' => FALSE],
+      ],
+    ]);
+  }
+
+  // Index for fast time-range queries.
+  if (!$schema->indexExists($table, 'idx_created')) {
+    $schema->addIndex($table, 'idx_created', ['created'], [
+      'fields' => [
+        'created' => ['type' => 'int', 'not null' => TRUE],
+      ],
+    ]);
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ *
+ * Cleans up config, KeyValue stores, and State API entries.
+ */
+function ai_site_audit_uninstall(): void {
+  // Delete module config.
+  \Drupal::configFactory()
+    ->getEditable('ai_site_audit.settings')
+    ->delete();
+
+  // Clean up KeyValue expirable store.
+  /** @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $kvFactory */
+  $kvFactory = \Drupal::service('keyvalue.expirable');
+  $kvFactory->get('ai_site_audit')->deleteAll();
+
+  // Clean up non-expirable trend store.
+  /** @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface $kvTrendFactory */
+  $kvTrendFactory = \Drupal::service('keyvalue');
+  $kvTrendFactory->get('ai_site_audit.trends')->deleteAll();
+
+  // Clean up State API entries.
+  $state = \Drupal::state();
+  $state->deleteMultiple([
+    'ai_site_audit.last_processed_assessment_id',
+    'ai_site_audit.last_rollup_time',
+    'ai_site_audit.last_ai_analysis_time',
+    'ai_site_audit.analysis_state',
+    'ai_site_audit.analysis_progress',
+    'ai_site_audit.last_snapshot_date',
+  ]);
+
+  // Remove indexes we added to the parent table.
+  $schema = \Drupal::database()->schema();
+  $table = 'ai_content_assessment';
+  if ($schema->indexExists($table, 'idx_target_node_id')) {
+    $schema->dropIndex($table, 'idx_target_node_id');
+  }
+  if ($schema->indexExists($table, 'idx_score')) {
+    $schema->dropIndex($table, 'idx_score');
+  }
+  if ($schema->indexExists($table, 'idx_created')) {
+    $schema->dropIndex($table, 'idx_created');
+  }
+}

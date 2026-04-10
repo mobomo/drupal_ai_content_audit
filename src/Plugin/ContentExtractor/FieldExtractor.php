@@ -2,17 +2,30 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Service;
+namespace Drupal\ai_content_audit\Plugin\ContentExtractor;
 
-use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginBase;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Extracts displayable text content from a node for AI assessment.
+ * Text-based field content extractor.
+ *
+ * Extracts displayable text values from node fields for AI assessment.
+ * Only fields that appear in the configured entity view display and whose
+ * field type is extractable (string, text, etc.) are included.
+ *
+ * @ContentExtractor(
+ *   id = "field_text",
+ *   label = @Translation("Field text extractor"),
+ *   description = @Translation("Extracts text content from entity field values."),
+ *   render_mode = "text"
+ * )
  */
-class FieldExtractor implements ContentExtractorInterface {
+class FieldExtractor extends PluginBase implements ContentExtractorInterface, ContainerFactoryPluginInterface {
 
   /**
    * Field types considered text-based and extractable.
@@ -26,15 +39,44 @@ class FieldExtractor implements ContentExtractorInterface {
     'list_string',
   ];
 
+  /**
+   * Constructs a FieldExtractor plugin instance.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin ID for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager service.
+   */
   public function __construct(
+    array $configuration,
+    string $plugin_id,
+    mixed $plugin_definition,
     protected EntityTypeManagerInterface $entityTypeManager,
-  ) {}
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+    );
+  }
 
   /**
    * {@inheritdoc}
    */
   public function supports(string $mode): bool {
-    return $mode === RenderMode::TEXT->value;
+    return ($this->pluginDefinition['render_mode'] ?? '') === $mode;
   }
 
   /**
@@ -48,7 +90,7 @@ class FieldExtractor implements ContentExtractorInterface {
    * {@inheritdoc}
    */
   public function getMode(): string {
-    return RenderMode::TEXT->value;
+    return $this->pluginDefinition['render_mode'] ?? '';
   }
 
   /**
@@ -61,10 +103,6 @@ class FieldExtractor implements ContentExtractorInterface {
    *
    * @return string
    *   Compiled plain-text content from all extractable fields.
-   *
-   * @deprecated in ai_content_audit:1.x and is removed from ai_content_audit:2.x.
-   *   Use \Drupal\ai_content_audit\Extractor\ContentExtractorInterface::extract() instead.
-   *   @see \Drupal\ai_content_audit\Extractor\ContentExtractorInterface
    */
   public function extractForNode(NodeInterface $node, string $view_mode = 'default'): string {
     $parts = [];
@@ -113,6 +151,14 @@ class FieldExtractor implements ContentExtractorInterface {
 
   /**
    * Loads the entity view display for a given bundle and view mode.
+   *
+   * @param string $bundle
+   *   The node bundle (content type).
+   * @param string $view_mode
+   *   The view mode machine name.
+   *
+   * @return object|null
+   *   The entity view display, or NULL if not found.
    */
   protected function loadViewDisplay(string $bundle, string $view_mode): ?object {
     try {
@@ -127,6 +173,16 @@ class FieldExtractor implements ContentExtractorInterface {
 
   /**
    * Extracts plain text from a specific field on a node.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node containing the field.
+   * @param string $field_name
+   *   The machine name of the field.
+   * @param string $field_type
+   *   The field type string.
+   *
+   * @return string
+   *   The extracted plain-text value(s) joined by a space.
    */
   protected function extractFieldText(NodeInterface $node, string $field_name, string $field_type): string {
     $field = $node->get($field_name);
@@ -169,6 +225,12 @@ class FieldExtractor implements ContentExtractorInterface {
 
   /**
    * Strips HTML and normalizes whitespace from a string.
+   *
+   * @param string $html
+   *   The HTML string to process.
+   *
+   * @return string
+   *   Plain text with normalized whitespace.
    */
   protected function stripHtml(string $html): string {
     // Decode HTML entities first.

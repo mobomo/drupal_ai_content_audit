@@ -1,0 +1,15 @@
+analysis_tier_default: 'tier_2'
+max_ai_calls_per_analysis: 20
+max_tokens_per_analysis: 100000
+analysis_cooldown_hours: 24
+auto_analysis_threshold: 0.10
+rollup_batch_size: 500
+rollup_max_age_hours: 1
+dashboard_cache_max_age: 300
+stats_cache_max_age: 300
+enable_cron_analysis: false
+cron_analysis_frequency_hours: 24
+enable_trend_snapshots: true
+trend_snapshot_retention_days: 90
+enable_csv_export: true
+enable_json_export: true

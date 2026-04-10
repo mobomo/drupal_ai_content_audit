@@ -4,6 +4,7 @@
   flex-direction: column;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #fff;
 }
 
 /* Header with gradient */
@@ -123,6 +124,7 @@
 /* Ensure our panel fills the dialog */
 .ui-dialog.airo-panel-dialog {
   overflow: hidden;
+  background-color: #fff;
 }
 
 .ui-dialog.airo-panel-dialog .ui-dialog-titlebar {

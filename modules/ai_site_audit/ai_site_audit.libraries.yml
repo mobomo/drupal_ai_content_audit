@@ -1,0 +1,12 @@
+site-dashboard:
+  version: VERSION
+  css:
+    component:
+      css/ai-site-dashboard.css: {}
+  js:
+    js/ai-site-dashboard.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax
+    - core/once

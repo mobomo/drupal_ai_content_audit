@@ -1,0 +1,199 @@
+{#
+/**
+ * @file
+ * Template for the sitewide AI audit dashboard.
+ *
+ * Variables:
+ *   - stats: Overall statistics array (avg_score, total_assessed, etc.)
+ *   - score_distribution: Score distribution buckets
+ *   - content_type_breakdown: Per-content-type stats
+ *   - coverage: Coverage statistics
+ *   - top_nodes: Best performing nodes
+ *   - bottom_nodes: Worst performing nodes
+ *   - rollup: Tier 2 rollup data (may be null)
+ *   - ai_insights: AI interpretation data (may be null)
+ *   - technical_audit: Technical audit results
+ *   - analysis_state: Current analysis pipeline state
+ *   - config: Dashboard configuration flags
+ */
+#}
+<div class="ai-site-dashboard" data-drupal-selector="ai-site-dashboard">
+
+  {# Header with actions #}
+  <div class="ai-site-dashboard__header">
+    <div class="ai-site-dashboard__header-actions">
+      <button class="ai-site-dashboard__refresh-btn button button--small"
+              data-drupal-selector="ai-site-refresh-stats"
+              type="button">
+        ↻ Refresh Stats
+      </button>
+
+      {% if config.enable_csv_export %}
+        <a href="{{ config.export_csv_url|default('#') }}" class="button button--small">⬇ CSV</a>
+      {% endif %}
+
+      {% if config.enable_json_export %}
+        <a href="{{ config.export_json_url|default('#') }}" class="button button--small">⬇ JSON</a>
+      {% endif %}
+    </div>
+
+    {% if config.recomputation_needed != 'none' %}
+      <div class="ai-site-dashboard__notice messages messages--warning">
+        {{ config.new_assessment_count }} new assessments since last rollup.
+        <button class="button button--small" data-drupal-selector="ai-site-trigger-analysis" type="button">
+          Run Analysis
+        </button>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Stats cards #}
+  {% include 'ai-site-audit-stats-cards.html.twig' with { 'stats': stats, 'coverage': coverage } only %}
+
+  {# Score distribution chart #}
+  <div class="ai-site-dashboard__section">
+    <h3 class="ai-site-dashboard__section-title">Score Distribution</h3>
+    {% include 'ai-site-audit-score-distribution.html.twig' with { 'distribution': score_distribution } only %}
+  </div>
+
+  {# Content type breakdown #}
+  {% if content_type_breakdown is not empty %}
+    <div class="ai-site-dashboard__section">
+      <h3 class="ai-site-dashboard__section-title">Content Type Breakdown</h3>
+      {% include 'ai-site-audit-content-type-table.html.twig' with { 'content_types': content_type_breakdown } only %}
+    </div>
+  {% endif %}
+
+  {# Two-column layout: worst/best nodes #}
+  <div class="ai-site-dashboard__columns">
+    {% if bottom_nodes is not empty %}
+      <div class="ai-site-dashboard__column">
+        <h3 class="ai-site-dashboard__section-title">Needs Most Work</h3>
+        <div class="ai-site-dashboard__node-list">
+          {% for node in bottom_nodes %}
+            <div class="ai-site-dashboard__node-item ai-site-dashboard__node-item--{{ node.score < 30 ? 'critical' : (node.score < 50 ? 'warning' : 'ok') }}">
+              <span class="ai-site-dashboard__node-score">{{ node.score }}</span>
+              <a href="/node/{{ node.nid }}" class="ai-site-dashboard__node-title">{{ node.title }}</a>
+              <span class="ai-site-dashboard__node-type">{{ node.type }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if top_nodes is not empty %}
+      <div class="ai-site-dashboard__column">
+        <h3 class="ai-site-dashboard__section-title">Top Performers</h3>
+        <div class="ai-site-dashboard__node-list">
+          {% for node in top_nodes %}
+            <div class="ai-site-dashboard__node-item ai-site-dashboard__node-item--good">
+              <span class="ai-site-dashboard__node-score">{{ node.score }}</span>
+              <a href="/node/{{ node.nid }}" class="ai-site-dashboard__node-title">{{ node.title }}</a>
+              <span class="ai-site-dashboard__node-type">{{ node.type }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Rollup data: sub-scores, checkpoints, action items #}
+  {% if rollup %}
+    {% if rollup.sub_score_averages is not empty %}
+      <div class="ai-site-dashboard__section">
+        <h3 class="ai-site-dashboard__section-title">Sub-Score Averages</h3>
+        <div class="ai-site-dashboard__sub-scores">
+          {% for dim, data in rollup.sub_score_averages %}
+            <div class="ai-site-dashboard__sub-score-bar">
+              <span class="ai-site-dashboard__sub-score-label">{{ data.label|default(dim) }}</span>
+              <div class="ai-site-dashboard__progress-bar">
+                <div class="ai-site-dashboard__progress-fill" style="width: {{ data.pct }}%"></div>
+              </div>
+              <span class="ai-site-dashboard__sub-score-value">{{ data.avg }}/{{ data.max_possible }} ({{ data.pct }}%)</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if rollup.top_failing_checkpoints is not empty %}
+      <div class="ai-site-dashboard__section">
+        <h3 class="ai-site-dashboard__section-title">Top Failing Checkpoints</h3>
+        <table class="ai-site-dashboard__table">
+          <thead>
+            <tr>
+              <th>Checkpoint</th>
+              <th>Category</th>
+              <th>Failures</th>
+              <th>% of Nodes</th>
+              <th>Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cp in rollup.top_failing_checkpoints %}
+              <tr>
+                <td>{{ cp.item }}</td>
+                <td>{{ cp.category }}</td>
+                <td>{{ cp.fail_count }}</td>
+                <td>{{ cp.pct }}%</td>
+                <td><span class="ai-site-dashboard__priority ai-site-dashboard__priority--{{ cp.priority }}">{{ cp.priority }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if rollup.top_action_items is not empty %}
+      <div class="ai-site-dashboard__section">
+        <h3 class="ai-site-dashboard__section-title">Most Common Action Items</h3>
+        <table class="ai-site-dashboard__table">
+          <thead>
+            <tr>
+              <th>Action Item</th>
+              <th>Affected Nodes</th>
+              <th>Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in rollup.top_action_items %}
+              <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.count }}</td>
+                <td><span class="ai-site-dashboard__priority ai-site-dashboard__priority--{{ item.priority }}">{{ item.priority }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% endif %}
+
+  {# AI Insights section #}
+  <div class="ai-site-dashboard__section" data-drupal-selector="ai-site-insights-section">
+    <h3 class="ai-site-dashboard__section-title">AI Insights</h3>
+    {% include 'ai-site-audit-ai-insights.html.twig' with {
+      'insights': ai_insights,
+      'analysis_state': analysis_state,
+      'can_run_analysis': config.can_run_analysis
+    } only %}
+  </div>
+
+  {# Technical audit summary #}
+  {% if technical_audit is not empty %}
+    <div class="ai-site-dashboard__section">
+      <h3 class="ai-site-dashboard__section-title">Technical Audit</h3>
+      {% include 'ai-site-audit-technical-summary.html.twig' with { 'results': technical_audit } only %}
+    </div>
+  {% endif %}
+
+  {# Analysis status indicator #}
+  <div class="ai-site-dashboard__footer" data-drupal-selector="ai-site-analysis-status">
+    {% if analysis_state.state is defined and analysis_state.state != 'idle' and analysis_state.state != 'complete' %}
+      <div class="ai-site-dashboard__status ai-site-dashboard__status--running">
+        Analysis in progress: {{ analysis_state.state }}…
+      </div>
+    {% endif %}
+  </div>
+
+</div>

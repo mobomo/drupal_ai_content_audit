@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Form;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -26,10 +27,11 @@ final class SettingsForm extends ConfigFormBase {
 
   public function __construct(
     $config_factory,
+    TypedConfigManagerInterface $typedConfigManager,
     private readonly AiProviderPluginManager $aiProviderManager,
     private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {
-    parent::__construct($config_factory);
+    parent::__construct($config_factory, $typedConfigManager);
   }
 
   /**
@@ -38,6 +40,7 @@ final class SettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('ai.provider'),
       $container->get('entity_type.manager'),
     );

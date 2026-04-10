@@ -1,0 +1,41 @@
+services:
+  logger.channel.ai_site_audit:
+    parent: logger.channel_base
+    arguments: ['ai_site_audit']
+
+  ai_site_audit.aggregation:
+    class: Drupal\ai_site_audit\Service\SiteAggregationService
+    arguments:
+      - '@database'
+      - '@cache.default'
+      - '@logger.channel.ai_site_audit'
+
+  ai_site_audit.rollup:
+    class: Drupal\ai_site_audit\Service\SiteRollupService
+    arguments:
+      - '@database'
+      - '@keyvalue.expirable'
+      - '@state'
+      - '@config.factory'
+      - '@logger.channel.ai_site_audit'
+
+  ai_site_audit.analysis:
+    class: Drupal\ai_site_audit\Service\SiteAnalysisService
+    arguments:
+      - '@ai.provider'
+      - '@keyvalue.expirable'
+      - '@state'
+      - '@config.factory'
+      - '@logger.channel.ai_site_audit'
+
+  ai_site_audit.orchestrator:
+    class: Drupal\ai_site_audit\Service\AnalysisOrchestrator
+    arguments:
+      - '@ai_site_audit.aggregation'
+      - '@ai_site_audit.rollup'
+      - '@ai_site_audit.analysis'
+      - '@ai_content_audit.technical_audit'
+      - '@state'
+      - '@queue'
+      - '@config.factory'
+      - '@logger.channel.ai_site_audit'

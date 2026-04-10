@@ -6,5 +6,6 @@ services:
       - '@entity_type.manager'
       - '@queue'
       - '@config.factory'
+      - '@module_installer'
     tags:
       - { name: drush.command }

@@ -1,0 +1,13 @@
+ai_site_audit.dashboard:
+  title: 'Sitewide Audit Dashboard'
+  description: 'View sitewide AI content audit statistics and AI insights.'
+  route_name: ai_site_audit.dashboard
+  parent: system.admin_content
+  weight: 11
+
+ai_site_audit.settings:
+  title: 'AI Site Audit'
+  description: 'Configure sitewide audit dashboard and budget controls.'
+  route_name: ai_site_audit.settings
+  parent: system.admin_config
+  weight: 11

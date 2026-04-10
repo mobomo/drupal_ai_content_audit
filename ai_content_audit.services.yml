@@ -1,20 +1,19 @@
 services:
+  logger.channel.ai_content_audit:
+    parent: logger.channel_base
+    arguments: ['ai_content_audit']
+
   ai_content_audit.assessment_repository:
     class: Drupal\ai_content_audit\Repository\AiContentAssessmentRepository
     arguments:
       - '@entity_type.manager'
 
-  ai_content_audit.field_extractor:
-    class: Drupal\ai_content_audit\Service\FieldExtractor
-    arguments:
-      - '@entity_type.manager'
-    tags:
-      - { name: ai_content_audit.content_extractor, priority: 0 }
-
   ai_content_audit.extractor_manager:
     class: Drupal\ai_content_audit\Extractor\ContentExtractorManager
-    calls:
-      - [addExtractor, ['@ai_content_audit.field_extractor']]
+    arguments:
+      - '@container.namespaces'
+      - '@cache.discovery'
+      - '@module_handler'
 
   ai_content_audit.assessment_service:
     class: Drupal\ai_content_audit\Service\AiAssessmentService
@@ -31,8 +30,9 @@ services:
       - '@http_client'
       - '@config.factory'
       - '@logger.channel.ai_content_audit'
-      - '@state'
+      - '@cache.data'
       - '@request_stack'
+      - '@module_handler'
 
   ai_content_audit.ai_response_subscriber:
     class: Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber

@@ -5,7 +5,7 @@ entity.ai_content_assessment.collection:
     _entity_list: 'ai_content_assessment'
     _title: 'AI Content Assessments'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
   options:
     _admin_route: TRUE
 
@@ -37,7 +37,7 @@ ai_content_audit.panel.open:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::openPanel'
     _title: 'AIRO Analysis'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: TRUE
@@ -51,7 +51,7 @@ ai_content_audit.panel.assess:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::assessNode'
     _title: 'Assess Node'
   requirements:
-    _permission: 'run ai content assessment,administer ai content audit'
+    _permission: 'run ai content assessment+administer ai content audit'
     node: \d+
   methods: [POST]
   options:
@@ -66,7 +66,7 @@ ai_content_audit.panel.status:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::assessmentStatus'
     _title: 'Assessment Status'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: TRUE
@@ -79,7 +79,7 @@ ai_content_audit.panel.score_tab:
   defaults:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::scoreTab'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: TRUE
@@ -92,7 +92,7 @@ ai_content_audit.panel.actions_tab:
   defaults:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::actionItemsTab'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: TRUE
@@ -105,7 +105,7 @@ ai_content_audit.panel.audit_tab:
   defaults:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::technicalAuditTab'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: TRUE
@@ -118,7 +118,7 @@ ai_content_audit.panel.preview_tab:
   defaults:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::aiPreviewTab'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: TRUE
@@ -133,7 +133,7 @@ ai_content_audit.node.assessment_history:
     _controller: '\Drupal\ai_content_audit\Controller\AiAssessmentController::history'
     _title: 'AI Assessment History'
   requirements:
-    _permission: 'view ai content assessment,administer ai content audit'
+    _permission: 'view ai content assessment+administer ai content audit'
     node: \d+
   options:
     _admin_route: FALSE
@@ -143,7 +143,7 @@ ai_content_audit.panel.actions_toggle:
   defaults:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::toggleActionItem'
   requirements:
-    _permission: 'run ai content assessment,administer ai content audit'
+    _permission: 'run ai content assessment+administer ai content audit'
     node: \d+
   methods: [POST]
   options:
@@ -157,7 +157,7 @@ ai_content_audit.panel.preview_query:
   defaults:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::submitPreviewQuery'
   requirements:
-    _permission: 'run ai content assessment,administer ai content audit'
+    _permission: 'run ai content assessment+administer ai content audit'
     node: \d+
   methods: [POST]
   options:

@@ -1,0 +1,49 @@
+ai_site_audit.settings:
+  type: config_object
+  label: 'AI Site Audit settings'
+  mapping:
+    analysis_tier_default:
+      type: string
+      label: 'Default analysis tier'
+    max_ai_calls_per_analysis:
+      type: integer
+      label: 'Maximum AI calls per sitewide analysis'
+    max_tokens_per_analysis:
+      type: integer
+      label: 'Maximum tokens per sitewide analysis'
+    analysis_cooldown_hours:
+      type: integer
+      label: 'Minimum hours between AI analyses'
+    auto_analysis_threshold:
+      type: float
+      label: 'Auto-trigger threshold as fraction of new assessments'
+    rollup_batch_size:
+      type: integer
+      label: 'Batch size for PHP rollup processing'
+    rollup_max_age_hours:
+      type: integer
+      label: 'Maximum age in hours before rollup is refreshed'
+    dashboard_cache_max_age:
+      type: integer
+      label: 'Dashboard render cache max-age in seconds'
+    stats_cache_max_age:
+      type: integer
+      label: 'Statistics cache max-age in seconds'
+    enable_cron_analysis:
+      type: boolean
+      label: 'Enable periodic cron-based analysis'
+    cron_analysis_frequency_hours:
+      type: integer
+      label: 'Hours between cron analysis runs'
+    enable_trend_snapshots:
+      type: boolean
+      label: 'Enable historical trend snapshots'
+    trend_snapshot_retention_days:
+      type: integer
+      label: 'Days to retain trend snapshots'
+    enable_csv_export:
+      type: boolean
+      label: 'Enable CSV export'
+    enable_json_export:
+      type: boolean
+      label: 'Enable JSON export'

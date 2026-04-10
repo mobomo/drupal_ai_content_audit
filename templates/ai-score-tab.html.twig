@@ -4,141 +4,171 @@
  * AI Score tab content for the AIRO panel.
  *
  * Variables:
- * - score: Overall score (0-100).
- * - qualitative_label: 'Needs Work', 'Improving', or 'AI Ready'.
- * - score_color: 'good', 'warning', or 'danger'.
- * - score_color_hex: Hex color for the donut stroke.
- * - trend_delta: Integer point change from previous assessment (can be negative).
+ * - score: Integer score 0–100, or NULL if no assessment exists.
+ * - qualitative_label: Human-readable label e.g. "AI Ready", "Improving", "Needs Work".
+ * - score_color: CSS modifier class segment: 'good', 'warning', or 'danger'.
+ * - score_color_hex: Hex color string matching the score tier.
+ * - trend_delta: Signed integer change since previous assessment, or NULL.
  * - donut_radius: SVG circle radius (50).
- * - donut_circumference: Calculated circumference.
- * - donut_offset: Calculated stroke-dashoffset.
- * - sub_scores: Array of {dimension, label, score, max_score, percentage}.
- * - checkpoints: Array of {category, item, status, priority}.
- * - checkpoints_by_category: Checkpoints grouped by category.
- * - history: Array of {date, score, bar_height}.
+ * - donut_circumference: Full circumference value for stroke-dasharray.
+ * - donut_offset: stroke-dashoffset value representing percentage filled.
+ * - sub_scores: Array of sub-score objects with keys: label, score, max_score, percentage.
+ * - checkpoints: Flat array of all checkpoint objects.
+ * - checkpoints_by_category: Checkpoints grouped by category key.
+ * - history: Array of history entries with keys: date, date_short, score, bar_height.
  * - node_id: The node ID.
  * - assess_url: URL for the re-analyze endpoint.
  */
 #}
 <div class="airo-score" data-node-id="{{ node_id }}">
 
-  {# Section 1: Overall Score #}
-  <div class="airo-score__overview">
-    <div class="airo-score__donut-container">
-      <svg viewBox="0 0 128 128" class="airo-score__donut-svg">
-        <circle class="airo-score__donut-bg"
-          cx="64" cy="64" r="{{ donut_radius }}"
-          fill="none" stroke="#e5e7eb" stroke-width="10" />
-        <circle class="airo-score__donut-fill"
-          cx="64" cy="64" r="{{ donut_radius }}"
-          fill="none"
-          stroke="{{ score_color_hex }}"
-          stroke-width="10"
-          stroke-dasharray="{{ donut_circumference }}"
-          stroke-dashoffset="{{ donut_offset }}"
-          stroke-linecap="round"
-          transform="rotate(-90 64 64)" />
-        <text x="64" y="58" text-anchor="middle" dominant-baseline="central"
-          class="airo-score__donut-score">{{ score }}</text>
-        <text x="64" y="78" text-anchor="middle" dominant-baseline="central"
-          class="airo-score__donut-label">{{ qualitative_label }}</text>
-      </svg>
-    </div>
-    <div class="airo-score__overview-info">
-      {% if trend_delta is not null %}
-        <div class="airo-score__trend airo-score__trend--{{ trend_delta >= 0 ? 'up' : 'down' }}">
-          {% if trend_delta >= 0 %}
-            <span class="airo-score__trend-arrow">↑</span>
-            <span>+{{ trend_delta }} {{ 'points since last check'|t }}</span>
-          {% else %}
-            <span class="airo-score__trend-arrow">↓</span>
-            <span>{{ trend_delta }} {{ 'points since last check'|t }}</span>
-          {% endif %}
-        </div>
-      {% endif %}
-      <button type="button" class="airo-score__reanalyze button button--primary button--small"
-        data-assess-url="{{ assess_url }}">
-        {{ 'Re-analyze'|t }}
-      </button>
-    </div>
-  </div>
+  {% if score is not null %}
 
-  {# Section 2: Sub-Score Breakdown #}
-  {% if sub_scores is not empty %}
-  <div class="airo-score__breakdown">
-    <h3 class="airo-score__section-title">{{ 'Score Breakdown'|t }}</h3>
-    {% for sub in sub_scores %}
-      <div class="airo-score__subscore">
-        <div class="airo-score__subscore-header">
-          <span class="airo-score__subscore-label">{{ sub.label }}</span>
-          <span class="airo-score__subscore-value">{{ sub.score }}/{{ sub.max_score }}</span>
-        </div>
-        <div class="airo-score__subscore-bar">
-          <div class="airo-score__subscore-fill" style="width: {{ sub.percentage }}%; background-color: {{ sub.color|default('#3b82f6') }};"></div>
-        </div>
+    {# Section 1: Overview with donut chart #}
+    <div class="airo-score__overview">
+      <div class="airo-score__donut-container">
+        <svg class="airo-score__donut-svg" viewBox="0 0 128 128" role="img"
+          aria-label="{{ 'AI Readiness Score: %score'|t({'%score': score}) }}">
+          {# Background track #}
+          <circle
+            cx="64" cy="64"
+            r="{{ donut_radius }}"
+            fill="none"
+            stroke="#e5e7eb"
+            stroke-width="12"
+          />
+          {# Score fill #}
+          <circle
+            class="airo-score__donut-fill"
+            cx="64" cy="64"
+            r="{{ donut_radius }}"
+            fill="none"
+            stroke="{{ score_color_hex }}"
+            stroke-width="12"
+            stroke-linecap="round"
+            stroke-dasharray="{{ donut_circumference }}"
+            stroke-dashoffset="{{ donut_offset }}"
+            transform="rotate(-90 64 64)"
+          />
+          {# Score number #}
+          <text class="airo-score__donut-score" x="64" y="60" text-anchor="middle" dominant-baseline="middle">
+            {{ score }}
+          </text>
+          {# Score label #}
+          <text class="airo-score__donut-label" x="64" y="78" text-anchor="middle">
+            {{ 'out of 100'|t }}
+          </text>
+        </svg>
       </div>
-    {% endfor %}
-  </div>
-  {% endif %}
 
-  {# Section 3: Detailed Checkpoints #}
-  {% if checkpoints_by_category is not empty %}
-  <div class="airo-score__checkpoints">
-    <h3 class="airo-score__section-title">{{ 'Detailed Checkpoints'|t }}</h3>
-    {% for category, items in checkpoints_by_category %}
-      <div class="airo-score__checkpoint-group">
-        <h4 class="airo-score__checkpoint-category">{{ category }}</h4>
-        <table class="airo-score__checkpoint-table">
-          <tbody>
-            {% for checkpoint in items %}
-              <tr class="airo-score__checkpoint-row airo-score__checkpoint-row--{{ checkpoint.status }}">
-                <td class="airo-score__checkpoint-icon">
-                  {% if checkpoint.status == 'pass' %}
-                    <span class="airo-score__icon airo-score__icon--pass" title="{{ 'Pass'|t }}">✓</span>
-                  {% elseif checkpoint.status == 'fail' %}
-                    <span class="airo-score__icon airo-score__icon--fail" title="{{ 'Fail'|t }}">✗</span>
-                  {% else %}
-                    <span class="airo-score__icon airo-score__icon--warning" title="{{ 'Warning'|t }}">⚠</span>
-                  {% endif %}
-                </td>
-                <td class="airo-score__checkpoint-item">{{ checkpoint.item }}</td>
-                <td class="airo-score__checkpoint-priority">
-                  <span class="airo-score__priority-badge airo-score__priority-badge--{{ checkpoint.priority }}">
-                    {{ checkpoint.priority }}
-                  </span>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+      <div class="airo-score__overview-info">
+        <div class="airo-score__qualitative airo-score__qualitative--{{ score_color }}">
+          {{ qualitative_label }}
+        </div>
 
-  {# Section 4: Historical Trend #}
-  {% if history is not empty %}
-  <div class="airo-score__history">
-    <h3 class="airo-score__section-title">{{ 'Score History'|t }}</h3>
-    <div class="airo-score__history-chart">
-      {% for entry in history %}
-        <div class="airo-score__history-bar-wrapper">
-          <div class="airo-score__history-bar" style="height: {{ entry.bar_height }}%;"
-            title="{{ entry.date }}: {{ entry.score }}">
-            <span class="airo-score__history-value">{{ entry.score }}</span>
+        {# Trend delta #}
+        {% if trend_delta is not null %}
+          <div class="airo-score__trend airo-score__trend--{{ trend_delta >= 0 ? 'up' : 'down' }}">
+            <span class="airo-score__trend-arrow">{{ trend_delta >= 0 ? '▲' : '▼' }}</span>
+            <span>{{ trend_delta|abs }} {{ 'pts since last check'|t }}</span>
           </div>
-          <span class="airo-score__history-date">{{ entry.date_short }}</span>
+        {% endif %}
+
+        <button type="button"
+          class="airo-score__reanalyze button button--small"
+          data-assess-url="{{ assess_url }}"
+          data-node-id="{{ node_id }}">
+          {{ 'Re-analyze'|t }}
+        </button>
+      </div>
+    </div>
+
+    {# Section 2: Sub-score breakdown #}
+    {% if sub_scores is not empty %}
+    <div class="airo-score__breakdown">
+      <h3 class="airo-score__section-title">{{ 'Score Breakdown'|t }}</h3>
+      {% for sub in sub_scores %}
+        <div class="airo-score__subscore">
+          <div class="airo-score__subscore-header">
+            <span class="airo-score__subscore-label">{{ sub.label }}</span>
+            <span class="airo-score__subscore-value">{{ sub.score }}/{{ sub.max_score }}</span>
+          </div>
+          <div class="airo-score__subscore-bar">
+            <div class="airo-score__subscore-fill"
+              style="width: {{ sub.percentage }}%; background-color: {{ score_color_hex }};"></div>
+          </div>
         </div>
       {% endfor %}
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  {# No data fallback #}
-  {% if score is null %}
-  <div class="airo-score__empty">
-    <p>{{ 'No assessment data available. Run an analysis to see your AI readiness score.'|t }}</p>
-  </div>
+    {# Section 3: Checkpoints by category #}
+    {% if checkpoints_by_category is not empty %}
+    <div class="airo-score__checkpoints">
+      <h3 class="airo-score__section-title">{{ 'Checkpoints'|t }}</h3>
+      {% for category, items in checkpoints_by_category %}
+        <div class="airo-score__checkpoint-group">
+          <p class="airo-score__checkpoint-category">{{ category }}</p>
+          <table class="airo-score__checkpoint-table">
+            <tbody>
+              {% for cp in items %}
+                <tr class="airo-score__checkpoint-row">
+                  <td class="airo-score__checkpoint-icon">
+                    <span class="airo-score__icon airo-score__icon--{{ cp.status|default('warning') }}">
+                      {% if cp.status == 'pass' %}✓
+                      {% elseif cp.status == 'fail' %}✗
+                      {% else %}!{% endif %}
+                    </span>
+                  </td>
+                  <td class="airo-score__checkpoint-item">{{ cp.label }}</td>
+                  <td class="airo-score__checkpoint-priority">
+                    {% if cp.priority is defined %}
+                      <span class="airo-score__priority-badge airo-score__priority-badge--{{ cp.priority }}">
+                        {{ cp.priority }}
+                      </span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Section 4: Score history chart #}
+    {% if history is not empty %}
+    <div class="airo-score__history">
+      <h3 class="airo-score__section-title">{{ 'Score History'|t }}</h3>
+      <div class="airo-score__history-chart">
+        {% for entry in history %}
+          <div class="airo-score__history-bar-wrapper"
+            title="{{ entry.date }}: {{ entry.score }}">
+            <div class="airo-score__history-bar"
+              style="height: {{ entry.bar_height }}%;">
+              <span class="airo-score__history-value">{{ entry.score }}</span>
+            </div>
+            <span class="airo-score__history-date">{{ entry.date_short }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  {% else %}
+
+    {# Empty state: no assessment yet #}
+    <div class="airo-score__empty">
+      <p>{{ 'No score yet. Run an analysis to generate your AI Readiness Score.'|t }}</p>
+      <button type="button"
+        class="button button--primary"
+        data-assess-url="{{ assess_url }}"
+        data-node-id="{{ node_id }}">
+        {{ 'Analyze Now'|t }}
+      </button>
+    </div>
+
   {% endif %}
 
 </div>

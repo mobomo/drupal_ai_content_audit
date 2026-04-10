@@ -8,22 +8,23 @@ use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\node\NodeInterface;
 
 /**
- * Defines the interface for content extractors used in AI assessment.
+ * Defines the interface for content extractor plugins used in AI assessment.
  *
  * A content extractor is responsible for producing a string representation
  * of a node's content suitable for submission to an AI language or vision model.
  *
- * Implementations are registered as tagged Symfony services with the tag
- * 'ai_content_audit.content_extractor'. The ContentExtractorManager collects
- * all tagged implementations and routes to the correct one based on the
- * requested RenderMode.
+ * Implementations are annotation-based plugins discovered automatically from
+ * any module's Plugin/ContentExtractor/ subdirectory. They are annotated with
+ * @ContentExtractor and managed by ContentExtractorManager.
  *
- * To add a new render mode:
- * 1. Add a case to \Drupal\ai_content_audit\Enum\RenderMode.
- * 2. Create a class implementing this interface.
- * 3. Register it as a service with the tag 'ai_content_audit.content_extractor'.
- * No changes to AiAssessmentService or the queue worker are required.
+ * To add a new extractor:
+ * 1. Optionally add a case to \Drupal\ai_content_audit\Enum\RenderMode.
+ * 2. Create a class in Plugin/ContentExtractor/ implementing this interface.
+ * 3. Annotate it with @ContentExtractor (id, label, description, render_mode).
+ * No changes to AiAssessmentService, ContentExtractorManager, or services.yml
+ * are required — the plugin system handles discovery automatically.
  *
+ * @see \Drupal\ai_content_audit\Annotation\ContentExtractor
  * @see \Drupal\ai_content_audit\Enum\RenderMode
  * @see \Drupal\ai_content_audit\Extractor\ContentExtractorManager
  */

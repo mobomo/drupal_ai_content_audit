@@ -5,105 +5,128 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Extractor;
 
 use Drupal\ai_content_audit\Enum\RenderMode;
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
- * Collects and routes between registered content extractors.
+ * Plugin manager for ContentExtractor plugins.
  *
- * This service acts as a strategy registry for ContentExtractorInterface
- * implementations. It is populated by the DI container via the tagged
- * service pattern: any service tagged with 'ai_content_audit.content_extractor'
- * is automatically added via addExtractor().
+ * Discovers plugins annotated with @ContentExtractor from any module's
+ * Plugin/ContentExtractor/ subdirectory.
  *
- * Usage in AiAssessmentService:
+ * Other modules can alter discovered definitions via:
  * @code
- *   $extractor = $this->extractorManager->getExtractorForMode($mode);
+ *   function mymodule_content_extractor_info_alter(array &$definitions): void {
+ *     // Modify $definitions keyed by plugin ID.
+ *   }
+ * @endcode
+ *
+ * Usage:
+ * @code
+ *   $extractor = $this->extractorManager->getExtractorForMode('text');
  *   $content = $extractor->extract($node);
  * @endcode
  *
- * To register a new extractor, tag it in your services.yml:
- * @code
- *   my_module.extractor.html:
- *     class: Drupal\my_module\Extractor\HtmlExtractor
- *     tags:
- *       - { name: ai_content_audit.content_extractor, priority: 10 }
- * @endcode
+ * To add a new extractor, create a class in Plugin/ContentExtractor/ annotated
+ * with @ContentExtractor in any enabled module. No changes to this manager or
+ * to AiAssessmentService are required.
  *
+ * @see \Drupal\ai_content_audit\Annotation\ContentExtractor
  * @see \Drupal\ai_content_audit\Extractor\ContentExtractorInterface
+ * @see \Drupal\Core\Plugin\DefaultPluginManager
  */
-class ContentExtractorManager {
+class ContentExtractorManager extends DefaultPluginManager {
 
   /**
-   * The registered content extractors, keyed by mode string.
+   * Constructs a ContentExtractorManager.
    *
-   * @var \Drupal\ai_content_audit\Extractor\ContentExtractorInterface[]
+   * @param \Traversable $namespaces
+   *   An object that implements \Traversable which contains the root paths
+   *   keyed by the corresponding namespace to look for plugin implementations.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   Cache backend instance to use for plugin discovery caching.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler to invoke the alter hook with.
    */
-  protected array $extractors = [];
+  public function __construct(
+    \Traversable $namespaces,
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+  ) {
+    parent::__construct(
+      'Plugin/ContentExtractor',
+      $namespaces,
+      $module_handler,
+      ContentExtractorInterface::class,
+      'Drupal\ai_content_audit\Annotation\ContentExtractor',
+    );
 
-  /**
-   * Adds a content extractor to the registry.
-   *
-   * Called by the DI container for each service tagged with
-   * 'ai_content_audit.content_extractor'.
-   *
-   * @param \Drupal\ai_content_audit\Extractor\ContentExtractorInterface $extractor
-   *   The extractor to register.
-   */
-  public function addExtractor(ContentExtractorInterface $extractor): void {
-    $this->extractors[$extractor->getMode()] = $extractor;
+    // Enable hook_content_extractor_info_alter().
+    $this->alterInfo('content_extractor_info');
+    // Cache discovered definitions under a stable key.
+    $this->setCacheBackend($cache_backend, 'content_extractor_plugins');
   }
 
   /**
-   * Returns the extractor for the given render mode.
+   * Returns an instantiated extractor for the given render mode.
    *
    * @param string $mode
    *   A RenderMode enum value string. Defaults to RenderMode::TEXT.
    *
    * @return \Drupal\ai_content_audit\Extractor\ContentExtractorInterface
-   *   The matching extractor.
+   *   The matching extractor plugin instance.
    *
    * @throws \InvalidArgumentException
-   *   If no extractor is registered for the given mode.
+   *   If no plugin is registered for the given render mode.
    */
   public function getExtractorForMode(string $mode = ''): ContentExtractorInterface {
     if (empty($mode)) {
       $mode = RenderMode::default()->value;
     }
 
-    if (!isset($this->extractors[$mode])) {
-      $available = implode(', ', array_keys($this->extractors));
-      throw new \InvalidArgumentException(
-        sprintf(
-          'No content extractor registered for render mode "%s". Available modes: %s.',
-          $mode,
-          $available ?: 'none'
-        )
-      );
+    foreach ($this->getDefinitions() as $plugin_id => $definition) {
+      if (($definition['render_mode'] ?? '') === $mode) {
+        return $this->createInstance($plugin_id);
+      }
     }
 
-    return $this->extractors[$mode];
+    $available = implode(', ', $this->getAvailableModes());
+    throw new \InvalidArgumentException(
+      sprintf(
+        'No content extractor plugin registered for render mode "%s". Available modes: %s.',
+        $mode,
+        $available ?: 'none'
+      )
+    );
   }
 
   /**
    * Returns all registered render mode strings.
    *
    * @return string[]
-   *   Array of registered mode strings (e.g., ['text', 'html']).
+   *   Array of render mode strings from plugin definitions (e.g., ['text']).
    */
   public function getAvailableModes(): array {
-    return array_keys($this->extractors);
+    return array_column($this->getDefinitions(), 'render_mode');
   }
 
   /**
-   * Returns whether an extractor is registered for the given mode.
+   * Returns whether a plugin is registered for the given render mode.
    *
    * @param string $mode
    *   A RenderMode enum value string.
    *
    * @return bool
-   *   TRUE if an extractor is registered for the mode.
+   *   TRUE if a plugin handles the given mode.
    */
   public function hasExtractorForMode(string $mode): bool {
-    return isset($this->extractors[$mode]);
+    foreach ($this->getDefinitions() as $definition) {
+      if (($definition['render_mode'] ?? '') === $mode) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
 }

@@ -1,0 +1,26 @@
+{#
+/**
+ * @file
+ * Template for technical audit summary.
+ */
+#}
+<div class="ai-site-dashboard__technical">
+  {% for result in results %}
+    {% set status_class = result.status == 'pass' ? 'pass' : (result.status == 'fail' ? 'fail' : 'warning') %}
+    <div class="ai-site-dashboard__tech-item ai-site-dashboard__tech-item--{{ status_class }}">
+      <div class="ai-site-dashboard__tech-status">
+        {% if result.status == 'pass' %}
+          ✓
+        {% elseif result.status == 'fail' %}
+          ✗
+        {% else %}
+          ⚠
+        {% endif %}
+      </div>
+      <div class="ai-site-dashboard__tech-content">
+        <strong>{{ result.label|default(result.check|default('Check')) }}</strong>
+        <p>{{ result.description|default('') }}</p>
+      </div>
+    </div>
+  {% endfor %}
+</div>

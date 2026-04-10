@@ -59,7 +59,9 @@ class AiroPanelController extends ControllerBase {
 
     // Render the initial tab content (AI Score tab is default).
     $score_tab_build = $this->buildScoreTab($node, $assessment);
-    $tab_content = (string) $this->renderer->renderRoot($score_tab_build);
+    $tab_content = $this->renderer->renderRoot($score_tab_build);
+    // Collect any attached libraries from the inner tab render.
+    $inner_attached = $score_tab_build['#attached'] ?? [];
 
     $build = [
       '#theme' => 'ai_airo_panel',
@@ -69,11 +71,10 @@ class AiroPanelController extends ControllerBase {
       '#is_analyzing' => FALSE,
       '#active_tab' => 'score-tab',
       '#tab_content' => $tab_content,
-      '#attached' => [
-        'library' => [
-          'ai_content_audit/airo-panel',
-        ],
-      ],
+      '#attached' => array_merge_recursive(
+        ['library' => ['ai_content_audit/airo-panel']],
+        $inner_attached
+      ),
     ];
 
     $html = $this->renderer->renderRoot($build);
@@ -91,6 +92,9 @@ class AiroPanelController extends ControllerBase {
       NULL,
       'side',
     ));
+    if (!empty($build['#attached'])) {
+      $response->setAttachments($build['#attached']);
+    }
 
     return $response;
   }
@@ -200,6 +204,9 @@ class AiroPanelController extends ControllerBase {
       '#airo-tab-content',
       '<div class="airo-panel__content" id="airo-tab-content" role="tabpanel">' . $html . '</div>'
     ));
+    if (!empty($build['#attached'])) {
+      $response->setAttachments($build['#attached']);
+    }
     return $response;
   }
 
@@ -301,6 +308,9 @@ class AiroPanelController extends ControllerBase {
       '#airo-tab-content',
       '<div class="airo-panel__content" id="airo-tab-content" role="tabpanel">' . $html . '</div>'
     ));
+    if (!empty($build['#attached'])) {
+      $response->setAttachments($build['#attached']);
+    }
     return $response;
   }
 
@@ -436,6 +446,9 @@ class AiroPanelController extends ControllerBase {
       '#airo-tab-content',
       '<div class="airo-panel__content" id="airo-tab-content" role="tabpanel">' . $html . '</div>'
     ));
+    if (!empty($build['#attached'])) {
+      $response->setAttachments($build['#attached']);
+    }
     return $response;
   }
 
@@ -484,6 +497,9 @@ class AiroPanelController extends ControllerBase {
       '#airo-tab-content',
       '<div class="airo-panel__content" id="airo-tab-content" role="tabpanel">' . $html . '</div>'
     ));
+    if (!empty($build['#attached'])) {
+      $response->setAttachments($build['#attached']);
+    }
     return $response;
   }
 

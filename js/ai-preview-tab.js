@@ -75,13 +75,14 @@
      * Submits a preview query to the server.
      */
     submitQuery: function (question, providerId) {
-      var responseArea = document.getElementById('airo-preview-response');
       var previewEl = document.querySelector('.airo-preview');
-      if (!responseArea || !previewEl) return;
-
+      if (!previewEl) return;
       var nodeId = previewEl.getAttribute('data-node-id');
+      var responseArea = document.getElementById('airo-preview-response-' + nodeId);
+      if (!responseArea) return;
+
       var input = document.querySelector('.airo-preview__input');
-      var queryUrl = input ? input.getAttribute('data-query-url') : null;
+      var queryUrl = previewEl.getAttribute('data-query-url');
       if (!queryUrl || !nodeId) return;
 
       // Get active provider if not specified

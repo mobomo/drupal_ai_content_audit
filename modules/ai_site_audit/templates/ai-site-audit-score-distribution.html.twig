@@ -1,0 +1,37 @@
+{#
+/**
+ * @file
+ * Template for score distribution chart.
+ * Uses pure CSS bar chart (no Chart.js dependency).
+ */
+#}
+{% set max_count = 1 %}
+{% for range, count in distribution %}
+  {% if count > max_count %}
+    {% set max_count = count %}
+  {% endif %}
+{% endfor %}
+
+<div class="ai-site-dashboard__distribution">
+  {% set colors = {
+    '0-19': '#dc3545',
+    '20-39': '#e67e22',
+    '40-59': '#f1c40f',
+    '60-79': '#27ae60',
+    '80-100': '#2ecc71'
+  } %}
+
+  <div class="ai-site-dashboard__chart-bars">
+    {% for range, count in distribution %}
+      {% set pct = (count / max_count * 100)|round %}
+      <div class="ai-site-dashboard__bar-group">
+        <div class="ai-site-dashboard__bar-value">{{ count }}</div>
+        <div class="ai-site-dashboard__bar"
+             style="height: {{ pct > 0 ? pct : 2 }}%; background-color: {{ colors[range]|default('#888') }};"
+             title="{{ range }}: {{ count }} nodes">
+        </div>
+        <div class="ai-site-dashboard__bar-label">{{ range }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>

@@ -1,0 +1,67 @@
+ai_site_audit.dashboard:
+  path: '/admin/ai-content-audit/site-dashboard'
+  defaults:
+    _controller: '\Drupal\ai_site_audit\Controller\SiteAuditDashboardController::dashboard'
+    _title: 'Sitewide AI Audit Dashboard'
+  requirements:
+    _permission: 'view site audit dashboard+administer ai content audit'
+  options:
+    _admin_route: TRUE
+
+ai_site_audit.refresh_stats:
+  path: '/admin/ai-content-audit/site-dashboard/refresh-stats'
+  defaults:
+    _controller: '\Drupal\ai_site_audit\Controller\SiteAuditDashboardController::refreshStats'
+  requirements:
+    _permission: 'run site audit analysis+administer ai content audit'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+
+ai_site_audit.ai_insights:
+  path: '/admin/ai-content-audit/site-dashboard/ai-insights'
+  defaults:
+    _controller: '\Drupal\ai_site_audit\Controller\SiteAuditDashboardController::aiInsights'
+  requirements:
+    _permission: 'view site audit dashboard+administer ai content audit'
+  options:
+    _admin_route: TRUE
+
+ai_site_audit.trigger_analysis:
+  path: '/admin/ai-content-audit/site-dashboard/trigger-analysis'
+  defaults:
+    _controller: '\Drupal\ai_site_audit\Controller\SiteAuditDashboardController::triggerAnalysis'
+  requirements:
+    _permission: 'run site audit analysis+administer ai content audit'
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+
+ai_site_audit.analysis_status:
+  path: '/admin/ai-content-audit/site-dashboard/analysis-status'
+  defaults:
+    _controller: '\Drupal\ai_site_audit\Controller\SiteAuditDashboardController::analysisStatus'
+  requirements:
+    _permission: 'view site audit dashboard+administer ai content audit'
+  options:
+    _admin_route: TRUE
+
+ai_site_audit.settings:
+  path: '/admin/config/ai/site-audit'
+  defaults:
+    _form: '\Drupal\ai_site_audit\Form\SiteAuditSettingsForm'
+    _title: 'AI Site Audit Settings'
+  requirements:
+    _permission: 'administer ai content audit'
+  options:
+    _admin_route: TRUE
+
+ai_site_audit.export:
+  path: '/admin/ai-content-audit/site-dashboard/export/{format}'
+  defaults:
+    _controller: '\Drupal\ai_site_audit\Controller\SiteAuditDashboardController::exportReport'
+  requirements:
+    _permission: 'view site audit dashboard+administer ai content audit'
+    format: 'csv|json'
+  options:
+    _admin_route: TRUE
