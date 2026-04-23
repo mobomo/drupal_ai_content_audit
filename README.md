@@ -56,7 +56,7 @@ Replace the placeholder URL with your actual git repository URL.
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/YOUR-ORG/ai_content_audit.git"
+      "url": "https://github.com/ednark/drupal_ai_content_audit.git"
     }
   ],
   "require": {
@@ -65,7 +65,7 @@ Replace the placeholder URL with your actual git repository URL.
 }
 ```
 
-> **Replace** `https://github.com/YOUR-ORG/ai_content_audit.git` with the
+> **Replace** `https://github.com/ednark/drupal_ai_content_audit.git` with the
 > real repository URL before running Composer.
 
 **Step 2.** Install:
@@ -114,7 +114,7 @@ composer require "drupal/ai_content_audit:1.0.x-dev@dev"
 1. Clone or download the repository:
 
    ```bash
-   git clone https://github.com/YOUR-ORG/ai_content_audit.git \
+   git clone https://github.com/ednark/drupal_ai_content_audit.git \
      web/modules/custom/ai_content_audit
    ```
 
@@ -300,7 +300,6 @@ be deleted from your site's `composer.json`.
 ## Contributing / Issues / License
 
 **Issues & contributions:** Please open issues and pull requests on the project
-repository at `https://github.com/YOUR-ORG/ai_content_audit/issues`.
-_(Replace with your actual repository URL.)_
+repository at `https://github.com/ednark/drupal_ai_content_audit/issues`.
 
 **License:** [GPL-2.0-or-later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
