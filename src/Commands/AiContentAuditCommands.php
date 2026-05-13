@@ -239,7 +239,7 @@ final class AiContentAuditCommands extends DrushCommands {
    * Runs an AI assessment on a single node synchronously.
    *
    * @param int $nid
-   *   Node ID to assess.
+   *   Node ID to assess (loads the default revision; use the UI for draft revisions).
    * @param array $ai_options
    *   Optional AI overrides passed to AiAssessmentService::assessNode().
    *   Supported keys: 'provider_id', 'model_id'.

@@ -6,6 +6,8 @@ namespace Drupal\ai_content_audit\Plugin\ContentExtractor;
 
 use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\ai_content_audit\Extractor\EntityContextTrait;
+use Drupal\ai_content_audit\Service\HtmlFetchService;
+use Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -70,6 +72,10 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    *   The configuration factory, used to read max_chars_per_request.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack, used to resolve the site host for link classification.
+   * @param \Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource $layoutBuilderPreviewSource
+   *   Builds Layout Builder section render arrays when LB is enabled for the node.
+   * @param \Drupal\ai_content_audit\Service\HtmlFetchService $htmlFetchService
+   *   Fetches live page HTML via HTTP, used as the primary extraction strategy.
    */
   public function __construct(
     array $configuration,
@@ -79,6 +85,8 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     protected RendererInterface $renderer,
     protected ConfigFactoryInterface $configFactory,
     protected RequestStack $requestStack,
+    protected LayoutBuilderPreviewSource $layoutBuilderPreviewSource,
+    protected HtmlFetchService $htmlFetchService,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -95,6 +103,8 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       $container->get('renderer'),
       $container->get('config.factory'),
       $container->get('request_stack'),
+      $container->get('ai_content_audit.layout_builder_preview_source'),
+      $container->get('ai_content_audit.html_fetch'),
     );
   }
 
@@ -115,44 +125,36 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   /**
    * {@inheritdoc}
    *
-   * Renders the node to HTML via the entity view builder, converts the HTML
-   * to structured plain text, then assembles the output in three sections:
-   * content metadata header, HTML body text, and entity context footer.
+   * Extracts content using a three-strategy cascade, trying each in order and
+   * falling back to the next when the previous yields insufficient content:
    *
-   * Truncation to max_chars_per_request is applied after all sections are
-   * joined, with a "[Content truncated for assessment]" notice appended.
+   * 1. HTTP fetch with session-cookie forwarding (primary): Requests the page's
+   *    canonical URL using the current user's authenticated session. This
+   *    produces the exact HTML the browser renders, including all Layout Builder
+   *    blocks, theme templates, metatags, heading hierarchy, and image alt text.
+   *    Works for any Drupal content type without site-specific assumptions.
+   *
+   * 2. PHP entity rendering (secondary): Renders the node via Drupal's entity
+   *    view builder and Layout Builder section rendering pipeline. Reliable for
+   *    simple content types and post-type nodes. May produce empty body content
+   *    for complex Layout Builder nodes in CLI/Drush contexts because inline
+   *    block plugins skip unpublished block_content entities that fail access
+   *    checks without a live HTTP session.
+   *
+   * 3. Inline block text extraction (tertiary): Directly loads block_content
+   *    entity revisions referenced by the node's Layout Builder override field
+   *    and extracts their text fields without rendering. Produces plain text
+   *    without heading markers but ensures the LLM receives actual content
+   *    rather than only metadata when strategies 1 and 2 both fail.
    */
   public function extract(NodeInterface $node): string {
     $maxChars = $this->getMaxChars();
 
-    // Build surrounding context blocks from the trait.
+    // Build surrounding context blocks from the trait (always present).
     $metadata = $this->buildContentMetadataBlock($node);
     $entityContext = $this->buildEntityContextBlock($node);
 
-    // Render the node to HTML using an isolated render context to prevent
-    // "leaked render context" errors that occur when render calls are nested
-    // outside an active render context.
-    $viewBuilder = $this->entityTypeManager->getViewBuilder('node');
-    $renderArray = $viewBuilder->view($node, 'full');
-
-    $html = (string) $this->renderer->executeInRenderContext(
-      new RenderContext(),
-      function () use ($renderArray): string {
-        return (string) $this->renderer->render($renderArray);
-      }
-    );
-
-    if (empty(trim($html))) {
-      // Nothing rendered; assemble header and footer without body.
-      $parts = array_filter(
-        [$metadata, $entityContext],
-        fn(string $p): bool => $p !== ''
-      );
-      return implode("\n\n", $parts);
-    }
-
-    // Convert rendered HTML to structured plain text.
-    $bodyText = $this->convertHtmlToStructuredText($html);
+    $bodyText = $this->extractBodyText($node);
 
     $parts = array_filter(
       [$metadata, $bodyText, $entityContext],
@@ -160,12 +162,123 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     );
     $content = implode("\n\n", $parts);
 
-    // Truncate to the configured character limit if necessary.
     if (mb_strlen($content) > $maxChars) {
       $content = mb_substr($content, 0, $maxChars) . "\n[Content truncated for assessment]";
     }
 
     return $content;
+  }
+
+  /**
+   * Runs the three-strategy cascade and returns the best body text available.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to extract content from.
+   *
+   * @return string
+   *   Structured plain text body (may be empty if all strategies fail).
+   */
+  private function extractBodyText(NodeInterface $node): string {
+    // --- Strategy 1: HTTP fetch with session-cookie forwarding ---
+    $html = $this->fetchNodeHtmlViaHttp($node);
+    if (!empty(trim($html))) {
+      $bodyText = $this->convertHtmlToStructuredText($html);
+      if ($bodyText === '') {
+        $bodyText = $this->convertHtmlToPlainTextFallback($html);
+      }
+      if (mb_strlen($bodyText) >= 80) {
+        return $bodyText;
+      }
+    }
+
+    // --- Strategy 2: PHP entity rendering (LB sections + view builder) ---
+    $html = $this->renderNodeToHtml($node);
+    if (!empty(trim($html))) {
+      $bodyText = $this->convertHtmlToStructuredText($html);
+      if ($bodyText === '') {
+        $bodyText = $this->convertHtmlToPlainTextFallback($html);
+      }
+      if (mb_strlen($bodyText) >= 80) {
+        return $bodyText;
+      }
+    }
+
+    // --- Strategy 3: Direct inline block field text extraction ---
+    $inlineText = $this->layoutBuilderPreviewSource->extractTextFromInlineBlocks($node, 'full');
+    if ($inlineText !== '') {
+      return $inlineText;
+    }
+
+    return '';
+  }
+
+  /**
+   * Fetches the page HTML by making an authenticated HTTP request.
+   *
+   * Forwards the current session cookies so the request is handled as the
+   * authenticated editor, giving access to both published and draft content.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node whose page should be fetched.
+   *
+   * @return string
+   *   The raw HTML response body, or an empty string on failure.
+   */
+  private function fetchNodeHtmlViaHttp(NodeInterface $node): string {
+    try {
+      $url = $node->toUrl('canonical')->setAbsolute(TRUE)->toString();
+    }
+    catch (\Throwable) {
+      return '';
+    }
+
+    // Build a Cookie header from the current request's cookies so the HTTP
+    // client is treated as an authenticated user — required for draft nodes
+    // and any access-controlled content.
+    $cookieHeader = '';
+    $request = $this->requestStack->getCurrentRequest();
+    if ($request !== NULL) {
+      $pairs = [];
+      foreach ($request->cookies->all() as $name => $value) {
+        $pairs[] = rawurlencode((string) $name) . '=' . rawurlencode((string) $value);
+      }
+      $cookieHeader = implode('; ', $pairs);
+    }
+
+    return $this->htmlFetchService->fetchPageHtml($url, $cookieHeader) ?? '';
+  }
+
+  /**
+   * Renders the node to HTML via the PHP entity view + Layout Builder pipeline.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to render.
+   *
+   * @return string
+   *   The rendered HTML, or an empty string when rendering fails.
+   */
+  private function renderNodeToHtml(NodeInterface $node): string {
+    $viewBuilder = $this->entityTypeManager->getViewBuilder('node');
+    $layoutBuild = $this->layoutBuilderPreviewSource->buildSectionsRenderArray($node, 'full');
+    $renderArray = $layoutBuild !== []
+      ? [
+        '#type' => 'container',
+        '#attributes' => ['class' => ['ai-content-audit__layout-builder-extract']],
+        'sections' => $layoutBuild,
+      ]
+      : $viewBuilder->view($node, 'full');
+
+    try {
+      return (string) $this->renderer->executeInRenderContext(
+        new RenderContext(),
+        function () use ($renderArray): string {
+          return (string) $this->renderer->render($renderArray);
+        }
+      );
+    }
+    catch (\Throwable) {
+      return '';
+    }
   }
 
   /**
@@ -205,6 +318,13 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
 
     $xpath = new \DOMXPath($doc);
 
+    // Extract all <meta> tags from <head> before stripping the DOM.
+    // Meta elements have no text content — their values live in the "content"
+    // attribute — so textContent extraction below would miss them entirely.
+    // This captures name/property/http-equiv metas: description, robots,
+    // keywords, og:*, twitter:*, canonical hints, etc.
+    $metaLines = $this->extractMetaTags($xpath);
+
     // Strip navigation chrome, scripts, styles, and hidden elements first so
     // they do not contribute text to the output.
     $this->stripUnwantedElements($xpath);
@@ -226,23 +346,114 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     // Decode any remaining HTML entities present in text nodes.
     $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-    // Collapse runs of three or more consecutive newlines to at most two.
-    $text = (string) preg_replace('/\n{3,}/', "\n\n", $text);
-
     // Collapse inline runs of horizontal whitespace (spaces/tabs) while
     // preserving the structural newlines added by the converters above.
     $text = (string) preg_replace('/[^\S\n]+/', ' ', $text);
 
+    // Normalize lines that consist of only whitespace to empty lines.
+    // This handles the common case where layout wrappers and theme containers
+    // render as " \n \n \n" (spaces between newlines) rather than "\n\n\n",
+    // which would otherwise defeat the consecutive-newline collapse below.
+    $text = (string) preg_replace('/^ +$/m', '', $text);
+
+    // Collapse runs of three or more consecutive newlines to at most two.
+    $text = (string) preg_replace('/\n{3,}/', "\n\n", $text);
+
+    $text = trim($text);
+
+    // Prepend all extracted meta tags so the LLM can assess SEO completeness
+    // (description, robots, keywords, og:*, twitter:*, etc.).
+    if (!empty($metaLines)) {
+      $metaBlock = "--- Page Meta Tags ---\n" . implode("\n", $metaLines);
+      $text = $metaBlock . "\n\n" . $text;
+    }
+
+    return $text;
+  }
+
+  /**
+   * Converts rendered HTML to plain text as a conservative fallback.
+   *
+   * This is used only when structured conversion unexpectedly yields an empty
+   * string. It keeps the extractor resilient for themes/layouts that use
+   * wrappers not handled by the structured converter.
+   */
+  protected function convertHtmlToPlainTextFallback(string $html): string {
+    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = (string) preg_replace('/[^\S\n]+/', ' ', $text);
+    $text = (string) preg_replace('/^ +$/m', '', $text);
+    $text = (string) preg_replace('/\n{3,}/', "\n\n", $text);
     return trim($text);
+  }
+
+  /**
+   * Extracts all <meta> tag key/value pairs from the document head.
+   *
+   * Iterates every <meta> element and resolves its label from (in priority
+   * order): the "name" attribute, the "property" attribute (Open Graph /
+   * Twitter Card), or the "http-equiv" attribute. The value is always taken
+   * from the "content" attribute. Elements that have no content or no
+   * identifiable label are skipped.
+   *
+   * Returns lines formatted as "Meta {Label}: {value}" so the LLM can assess
+   * SEO completeness across description, robots, keywords, og:title, og:image,
+   * twitter:card, and any other custom meta tags present on the page.
+   *
+   * @param \DOMXPath $xpath
+   *   The XPath object bound to the document being processed.
+   *
+   * @return string[]
+   *   Array of formatted "Meta {label}: {value}" strings, one per tag found.
+   */
+  protected function extractMetaTags(\DOMXPath $xpath): array {
+    $lines = [];
+    $seen = [];
+
+    $nodes = iterator_to_array($xpath->query('//meta') ?: [], FALSE);
+    foreach ($nodes as $node) {
+      if (!$node instanceof \DOMElement) {
+        continue;
+      }
+
+      // Resolve the label: name > property > http-equiv.
+      $label = $node->getAttribute('name')
+        ?: $node->getAttribute('property')
+        ?: $node->getAttribute('http-equiv');
+      $label = trim($label);
+
+      $value = trim($node->getAttribute('content'));
+
+      if ($label === '' || $value === '') {
+        continue;
+      }
+
+      // Skip charset and viewport — purely technical, not editorial.
+      if (in_array(strtolower($label), ['viewport', 'charset', 'generator'], TRUE)) {
+        continue;
+      }
+
+      // Deduplicate by label (keep first occurrence).
+      if (isset($seen[$label])) {
+        continue;
+      }
+      $seen[$label] = TRUE;
+
+      $lines[] = 'Meta ' . $label . ': ' . $value;
+    }
+
+    return $lines;
   }
 
   /**
    * Strips navigation chrome and invisible elements from the DOM.
    *
-   * Removes <script>, <style>, <nav>, <header>, <footer>, and any element
-   * whose class attribute contains "visually-hidden" or "hidden" so that
-   * Drupal theme chrome and screen-reader-only text do not pollute the
-   * LLM-facing content.
+   * Removes <script>, <style>, <nav>, and any element whose class attribute
+   * contains "visually-hidden" or "hidden" so that theme chrome and
+   * screen-reader-only text do not pollute the LLM-facing content.
+   *
+   * Intentionally does NOT remove <header> or <footer>: entity and Layout
+   * Builder output often places real page content inside those elements; stripping
+   * them would leave empty extraction (only metadata) for many case studies.
    *
    * @param \DOMXPath $xpath
    *   The XPath object bound to the document being processed.
@@ -252,8 +463,6 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       '//script',
       '//style',
       '//nav',
-      '//header',
-      '//footer',
       '//*[contains(concat(" ",normalize-space(@class)," ")," visually-hidden ")]',
       '//*[contains(concat(" ",normalize-space(@class)," ")," hidden ")]',
     ];

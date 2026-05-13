@@ -100,6 +100,9 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
     /** @var \Drupal\node\NodeInterface|null $node */
     $node = $this->entityTypeManager->getStorage('node')->load($nid);
 
+    // Bulk queue uses the default revision by design (published nodes). For
+    // per-revision assessment (e.g. drafts), use loadRevision() when enqueueing.
+
     if (!$node instanceof NodeInterface) {
       // Node was deleted — discard permanently.
       $logger->warning('Queue item for nid @nid skipped: node not found.', [

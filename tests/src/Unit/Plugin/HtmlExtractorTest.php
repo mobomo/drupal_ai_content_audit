@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit\Unit\Plugin;
 
 use Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor;
+use Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -66,6 +67,9 @@ class HtmlExtractorTest extends TestCase {
     $requestStack = $this->createMock(RequestStack::class);
     $requestStack->method('getCurrentRequest')->willReturn($request);
 
+    $layoutBuilderPreview = $this->createMock(LayoutBuilderPreviewSource::class);
+    $layoutBuilderPreview->method('buildSectionsRenderArray')->willReturn([]);
+
     return new HtmlExtractor(
       [],
       'html_rendered',
@@ -74,6 +78,7 @@ class HtmlExtractorTest extends TestCase {
       $this->createMock(RendererInterface::class),
       $this->createMock(ConfigFactoryInterface::class),
       $requestStack,
+      $layoutBuilderPreview,
     );
   }
 
@@ -241,6 +246,7 @@ class HtmlExtractorTest extends TestCase {
       $this->createMock(RendererInterface::class),
       $this->createMock(ConfigFactoryInterface::class),
       $requestStack,
+      $this->createMock(LayoutBuilderPreviewSource::class),
     );
     $html = '<p><a href="https://example.com/page">A Link</a></p>';
 
@@ -347,11 +353,11 @@ class HtmlExtractorTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * Tests that nav, header, and footer elements are stripped.
+   * Tests that nav is stripped while header/footer content is retained for LB/article markup.
    *
    * @covers ::convertHtmlToStructuredText
    */
-  public function testConvertHtmlStripsNavAndFooter(): void {
+  public function testConvertHtmlStripsNavKeepsHeaderFooter(): void {
     // Arrange.
     $html = '<nav><a href="/">Home</a><a href="/about">About</a></nav>'
       . '<header><h1>Site Logo</h1></header>'
@@ -361,10 +367,10 @@ class HtmlExtractorTest extends TestCase {
     // Act.
     $result = $this->convert($html);
 
-    // Assert — nav/header/footer content must be absent; body content present.
+    // Assert — nav removed; main + header + footer text kept (Layout Builder often uses these).
     $this->assertStringContainsString('Body content here.', $result);
-    $this->assertStringNotContainsString('Site Logo', $result);
-    $this->assertStringNotContainsString('Copyright 2024', $result);
+    $this->assertStringContainsString('Site Logo', $result);
+    $this->assertStringContainsString('Copyright 2024', $result);
     // Navigation links are inside <nav> and should therefore be stripped.
     $this->assertStringNotContainsString('[Link: Home', $result);
   }

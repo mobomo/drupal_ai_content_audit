@@ -55,6 +55,13 @@ services:
       - '@module_handler'
       - '@config.factory'
 
+  ai_content_audit.layout_builder_preview_source:
+    class: Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource
+    arguments:
+      - '@plugin.manager.layout_builder.section_storage'
+      - '@context.repository'
+      - '@entity_type.manager'
+
   ai_content_audit.html_fetch:
     class: Drupal\ai_content_audit\Service\HtmlFetchService
     arguments:
@@ -72,3 +79,52 @@ services:
       - '@logger.factory'
     tags:
       - { name: event_subscriber }
+
+  ai_content_audit.score_meta:
+    class: Drupal\ai_content_audit\Service\ScoreMetaBuilder
+    arguments: ['@string_translation']
+
+  ai_content_audit.airo_panel_controller:
+    class: Drupal\ai_content_audit\Controller\AiroPanelController
+    factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
+    arguments: ['@service_container']
+
+  ai_content_audit.node_edit_form_alterer:
+    class: Drupal\ai_content_audit\Service\NodeEditFormAlterer
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_content_audit.assessment_repository'
+      - '@ai_content_audit.airo_panel_controller'
+      - '@string_translation'
+
+  ai_content_audit.lifecycle:
+    class: Drupal\ai_content_audit\Service\AiContentAuditLifecycle
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@queue'
+      - '@database'
+      - '@logger.channel.ai_content_audit'
+
+  # OOP hook classes: explicit services so the container injects constructors (see
+  # Drupal\Core\Hook\HookCollectorPass::writeImplementationsToContainer).
+  Drupal\ai_content_audit\Hook\AiContentAuditNodeFormHooks:
+    arguments: ['@ai_content_audit.node_edit_form_alterer']
+
+  Drupal\ai_content_audit\Hook\AiContentAuditThemeHooks:
+    arguments:
+      - '@ai_content_audit.score_meta'
+      - '@date.formatter'
+      - '@url_generator'
+
+  Drupal\ai_content_audit\Hook\AiContentAuditEntityHooks:
+    arguments: ['@ai_content_audit.lifecycle']
+
+  Drupal\ai_content_audit\Hook\AiContentAuditCronHooks:
+    arguments: ['@ai_content_audit.lifecycle']
+
+  Drupal\ai_content_audit\Hook\AiContentAuditPageHooks:
+    arguments: ['@config.factory']
+
+  Drupal\ai_content_audit\Hook\AiContentAuditAiHooks:
+    class: Drupal\ai_content_audit\Hook\AiContentAuditAiHooks

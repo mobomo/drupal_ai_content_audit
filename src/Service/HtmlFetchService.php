@@ -54,27 +54,41 @@ class HtmlFetchService {
    *
    * @param string $url
    *   The absolute URL to fetch.
+   * @param string $cookieHeader
+   *   Optional raw Cookie header string (e.g. "SESS...=abc; other=val") used
+   *   to forward an authenticated session so that access-controlled or draft
+   *   pages are returned in full rather than as a login redirect or 403.
    *
    * @return string|null
    *   The HTML body string, or NULL if the request failed or returned an error.
    */
-  public function fetchPageHtml(string $url): ?string {
-    if (array_key_exists($url, $this->htmlCache)) {
-      return $this->htmlCache[$url];
+  public function fetchPageHtml(string $url, string $cookieHeader = ''): ?string {
+    $cacheKey = $url . ($cookieHeader ? '|auth' : '');
+    if (array_key_exists($cacheKey, $this->htmlCache)) {
+      return $this->htmlCache[$cacheKey];
+    }
+
+    $headers = ['User-Agent' => 'DrupalAiContentAudit/1.0'];
+    if ($cookieHeader !== '') {
+      $headers['Cookie'] = $cookieHeader;
     }
 
     try {
       $response = $this->httpClient->request('GET', $url, [
         'timeout' => 10,
-        'headers' => ['User-Agent' => 'DrupalAiContentAudit/1.0'],
+        'headers' => $headers,
         'http_errors' => FALSE,
+        'allow_redirects' => ['max' => 5],
       ]);
-      $html = (string) $response->getBody();
-      $this->htmlCache[$url] = $html;
+      $status = $response->getStatusCode();
+      // Only accept 2xx responses; 3xx redirects are followed automatically,
+      // 4xx/5xx mean the page is inaccessible.
+      $html = $status >= 200 && $status < 300 ? (string) $response->getBody() : NULL;
+      $this->htmlCache[$cacheKey] = $html;
       return $html;
     }
     catch (\Exception $e) {
-      $this->htmlCache[$url] = NULL;
+      $this->htmlCache[$cacheKey] = NULL;
       return NULL;
     }
   }
