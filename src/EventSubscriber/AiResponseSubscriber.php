@@ -10,10 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Subscribes to Drupal AI module events for the AI Content Audit module.
- *
- * Listens to the post-generation event to log assessment calls
- * and the provider-disabled event to handle graceful degradation.
+ * Subscribes to Drupal AI module events used by this module.
  */
 class AiResponseSubscriber implements EventSubscriberInterface {
 

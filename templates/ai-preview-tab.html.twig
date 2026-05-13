@@ -10,12 +10,14 @@
  * - has_permission: TRUE if the user may choose providers; FALSE = site default only.
  * - suggested_prompts: Array of suggested question strings.
  * - node_id: The node ID.
+ * - revision_id: The node revision ID (for client POSTs to preview_query).
  * - query_url: POST endpoint URL for submitting preview queries.
  */
 #}
 {{ attach_library('ai_content_audit/provider_tabs') }}
 <div class="airo-preview"
   data-node-id="{{ node_id }}"
+  data-revision-id="{{ revision_id }}"
   data-query-url="{{ query_url }}">
 
   {# ── Question input ─────────────────────────────────────────────────── #}

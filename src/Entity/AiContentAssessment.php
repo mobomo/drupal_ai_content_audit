@@ -15,11 +15,10 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * Defines the AI Content Assessment entity type.
+ * Defines the AiContentAssessment content entity.
  *
- * Stores the result of an AI assessment of a Drupal node, including the
- * AI readiness score, parsed JSON result, raw LLM output, and metadata
- * about the provider and model used.
+ * Stores node assessment results: score, structured payload, raw response text,
+ * and provider metadata.
  */
 #[ContentEntityType(
   id: 'ai_content_assessment',

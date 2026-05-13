@@ -8,21 +8,7 @@ use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\node\NodeInterface;
 
 /**
- * Defines the interface for content extractor plugins used in AI assessment.
- *
- * A content extractor is responsible for producing a string representation
- * of a node's content suitable for submission to an AI language or vision model.
- *
- * Implementations are annotation-based plugins discovered automatically from
- * any module's Plugin/ContentExtractor/ subdirectory. They are annotated with
- * @ContentExtractor and managed by ContentExtractorManager.
- *
- * To add a new extractor:
- * 1. Optionally add a case to \Drupal\ai_content_audit\Enum\RenderMode.
- * 2. Create a class in Plugin/ContentExtractor/ implementing this interface.
- * 3. Annotate it with @ContentExtractor (id, label, description, render_mode).
- * No changes to AiAssessmentService, ContentExtractorManager, or services.yml
- * are required — the plugin system handles discovery automatically.
+ * Interface for plugins that build a text (or image) payload from a node.
  *
  * @see \Drupal\ai_content_audit\Annotation\ContentExtractor
  * @see \Drupal\ai_content_audit\Enum\RenderMode
@@ -42,20 +28,19 @@ interface ContentExtractorInterface {
   public function supports(string $mode): bool;
 
   /**
-   * Extracts content from the given node for AI assessment.
+   * Extracts assessable content from the node.
    *
-   * For text and HTML modes, returns a UTF-8 string of the content.
-   * For screenshot mode, returns a base64-encoded PNG data URI or an
-   * absolute file path to the screenshot image.
+   * Text and HTML modes return UTF-8 strings. Screenshot mode may return a
+   * data URI or filesystem path, depending on implementation.
    *
    * @param \Drupal\node\NodeInterface $node
-   *   The node to extract content from.
+   *   The node.
    *
    * @return string
-   *   The extracted content as a string. Must not be empty.
+   *   The extracted payload.
    *
    * @throws \RuntimeException
-   *   If content extraction fails.
+   *   When extraction fails.
    */
   public function extract(NodeInterface $node): string;
 

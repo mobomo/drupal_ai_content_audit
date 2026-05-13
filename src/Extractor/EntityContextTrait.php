@@ -7,51 +7,18 @@ namespace Drupal\ai_content_audit\Extractor;
 use Drupal\node\NodeInterface;
 
 /**
- * Provides entity relationship and metadata context extraction for content extractors.
- *
- * Classes using this trait gain two protected helper methods:
- *
- * - buildContentMetadataBlock(): returns the "--- Content Metadata ---" header
- *   block containing title, content type, dates, and canonical URL — intended
- *   to be prepended to any extracted content string before it is sent to the LLM.
- *
- * - buildEntityContextBlock(): returns the "--- Entity Context ---" footer block
- *   containing author display name, taxonomy term values per reference field, and
- *   counts of other entity reference fields — intended to be appended to extracted
- *   content after the main body text.
- *
- * Both methods are safe to call even when entity references are empty; they always
- * return a non-empty string with at least the section header line.
- *
- * Usage:
- * @code
- *   use EntityContextTrait;
- *
- *   public function extract(NodeInterface $node): string {
- *     $metadata = $this->buildContentMetadataBlock($node);
- *     $content  = $this->extractBody($node);
- *     $context  = $this->buildEntityContextBlock($node);
- *     return $metadata . "\n\n" . $content . "\n\n" . $context;
- *   }
- * @endcode
- *
- * @see \Drupal\ai_content_audit\Plugin\ContentExtractor\FieldExtractor
+ * Helpers to prepend metadata and append lightweight entity context to extracts.
  */
 trait EntityContextTrait {
 
   /**
-   * Builds the Content Metadata header block for prepending to extracted content.
-   *
-   * The block contains the node title, human-readable content type label, creation
-   * date, last-modified date (both formatted as Y-m-d), and the canonical URL path.
-   * This information allows the LLM to assess content freshness and URL structure
-   * without requiring any additional API calls.
+   * Builds the "--- Content Metadata ---" block (title, type, dates, URL).
    *
    * @param \Drupal\node\NodeInterface $node
-   *   The node whose metadata should be included.
+   *   The node.
    *
    * @return string
-   *   A multi-line string beginning with "--- Content Metadata ---".
+   *   The metadata block.
    */
   protected function buildContentMetadataBlock(NodeInterface $node): string {
     // Resolve the canonical URL; fall back to /node/{nid} on any routing error.
@@ -77,24 +44,13 @@ trait EntityContextTrait {
   }
 
   /**
-   * Builds the Entity Context footer block for appending to extracted content.
-   *
-   * The block contains:
-   * - The display name of the node owner (author), or "Anonymous" when the owner
-   *   cannot be resolved.
-   * - For each entity_reference or entity_reference_revisions field whose target
-   *   type is taxonomy_term: the field label followed by a comma-separated list of
-   *   term names.
-   * - For each entity_reference field whose target type is neither taxonomy_term
-   *   nor user: the field label prefixed with "Related " followed by an item count.
-   *
-   * Fields that are empty or reference users are skipped to keep the block concise.
+   * Builds the "--- Entity Context ---" block (author, taxonomy, reference counts).
    *
    * @param \Drupal\node\NodeInterface $node
-   *   The node whose entity relationships and authorship should be included.
+   *   The node.
    *
    * @return string
-   *   A multi-line string beginning with "--- Entity Context ---".
+   *   The context block.
    */
   protected function buildEntityContextBlock(NodeInterface $node): string {
     $lines = ['--- Entity Context ---'];

@@ -17,7 +17,7 @@ final class TechnicalAuditResult {
    * @param string $label
    *   Human-readable label for this check.
    * @param string $status
-   *   One of: 'pass', 'fail', 'warning'.
+   *   One of: 'pass', 'fail', 'warning', 'info'.
    * @param string|null $currentContent
    *   The current content found (e.g., robots.txt contents).
    * @param string|null $recommendedContent
