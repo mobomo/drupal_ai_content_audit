@@ -15,7 +15,7 @@
  * - assess_url: URL for re-check endpoint.
  */
 #}
-<div class="airo-actions" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+<div class="airo-actions" data-node-id="{{ node_id }}">
 
   {# Summary Header #}
   <div class="airo-actions__summary">
@@ -29,8 +29,7 @@
       {% endif %}
     </div>
     <button type="button" class="airo-actions__recheck button button--small"
-      data-assess-url="{{ assess_url }}"
-      data-revision-id="{{ revision_id }}">
+      data-assess-url="{{ assess_url }}">
       {{ 'Re-check'|t }}
     </button>
   </div>

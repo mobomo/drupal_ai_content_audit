@@ -2,5 +2,804 @@
 
 /**
  * @file
- * Procedural hooks for this module live in Drupal\ai_content_audit\Hook\* (Drupal 11).
+ * AI Content Audit module hooks.
  */
+
+use Drupal\ai_content_audit\Entity\AiContentAssessment;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\MessageCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\NodeInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function ai_content_audit_theme(): array {
+  return [
+    'ai_assessment_panel' => [
+      'variables' => [
+        'score'        => NULL,
+        'suggestions'  => [],
+        'provider_id'  => NULL,
+        'model_id'     => NULL,
+        'created'      => NULL,
+      ],
+    ],
+    'ai_inline_score_widget' => [
+      'variables' => [
+        'score'              => NULL,
+        'is_analyzing'       => FALSE,
+        'has_assessment'     => FALSE,
+        'high_priority_count' => 0,
+        'node_id'            => NULL,
+      ],
+      'template' => 'ai-inline-score-widget',
+    ],
+    'ai_airo_panel' => [
+      'variables' => [
+        'node_id'     => NULL,
+        'score'       => NULL,
+        'node_title'  => NULL,
+        'is_analyzing' => FALSE,
+        'active_tab'  => 'preview-tab',
+        // Keyed by tab ID, values are pre-rendered HTML strings for each pane.
+        // All panes are embedded in the initial dialog; tab switching is pure
+        // CSS show/hide — no per-tab AJAX requests.
+        'tab_panes'   => [],
+      ],
+      'template' => 'ai-airo-panel',
+    ],
+    // Accordion-item variant rendered inline on the node edit form sidebar.
+    // tab_panes values are Drupal render arrays (not HTML strings); Twig
+    // auto-renders them when output with {{ pane }}.
+    'ai_airo_accordion_item' => [
+      'variables' => [
+        'node_id'         => NULL,
+        'score'           => NULL,
+        'node_title'      => NULL,
+        'is_analyzing'    => FALSE,
+        'active_tab'      => 'preview-tab',
+        'tab_panes'       => [],
+        'assess_url'      => NULL,
+        'full_report_url' => NULL,
+      ],
+      'template' => 'ai-airo-accordion-item',
+    ],
+    'ai_score_tab' => [
+      'variables' => [
+        'score'                  => NULL,
+        'qualitative_label'      => NULL,
+        'score_color'            => NULL,
+        'score_color_hex'        => NULL,
+        'trend_delta'            => NULL,
+        'donut_radius'           => 50,
+        'donut_circumference'    => 0,
+        'donut_offset'           => 0,
+        'sub_scores'             => [],
+        'checkpoints_by_category' => [],
+        'history'                => [],
+        'node_id'                => NULL,
+        'assess_url'             => NULL,
+        'readability_grade'      => NULL,
+        'tone'                   => NULL,
+        'days_since_modified'    => NULL,
+        'is_stale'               => FALSE,
+        'h2_section_count'       => NULL,
+      ],
+      'template' => 'ai-score-tab',
+    ],
+    'ai_action_items_tab' => [
+      'variables' => [
+        'high_items'          => [],
+        'medium_items'        => [],
+        'low_items'           => [],
+        'action_items_status' => [],
+        'total_count'         => 0,
+        'completed_count'     => 0,
+        'high_count'          => 0,
+        'node_id'             => NULL,
+        'assess_url'          => NULL,
+      ],
+      'template' => 'ai-action-items-tab',
+    ],
+    'ai_action_item_card' => [
+      'variables' => [
+        'item' => [],
+        'status' => NULL,
+        'node_id' => NULL,
+      ],
+      'template' => 'ai-action-item-card',
+    ],
+    'ai_technical_audit_tab' => [
+      'variables' => [
+        'checks'          => [],
+        'checks_grouped'  => [],
+        'pass_count'      => 0,
+        'total_count'     => 0,
+        'node_id'         => NULL,
+        'filesystem_section' => NULL,
+        'site_audit_url'  => NULL,
+      ],
+      'template' => 'ai-technical-audit-tab',
+    ],
+    'ai_filesystem_audit_section' => [
+      'variables' => [
+        'filesystem_categories' => [],
+        'filesystem_summary' => [],
+        'can_refresh' => FALSE,
+        'node_id' => NULL,
+      ],
+      'template' => 'ai-filesystem-audit-section',
+    ],
+    'ai_preview_tab' => [
+      'variables' => [
+        // New multi-provider design.
+        'model_choices'    => [],
+        'selected_keys'    => [],
+        'has_permission'   => FALSE,
+        'suggested_prompts' => [],
+        'node_id'          => NULL,
+        'query_url'        => NULL,
+        // Kept for backwards-compat in case anything passes the old keys.
+        'providers'        => [],
+        'active_provider'  => NULL,
+      ],
+      'template' => 'ai-preview-tab',
+    ],
+    'ai_assessment_report' => [
+      'variables' => [
+        'assessment_id'          => NULL,
+        'node'                   => NULL,
+        'node_edit_url'          => NULL,
+        'score'                  => NULL,
+        'qualitative_status'     => NULL,
+        'trend_delta'            => NULL,
+        'created'                => NULL,
+        'provider_id'            => NULL,
+        'model_id'               => NULL,
+        'run_by'                 => NULL,
+        'sub_scores'             => [],
+        'checkpoints'            => [],
+        'checkpoints_by_category' => [],
+        'high_items'             => [],
+        'medium_items'           => [],
+        'low_items'              => [],
+        'action_items_status'    => [],
+        'completed_count'        => 0,
+        'total_action_items'     => 0,
+        'history'                => [],
+        'technical_checks'       => [],
+        'technical_checks_grouped' => [],
+        'technical_pass_count'   => 0,
+        'technical_total_count'  => 0,
+        'filesystem_categories'  => [],
+        'filesystem_summary'     => [],
+        'readability'            => [],
+        'seo'                    => [],
+        'content_completeness'   => [],
+        'tone_consistency'       => [],
+        'heading_hierarchy'      => [],
+        'image_accessibility'    => [],
+        'link_analysis'          => [],
+        'content_freshness'      => [],
+        'entity_richness'        => [],
+        'content_patterns'       => [],
+        'rag_chunk_quality'      => [],
+        'raw_output'             => NULL,
+        'result_json_formatted'  => NULL,
+      ],
+      'template' => 'ai-assessment-report',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for node_form.
+ *
+ * Adds the AI Assessment sidebar panel to existing node edit forms.
+ */
+function ai_content_audit_form_node_form_alter(
+  array &$form,
+  FormStateInterface $form_state,
+  string $form_id,
+): void {
+  /** @var \Drupal\node\NodeInterface $node */
+  $node = $form_state->getFormObject()->getEntity();
+
+  if (!$node instanceof NodeInterface || $node->isNew()) {
+    return;
+  }
+
+  $node_id    = (int) $node->id();
+  $assessment = \Drupal::service('ai_content_audit.assessment_repository')->getLatestForNode($node_id);
+  $score      = $assessment?->getScore();
+  $has_assessment = $assessment !== NULL;
+
+  // Count high-priority action items from the Phase 1 action_items field.
+  $high_priority_count = 0;
+  if ($assessment && !$assessment->get('action_items')->isEmpty()) {
+    $raw = $assessment->get('action_items')->value;
+    if ($raw) {
+      $items = json_decode($raw, TRUE) ?? [];
+      foreach ($items as $item) {
+        if (($item['priority'] ?? '') === 'high') {
+          $high_priority_count++;
+        }
+      }
+    }
+  }
+
+  // Inline score widget — shown above the accordion item as a quick summary.
+  // The "View Full Analysis" popup trigger has been removed from the widget
+  // template; the full analysis now lives in the accordion item below.
+  $form['ai_inline_score_widget'] = [
+    '#type'       => 'container',
+    '#weight'     => 10,
+    '#attributes' => ['id' => 'ai-inline-score-widget-wrapper'],
+    'widget'      => [
+      '#theme'               => 'ai_inline_score_widget',
+      '#score'               => $score,
+      '#is_analyzing'        => FALSE,
+      '#has_assessment'      => $has_assessment,
+      '#high_priority_count' => $high_priority_count,
+      '#node_id'             => $node_id,
+    ],
+    '#attached' => [
+      'library' => [
+        // Note: core/drupal.dialog.ajax removed — the popup trigger button
+        // that required it has been replaced by the inline accordion item.
+        'ai_content_audit/inline-widget',
+      ],
+    ],
+  ];
+
+  // ── AIRO Analysis accordion item ─────────────────────────────────────────
+  // Build all four tab panes server-side so the accordion item is fully
+  // functional on first page load without any AJAX round trips.
+  /** @var \Drupal\ai_content_audit\Controller\AiroPanelController $controller */
+  $controller = \Drupal\ai_content_audit\Controller\AiroPanelController::create(
+    \Drupal::getContainer()
+  );
+
+  // Load the assessment entity directly — controller methods expect the
+  // entity object, not the repository wrapper.
+  $assessment_storage = \Drupal::entityTypeManager()->getStorage('ai_content_assessment');
+  $assessment_ids = $assessment_storage->getQuery()
+    ->accessCheck(TRUE)
+    ->condition('target_node', $node_id)
+    ->sort('created', 'DESC')
+    ->range(0, 1)
+    ->execute();
+  $assessment_entity = !empty($assessment_ids)
+    ? $assessment_storage->load(reset($assessment_ids))
+    : NULL;
+
+  $assess_url = \Drupal\Core\Url::fromRoute(
+    'ai_content_audit.panel.assess',
+    ['node' => $node_id]
+  )->toString();
+
+  $full_report_url = $assessment_entity
+    ? \Drupal\Core\Url::fromRoute(
+        'ai_content_audit.assessment.report',
+        ['ai_content_assessment' => $assessment_entity->id()]
+      )->toString()
+    : NULL;
+
+  $form['airo_analysis'] = [
+    '#type'           => 'details',
+    '#title'          => t('AIRO Analysis'),
+    '#group'          => 'advanced',
+    // Claro/GIN: sets accordion_item Twig variable → adds claro-details--accordion-item
+    // and accordion__item CSS classes to the rendered <details> element.
+    '#accordion_item' => TRUE,
+    // Add accordion__item class explicitly so GIN's edit_form.css selectors
+    // (.entity-meta > .accordion__item > .claro-details__summary etc.) match
+    // regardless of which Claro/GIN version handles the preprocess.
+    '#attributes'     => ['class' => ['accordion__item']],
+    // Place just before the inline widget (weight 10) so it appears immediately
+    // below the score widget in the sidebar.
+    '#weight'         => 11,
+    'panel'           => [
+      '#theme'           => 'ai_airo_accordion_item',
+      '#node_id'         => $node_id,
+      '#score'           => $score,
+      '#node_title'      => $node->getTitle(),
+      '#is_analyzing'    => FALSE,
+      '#active_tab'      => 'preview-tab',
+      // Render arrays — Twig will render each one inline via {{ pane }}.
+      '#tab_panes'       => [
+        'preview-tab'         => $controller->buildPreviewTab($node),
+        'score-tab'           => $controller->buildScoreTab($node, $assessment_entity),
+        'action-items-tab'    => $controller->buildActionItemsTab($node),
+        'technical-audit-tab' => $controller->buildTechnicalAuditTab($node),
+      ],
+      '#assess_url'      => $assess_url,
+      '#full_report_url' => $full_report_url,
+      '#attached'        => ['library' => ['ai_content_audit/airo-panel']],
+    ],
+    '#attached' => ['library' => ['ai_content_audit/airo-panel']],
+  ];
+
+  // Keep form_state nid for legacy submit handlers.
+  $form_state->set('ai_assessment_nid', $node_id);
+}
+
+/**
+ * Submit handler: runs the assessment and saves the result entity.
+ *
+ * Fires before the #ajax callback.
+ */
+function ai_content_audit_assess_now_submit(
+  array &$form,
+  FormStateInterface $form_state,
+): void {
+  if (!\Drupal::currentUser()->hasPermission('run ai content assessment')) {
+    throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+  }
+
+  // M-10: Server-side rate limiting via Drupal's flood service.
+  // Limit each user to 3 assessment requests per node per 60 seconds.
+  $flood            = \Drupal::flood();
+  $flood_nid        = (int) $form_state->get('ai_assessment_nid');
+  $flood_event      = 'ai_content_audit.assess_now';
+  $flood_threshold  = 3;
+  $flood_window     = 60;
+  $flood_identifier = \Drupal::currentUser()->id() . ':' . $flood_nid;
+
+  if (!$flood->isAllowed($flood_event, $flood_threshold, $flood_window, $flood_identifier)) {
+    $response = new AjaxResponse();
+    $response->addCommand(new MessageCommand(
+      (string) t('You are submitting too many assessment requests. Please wait a moment before trying again.'),
+      NULL,
+      ['type' => 'warning'],
+    ));
+    $form_state->setResponse($response);
+    return;
+  }
+  $flood->register($flood_event, $flood_window, $flood_identifier);
+
+  // Read from server-side form_state storage (set in the form alter) rather
+  // than from a POST-submitted hidden field.  The #group => 'advanced' on the
+  // parent details element causes Drupal to re-parent the element during
+  // rendering, which breaks the #tree value path and makes getValue() return
+  // NULL (cast to 0).
+  $nid = (int) $form_state->get('ai_assessment_nid');
+
+  $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
+  if (!$node instanceof NodeInterface) {
+    \Drupal::logger('ai_content_audit')->error('assess_now_submit: node @nid not found.', ['@nid' => $nid]);
+    $form_state->set('ai_assessment_error', t('Node not found (nid=@nid).', ['@nid' => $nid]));
+    return;
+  }
+  try {
+    /** @var \Drupal\ai_content_audit\Service\AiAssessmentService $service */
+    $service = \Drupal::service('ai_content_audit.assessment_service');
+    $result  = $service->assessNode($node);
+    if (!$result['success']) {
+      $form_state->set('ai_assessment_error', $result['error']);
+    }
+  }
+  catch (\Throwable $e) {
+    \Drupal::logger('ai_content_audit')->error('assess_now_submit exception: @msg', ['@msg' => $e->getMessage()]);
+    $form_state->set('ai_assessment_error', t('An error occurred while requesting the assessment. Please try again later.'));
+  }
+}
+
+/**
+ * AJAX callback: returns the rebuilt sidebar after assessment.
+ */
+function ai_content_audit_assess_now_ajax(
+  array &$form,
+  FormStateInterface $form_state,
+): AjaxResponse {
+  $response = new AjaxResponse();
+
+  if ($error = $form_state->get('ai_assessment_error')) {
+    $response->addCommand(new MessageCommand(
+      (string) t('Assessment failed: @error', ['@error' => $error]),
+      NULL,
+      ['type' => 'error'],
+    ));
+    return $response;
+  }
+
+  $response->addCommand(new ReplaceCommand(
+    '#ai-assessment-sidebar-wrapper',
+    $form['ai_assessment_sidebar'],
+  ));
+  $response->addCommand(new MessageCommand(
+    (string) t('Assessment complete.'),
+    NULL,
+    ['type' => 'status'],
+  ));
+
+  return $response;
+}
+
+/**
+ * Returns score color, hex, and label for a given score integer.
+ *
+ * Centralises the three-tier threshold logic (danger / warning / good) so it
+ * is not copy-pasted across every preprocess hook that needs these values.
+ *
+ * @param int $score
+ *   An integer score in the range 0–100.
+ *
+ * @return array
+ *   Associative array with keys:
+ *   - 'color'     : CSS modifier class string ('danger', 'warning', 'good')
+ *   - 'color_hex' : Hex color string ('#ef4444', '#f59e0b', '#10b981')
+ *   - 'label'     : Translated qualitative label string
+ */
+function _ai_content_audit_score_meta(int $score): array {
+  return match (TRUE) {
+    $score < 50 => [
+      'color'     => 'danger',
+      'color_hex' => '#ef4444',
+      'label'     => t('Needs Work'),
+    ],
+    $score < 75 => [
+      'color'     => 'warning',
+      'color_hex' => '#f59e0b',
+      'label'     => t('Improving'),
+    ],
+    default => [
+      'color'     => 'good',
+      'color_hex' => '#10b981',
+      'label'     => t('AI Ready'),
+    ],
+  };
+}
+
+/**
+ * Preprocesses variables for the ai_inline_score_widget template.
+ *
+ * Calculates SVG donut values and derives color/label from the score.
+ */
+function template_preprocess_ai_inline_score_widget(array &$variables): void {
+  $score = (int) ($variables['score'] ?? 0);
+  $meta  = _ai_content_audit_score_meta($score);
+
+  $variables['score_color'] = $meta['color'];
+  $variables['status_label'] = $meta['label'];
+
+  // SVG donut calculations (small widget uses radius 28).
+  $radius        = 28;
+  $circumference = 2 * M_PI * $radius;
+  $variables['donut_radius']        = $radius;
+  $variables['donut_circumference'] = round($circumference, 4);
+  $variables['donut_offset']        = round($circumference - ($score / 100) * $circumference, 4);
+
+  // Generate URLs for AJAX actions.
+  // Note: view_analysis_link (the off-canvas popup trigger) has been removed.
+  // The full AIRO analysis is now rendered inline as an accordion item in the
+  // node edit form sidebar; no popup link is needed.
+  $node_id = $variables['node_id'];
+  if ($node_id) {
+    $variables['assess_url'] = \Drupal\Core\Url::fromRoute(
+      'ai_content_audit.panel.assess',
+      ['node' => $node_id]
+    )->toString();
+  }
+  else {
+    $variables['assess_url'] = '';
+  }
+  // Set view_analysis_link to empty so templates that still reference the
+  // variable render nothing rather than a PHP notice.
+  $variables['view_analysis_link'] = '';
+}
+
+/**
+ * Prepares variables for the AI Score tab template.
+ */
+function template_preprocess_ai_score_tab(array &$variables): void {
+  $score = (int) ($variables['score'] ?? 0);
+  $meta  = _ai_content_audit_score_meta($score);
+
+  $variables['score_color']       = $meta['color'];
+  $variables['score_color_hex']   = $meta['color_hex'];
+  $variables['qualitative_label'] = $meta['label'];
+
+  // Large donut calculations (radius = 50, viewBox = 128, cx/cy = 64).
+  $radius = 50;
+  $circumference = 2 * M_PI * $radius;
+  $variables['donut_radius']        = $radius;
+  $variables['donut_circumference'] = round($circumference, 4);
+  $variables['donut_offset']        = round($circumference - ($score / 100) * $circumference, 4);
+
+  // Ensure sub-scores have percentages.
+  foreach ($variables['sub_scores'] as &$sub) {
+    if (!isset($sub['percentage'])) {
+      $sub['percentage'] = $sub['max_score'] > 0
+        ? round(($sub['score'] / $sub['max_score']) * 100)
+        : 0;
+    }
+  }
+  unset($sub);
+
+  // Ensure history entries have bar heights (score 0–100 maps directly to %).
+  foreach ($variables['history'] as &$entry) {
+    if (!isset($entry['bar_height'])) {
+      $entry['bar_height'] = (int) $entry['score'];
+    }
+  }
+  unset($entry);
+}
+
+/**
+ * Prepares variables for the ai_assessment_report template.
+ *
+ * Derives score colour, donut SVG geometry, a formatted assessment date, and
+ * a human-readable qualitative label from the raw score integer.
+ */
+function template_preprocess_ai_assessment_report(array &$variables): void {
+  $score = (int) ($variables['score'] ?? 0);
+  $meta  = _ai_content_audit_score_meta($score);
+
+  // Score colour class modifier and hex used for the SVG stroke.
+  $variables['score_color']     = $meta['color'];
+  $variables['score_color_hex'] = $meta['color_hex'];
+
+  // Qualitative label — prefer the LLM-supplied value; fall back to derived.
+  $variables['qualitative_label'] = $variables['qualitative_status'] ?? $meta['label'];
+
+  // SVG donut geometry (large variant, radius 50, viewBox 128×128, cx/cy 64).
+  $radius = 50;
+  $circumference = 2 * M_PI * $radius;
+  $variables['donut_radius']        = $radius;
+  $variables['donut_circumference'] = round($circumference, 4);
+  $variables['donut_offset']        = round($circumference - ($score / 100) * $circumference, 4);
+
+  // Human-readable assessment date from the stored Unix timestamp.
+  $created = (int) ($variables['created'] ?? 0);
+  if ($created > 0) {
+    /** @var \Drupal\Core\Datetime\DateFormatterInterface $formatter */
+    $formatter = \Drupal::service('date.formatter');
+    $variables['assessment_date'] = $formatter->format($created, 'long');
+  }
+  else {
+    $variables['assessment_date'] = '';
+  }
+
+  // Ensure sub-scores have percentages if not already computed by the
+  // controller (e.g. when rendered via a different path).
+  foreach ($variables['sub_scores'] as &$sub) {
+    if (!isset($sub['percentage'])) {
+      $sub['percentage'] = $sub['max_score'] > 0
+        ? round(($sub['score'] / $sub['max_score']) * 100)
+        : 0;
+    }
+  }
+  unset($sub);
+}
+
+/**
+ * Implements hook_entity_insert().
+ *
+ * Invalidates per-node assessment list cache tags when a new assessment is saved.
+ */
+function ai_content_audit_entity_insert(EntityInterface $entity): void {
+  if ($entity instanceof AiContentAssessment) {
+    $nid = (int) $entity->get('target_node')->target_id;
+    if ($nid) {
+      Cache::invalidateTags(['ai_content_assessment_list:node:' . $nid]);
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Invalidates per-node assessment list cache tags when an assessment is updated.
+ */
+function ai_content_audit_entity_update(EntityInterface $entity): void {
+  if ($entity instanceof AiContentAssessment) {
+    $nid = (int) $entity->get('target_node')->target_id;
+    if ($nid) {
+      Cache::invalidateTags(['ai_content_assessment_list:node:' . $nid]);
+    }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ *
+ * Enqueues an AI assessment when a node is created, if on-save is enabled.
+ */
+function ai_content_audit_node_insert(\Drupal\node\NodeInterface $node): void {
+  _ai_content_audit_maybe_enqueue($node);
+}
+
+/**
+ * Implements hook_node_update().
+ *
+ * Enqueues an AI assessment when a node is updated, if on-save is enabled.
+ */
+function ai_content_audit_node_update(\Drupal\node\NodeInterface $node): void {
+  _ai_content_audit_maybe_enqueue($node);
+}
+
+/**
+ * Helper: enqueues a node for AI assessment if on-save triggering is enabled.
+ *
+ * Deduplication is handled inside AiAssessmentQueueWorker::processItem() via
+ * an idempotent check against recent AiContentAssessment entities, so items
+ * are always enqueued here without a pre-queue LIKE query on the queue table.
+ */
+function _ai_content_audit_maybe_enqueue(\Drupal\node\NodeInterface $node): void {
+  $config = \Drupal::config('ai_content_audit.settings');
+  if (!$config->get('enable_on_save')) {
+    return;
+  }
+
+  $allowed_types = $config->get('node_types') ?? [];
+  if (!empty($allowed_types) && !in_array($node->bundle(), $allowed_types, TRUE)) {
+    return;
+  }
+
+  \Drupal::queue('ai_content_audit_assessment')->createItem([
+    'nid' => (int) $node->id(),
+  ]);
+}
+
+/**
+ * Implements hook_node_delete().
+ *
+ * Deletes all AI assessment records when a node is deleted.
+ */
+function ai_content_audit_node_delete(\Drupal\node\NodeInterface $node): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('ai_content_assessment');
+  $ids = $storage->getQuery()
+    ->condition('target_node', $node->id())
+    ->accessCheck(FALSE)
+    ->execute();
+
+  if ($ids) {
+    $assessments = $storage->loadMultiple($ids);
+    $storage->delete($assessments);
+    \Drupal::logger('ai_content_audit')->info(
+      'Deleted @count AI assessment(s) for deleted node @nid.',
+      ['@count' => count($ids), '@nid' => $node->id()]
+    );
+  }
+}
+
+/**
+ * Implements hook_ai_operation_types_alter().
+ *
+ * Registers the 'content_audit' operation type so it appears as a dedicated
+ * row on the AI settings page at /admin/config/ai/settings.
+ */
+function ai_content_audit_ai_operation_types_alter(array &$operation_types): void {
+  $operation_types['content_audit'] = [
+    'id'          => 'content_audit',
+    'label'       => 'Content Audit',
+    'actual_type' => 'chat',
+    'filter'      => [],
+  ];
+}
+
+/**
+ * Implements hook_cron().
+ *
+ * Identifies excess ai_content_assessment records per node when
+ * max_assessments_per_node is set to a positive integer and enqueues
+ * their IDs (in chunks of 50) to the ai_content_audit_purge queue.
+ *
+ * The actual deletion is performed by AiAssessmentPurgeWorker so that
+ * each cron run stays fast (ID collection only) and heavy deletion work
+ * is spread across bounded queue-worker invocations — preventing PHP
+ * memory / timeout issues on large sites.
+ *
+ * The newest $max assessments per node are retained; older ones are purged.
+ */
+function ai_content_audit_cron(): void {
+  $max = (int) \Drupal::config('ai_content_audit.settings')
+    ->get('max_assessments_per_node');
+
+  // 0 (or unset) means keep all records — nothing to purge.
+  if ($max <= 0) {
+    return;
+  }
+
+  // Find all node IDs that have more assessments than the retention limit.
+  // target_node_target_id is the auto-generated column for the entity_reference
+  // base field 'target_node' (column key = target_id).
+  $database = \Drupal::database();
+  $node_ids = $database->select('ai_content_assessment', 'a')
+    ->fields('a', ['target_node_target_id'])
+    ->groupBy('a.target_node_target_id')
+    ->having('COUNT(a.id) > :max', [':max' => $max])
+    ->execute()
+    ->fetchCol();
+
+  if (empty($node_ids)) {
+    return;
+  }
+
+  $storage = \Drupal::entityTypeManager()->getStorage('ai_content_assessment');
+
+  // Collect all entity IDs that should be purged across all over-limit nodes.
+  $purge_ids = [];
+  foreach ($node_ids as $nid) {
+    // Retrieve only IDs (no entity loads) for this node, newest first.
+    $ids = $storage->getQuery()
+      ->accessCheck(FALSE)
+      ->condition('target_node', $nid)
+      ->sort('created', 'DESC')
+      ->execute();
+
+    // Everything beyond the retention window should be purged.
+    $excess = array_slice(array_values($ids), $max);
+    foreach ($excess as $id) {
+      $purge_ids[] = $id;
+    }
+  }
+
+  if (empty($purge_ids)) {
+    return;
+  }
+
+  // Enqueue IDs in chunks of 50 so the queue worker deletes in small,
+  // memory-bounded batches instead of one massive loadMultiple() call.
+  $queue = \Drupal::queue('ai_content_audit_purge');
+  foreach (array_chunk($purge_ids, 50) as $chunk) {
+    $queue->createItem(['ids' => $chunk]);
+  }
+
+  \Drupal::logger('ai_content_audit')->info(
+    'Enqueued @total excess assessment ID(s) across @nodes node(s) for purging (retention limit: @max, chunks: @chunks).',
+    [
+      '@total'  => count($purge_ids),
+      '@nodes'  => count($node_ids),
+      '@max'    => $max,
+      '@chunks' => count(array_chunk($purge_ids, 50)),
+    ],
+  );
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ *
+ * Conditionally attaches the Gin-exclusive CSS shim only when Gin is the
+ * active admin theme. The base module libraries are fully theme-agnostic and
+ * must NOT depend on this library.
+ *
+ * The shim is only useful if the airo-panel library is already on the page
+ * (i.e. we are on a node edit form or the assessment report page). Checking
+ * for the base library prevents the shim from attaching globally on every
+ * admin page when it has no effect.
+ */
+function ai_content_audit_page_attachments_alter(array &$attachments): void {
+  // Retrieve the system theme config; propagate its cache tags so this logic
+  // is invalidated whenever the admin theme setting changes.
+  $system_theme_config = \Drupal::config('system.theme');
+  $attachments['#cache']['tags'] = Cache::mergeTags(
+    $attachments['#cache']['tags'] ?? [],
+    $system_theme_config->getCacheTags()
+  );
+
+  // Only attach the Gin shim when Gin is the configured admin theme.
+  if ($system_theme_config->get('admin') !== 'gin') {
+    return;
+  }
+
+  // Only attach if the airo-panel or assessment-report library is present
+  // (i.e. this page actually renders AIRO module UI).
+  $attached_libraries = $attachments['#attached']['library'] ?? [];
+  $airo_present = array_filter($attached_libraries, static fn(string $lib): bool =>
+    str_starts_with($lib, 'ai_content_audit/airo-panel') ||
+    str_starts_with($lib, 'ai_content_audit/assessment-report') ||
+    str_starts_with($lib, 'ai_content_audit/inline-widget')
+  );
+
+  if (empty($airo_present)) {
+    return;
+  }
+
+  $attachments['#attached']['library'][] = 'ai_content_audit/airo-panel-gin-shim';
+}

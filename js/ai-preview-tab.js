@@ -16,8 +16,7 @@
  * arrives — fast providers appear first.  One failing provider never blocks the
  * others.
  *
- * No backend changes are required for Phase 2 beyond optional `revision_id`
- * in the POST body (same nid) so preview uses the draft revision from the form.
+ * No backend changes are required for Phase 2.
  */
 (function (Drupal, once) {
   'use strict';
@@ -128,21 +127,13 @@
    * @param {string} queryUrl
    * @param {string} question
    * @param {string} key      provider__model key, or '' for the site default.
-   * @param {Element} wrapper  .airo-preview root (revision_id + query URL).
    * @returns {Promise<object>}
    */
-  function fetchOneProvider(queryUrl, question, key, wrapper) {
+  function fetchOneProvider(queryUrl, question, key) {
     var postBody = {
       question:        question,
       provider_models: key ? [key] : [],
     };
-    var rid = wrapper && wrapper.getAttribute('data-revision-id');
-    if (rid) {
-      var parsed = parseInt(rid, 10);
-      if (!isNaN(parsed) && parsed > 0) {
-        postBody.revision_id = parsed;
-      }
-    }
 
     return fetch(queryUrl, {
       method: 'POST',
@@ -244,7 +235,7 @@
     keys.forEach(function (key, i) {
       var panelId = P + '-panel-' + nodeId + '-' + i;
 
-      fetchOneProvider(queryUrl, question, key, wrapper).then(function (result) {
+      fetchOneProvider(queryUrl, question, key).then(function (result) {
         var panel = document.getElementById(panelId);
         if (!panel) return;
 

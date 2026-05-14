@@ -17,9 +17,16 @@ use Drush\Attributes\Usage;
 use Drush\Commands\DrushCommands;
 
 /**
- * Drush commands for assessments, providers, purge, and reinstall.
+ * Drush commands for AI Content Audit module.
  *
- * Run `drush list ai_content_audit` for individual command help.
+ * Usage:
+ *   drush ai_content_audit:assess --nid=42
+ *   drush ai_content_audit:assess --nid=42 --provider=anthropic --model=claude-3-5-sonnet-20241022
+ *   drush ai_content_audit:assess --all
+ *   drush ai_content_audit:assess --all --type=article --provider=openai --model=gpt-4o
+ *   drush ai_content_audit:providers
+ *   drush ai_content_audit:purge
+ *   drush ai_content_audit:reinstall
  */
 final class AiContentAuditCommands extends DrushCommands {
 
@@ -232,7 +239,7 @@ final class AiContentAuditCommands extends DrushCommands {
    * Runs an AI assessment on a single node synchronously.
    *
    * @param int $nid
-   *   Node ID to assess (loads the default revision; use the UI for draft revisions).
+   *   Node ID to assess.
    * @param array $ai_options
    *   Optional AI overrides passed to AiAssessmentService::assessNode().
    *   Supported keys: 'provider_id', 'model_id'.

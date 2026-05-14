@@ -12,29 +12,6 @@
 (function (Drupal, once) {
   'use strict';
 
-  /**
-   * Builds JSON body for POST /panel/{node}/assess (optional revision_id).
-   *
-   * @param {HTMLElement} el
-   *   Element that may carry data-revision-id or sit inside a panel/widget that does.
-   *
-   * @return {string}
-   *   JSON string for the request body.
-   */
-  function airoAssessPostBody(el) {
-    var rid =
-      el.getAttribute('data-revision-id') ||
-      (el.closest('.airo-panel') && el.closest('.airo-panel').getAttribute('data-revision-id')) ||
-      (el.closest('.airo-widget') && el.closest('.airo-widget').getAttribute('data-revision-id')) ||
-      (el.closest('.airo-score') && el.closest('.airo-score').getAttribute('data-revision-id')) ||
-      (el.closest('.airo-actions') && el.closest('.airo-actions').getAttribute('data-revision-id')) ||
-      '';
-    if (!rid) {
-      return '{}';
-    }
-    return JSON.stringify({ revision_id: parseInt(rid, 10) });
-  }
-
   Drupal.behaviors.airoInlineWidget = {
     attach: function (context) {
       // G8: Use data-attribute selectors — stable across template class renames.
@@ -71,7 +48,6 @@
               'X-Requested-With': 'XMLHttpRequest',
             },
             credentials: 'same-origin',
-            body: airoAssessPostBody(this),
           })
           .then(function (response) { return response.json(); })
           .then(function (data) {

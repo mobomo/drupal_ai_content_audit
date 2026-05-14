@@ -22,7 +22,7 @@
  * correctly under any admin theme (Claro, Gin, Navigation, custom).
  */
 #}
-<div class="airo-widget" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+<div class="airo-widget" data-node-id="{{ node_id }}">
   <div class="airo-widget__body">
 
     {% if is_analyzing %}
@@ -99,7 +99,6 @@
           <button type="button"
             class="button button--small airo-widget__reanalyze"
             data-assess-url="{{ assess_url }}"
-            data-revision-id="{{ revision_id }}"
             data-airo-action="reanalyze"
             aria-label="{{ 'Re-run AI analysis for this content'|t }}">
             {{ 'Re-analyze'|t }}
@@ -133,7 +132,6 @@
         <button type="button"
           class="button button--primary button--small"
           data-assess-url="{{ assess_url }}"
-          data-revision-id="{{ revision_id }}"
           data-airo-action="run-analysis"
           aria-label="{{ 'Run AI analysis for this content'|t }}">
           {{ 'Run Analysis'|t }}

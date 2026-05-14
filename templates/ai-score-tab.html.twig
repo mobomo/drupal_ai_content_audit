@@ -25,7 +25,7 @@
  * - h2_section_count: Integer H2 section count from result_json, or NULL.
  */
 #}
-<div class="airo-score" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+<div class="airo-score" data-node-id="{{ node_id }}">
 
   {% if score is not null %}
 
@@ -82,7 +82,6 @@
         <button type="button"
           class="airo-score__reanalyze button button--small"
           data-assess-url="{{ assess_url }}"
-          data-revision-id="{{ revision_id }}"
           data-node-id="{{ node_id }}">
           {{ 'Re-analyze'|t }}
         </button>
@@ -272,7 +271,6 @@
       <button type="button"
         class="button button--primary"
         data-assess-url="{{ assess_url }}"
-        data-revision-id="{{ revision_id }}"
         data-node-id="{{ node_id }}">
         {{ 'Analyze Now'|t }}
       </button>

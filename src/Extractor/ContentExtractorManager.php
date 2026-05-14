@@ -12,8 +12,29 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 /**
  * Plugin manager for ContentExtractor plugins.
  *
+ * Discovers plugins annotated with @ContentExtractor from any module's
+ * Plugin/ContentExtractor/ subdirectory.
+ *
+ * Other modules can alter discovered definitions via:
+ * @code
+ *   function mymodule_content_extractor_info_alter(array &$definitions): void {
+ *     // Modify $definitions keyed by plugin ID.
+ *   }
+ * @endcode
+ *
+ * Usage:
+ * @code
+ *   $extractor = $this->extractorManager->getExtractorForMode('text');
+ *   $content = $extractor->extract($node);
+ * @endcode
+ *
+ * To add a new extractor, create a class in Plugin/ContentExtractor/ annotated
+ * with @ContentExtractor in any enabled module. No changes to this manager or
+ * to AiAssessmentService are required.
+ *
  * @see \Drupal\ai_content_audit\Annotation\ContentExtractor
- * @see hook_content_extractor_info_alter()
+ * @see \Drupal\ai_content_audit\Extractor\ContentExtractorInterface
+ * @see \Drupal\Core\Plugin\DefaultPluginManager
  */
 class ContentExtractorManager extends DefaultPluginManager {
 
