@@ -24,7 +24,7 @@ class AiAssessmentService {
   use StringTranslationTrait;
 
   /**
-   * JSON schema describing the structured assessment API response.
+   * The JSON schema the LLM must return.
    */
   const RESPONSE_SCHEMA = <<<'JSON'
 {
@@ -156,12 +156,7 @@ JSON;
    * Runs an AI assessment on the given node.
    *
    * @param \Drupal\node\NodeInterface $node
-   *   The node revision to assess. Callers must pass the revision whose content
-   *   should be extracted (for example the default revision on the canonical
-   *   route, or a specific revision from
-   *   \Drupal\Core\Entity\RevisionableStorageInterface::loadRevision()). The
-   *   HTML extractor uses this object for Layout Builder and entity view
-   *   rendering; passing the wrong revision assesses the wrong layout/content.
+   *   The node to assess.
    * @param array $options
    *   Optional overrides:
    *   - 'provider_id' (string): AI provider machine name.
@@ -224,7 +219,7 @@ JSON;
 
     // Build the prompts.
     $system_message = $this->buildSystemMessage();
-    $user_message = $this->buildUserMessage($content, $node);
+    $user_message = $this->buildUserMessage($content);
 
     // Build ChatInput.
     $chat_input = new ChatInput([
@@ -468,23 +463,10 @@ SYSTEM;
   /**
    * Builds the user message containing the content and schema.
    */
-  protected function buildUserMessage(string $content, NodeInterface $node): string {
+  protected function buildUserMessage(string $content): string {
     $schema = self::RESPONSE_SCHEMA;
-    $signals = $this->buildDeterministicSignals($content);
-    $seoSignals = $this->buildNodeSeoSignals($node);
     return <<<TEXT
 Analyze the following Drupal page content for quality and AI-readiness. Consider readability, SEO signal presence, content completeness, tone consistency, and overall quality.
-
-DETERMINISTIC STRUCTURE SIGNALS (ground truth from parsed markers):
-{$signals}
-
-DETERMINISTIC SEO SIGNALS (ground truth from node metadata):
-{$seoSignals}
-
-When these signals indicate heading markers are present, do NOT report missing
-H1/H2 marker checkpoints. Use these values as canonical for heading-marker
-presence checks. When seo signals show meta description or schema are present,
-do NOT report them as missing.
 
 CONTENT:
 ---
@@ -496,61 +478,6 @@ Return a JSON object exactly matching this schema:
 
 Return only the JSON object. Set unknown fields to null or empty arrays. Do not include any explanatory text, markdown, or code fences.
 TEXT;
-  }
-
-  /**
-   * Builds deterministic structure signals from markerized content.
-   */
-  protected function buildDeterministicSignals(string $content): string {
-    $h1 = preg_match_all('/^# H1:\s+/m', $content);
-    $h2 = preg_match_all('/^## H2:\s+/m', $content);
-    $hasSummary = preg_match(
-      '/\b(summary|key takeaways|takeaways|tl;dr|in summary|what you\'ll learn|highlights?)\b/i',
-      $content
-    ) === 1;
-
-    return implode("\n", [
-      '- h1_markers_count: ' . (int) $h1,
-      '- h2_markers_count: ' . (int) $h2,
-      '- has_summary_takeaways_keywords: ' . ($hasSummary ? 'true' : 'false'),
-    ]);
-  }
-
-  /**
-   * Builds deterministic SEO signals from computed metatag field values.
-   */
-  protected function buildNodeSeoSignals(NodeInterface $node): string {
-    $hasDescription = FALSE;
-    $hasCanonical = FALSE;
-    $hasJsonLdSchema = FALSE;
-
-    if ($node->hasField('metatag') && !$node->get('metatag')->isEmpty()) {
-      $items = $node->get('metatag')->getValue();
-      foreach ($items as $item) {
-        $tag = strtolower((string) ($item['tag'] ?? ''));
-        $attrs = is_array($item['attributes'] ?? NULL) ? $item['attributes'] : [];
-        $name = strtolower((string) ($attrs['name'] ?? ''));
-        $rel = strtolower((string) ($attrs['rel'] ?? ''));
-        $type = strtolower((string) ($attrs['type'] ?? ''));
-        $content = trim((string) ($attrs['content'] ?? ''));
-
-        if ($tag === 'meta' && $name === 'description' && $content !== '') {
-          $hasDescription = TRUE;
-        }
-        if ($tag === 'link' && $rel === 'canonical') {
-          $hasCanonical = TRUE;
-        }
-        if ($tag === 'script' && $type === 'application/ld+json') {
-          $hasJsonLdSchema = TRUE;
-        }
-      }
-    }
-
-    return implode("\n", [
-      '- meta_description_present: ' . ($hasDescription ? 'true' : 'false'),
-      '- canonical_tag_present: ' . ($hasCanonical ? 'true' : 'false'),
-      '- jsonld_schema_present: ' . ($hasJsonLdSchema ? 'true' : 'false'),
-    ]);
   }
 
   /**
@@ -588,57 +515,6 @@ TEXT;
     }
 
     return NULL;
-  }
-
-  /**
-   * Corrects heading-related fields/checkpoints using deterministic markers.
-   *
-   * @param string $content
-   *   Markerized extracted content.
-   * @param array<string, mixed> $parsed
-   *   Parsed LLM response (mutated in place).
-   */
-  protected function applyDeterministicHeadingCorrections(string $content, array &$parsed): void {
-    $h1Count = (int) preg_match_all('/^# H1:\s+/m', $content);
-    $h2Count = (int) preg_match_all('/^## H2:\s+/m', $content);
-    $hasHeadings = ($h1Count + $h2Count) > 0;
-
-    if (!isset($parsed['heading_hierarchy']) || !is_array($parsed['heading_hierarchy'])) {
-      $parsed['heading_hierarchy'] = [];
-    }
-
-    $parsed['heading_hierarchy']['total_headings'] = max(
-      (int) ($parsed['heading_hierarchy']['total_headings'] ?? 0),
-      $h1Count + $h2Count
-    );
-    $parsed['heading_hierarchy']['has_single_h1'] = ($h1Count === 1);
-    if ($hasHeadings && !isset($parsed['heading_hierarchy']['assessment'])) {
-      $parsed['heading_hierarchy']['assessment'] = 'Heading markers detected from rendered content.';
-    }
-
-    if (!isset($parsed['checkpoints']) || !is_array($parsed['checkpoints'])) {
-      return;
-    }
-
-    foreach ($parsed['checkpoints'] as &$checkpoint) {
-      if (!is_array($checkpoint)) {
-        continue;
-      }
-      $item = strtolower((string) ($checkpoint['item'] ?? ''));
-      $isHeadingCheckpoint = str_contains($item, 'heading') || str_contains($item, 'h1') || str_contains($item, 'h2');
-      $isNegativeHeadingClaim = str_contains($item, 'no h1')
-        || str_contains($item, 'no h2')
-        || str_contains($item, 'no heading')
-        || str_contains($item, 'missing h1')
-        || str_contains($item, 'missing h2');
-
-      if ($hasHeadings && $isHeadingCheckpoint && $isNegativeHeadingClaim) {
-        $checkpoint['status'] = 'pass';
-        $checkpoint['priority'] = 'low';
-        $checkpoint['item'] = sprintf('Heading markers present (H1=%d, H2=%d)', $h1Count, $h2Count);
-      }
-    }
-    unset($checkpoint);
   }
 
 }

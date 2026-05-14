@@ -9,25 +9,14 @@
  * AJAX requests are fired, so there is no Drupal.attachBehaviors cascade and
  * no active-tab reset race condition.
  *
- * This file handles three behaviors:
- *  1. airoPanel — tab switching (applies in both off-canvas and accordion).
- *  2. airoPanelAccordionReanalyze — Re-analyze in the accordion footer (POST + reload).
- *  3. airoPanelOffCanvasReanalyze — Re-analyze in the off-canvas footer (POST + reload).
+ * This file handles two behaviors:
+ *  1. airoPanel       — tab switching (applies in both off-canvas and accordion).
+ *  2. airoPanelAccordionReanalyze — Re-analyze button in the accordion footer.
+ *     After the assessment POST completes the page is reloaded so the accordion
+ *     item re-renders with fresh data.
  */
 (function (Drupal, once) {
   'use strict';
-
-  function airoAssessPostBody(el) {
-    var panel = el.closest('.airo-panel');
-    var rid =
-      el.getAttribute('data-revision-id') ||
-      (panel && panel.getAttribute('data-revision-id')) ||
-      '';
-    if (!rid) {
-      return '{}';
-    }
-    return JSON.stringify({ revision_id: parseInt(rid, 10) });
-  }
 
   // ── 1. Tab switching ──────────────────────────────────────────────────────
   Drupal.behaviors.airoPanel = {
@@ -113,7 +102,6 @@
               'X-Requested-With': 'XMLHttpRequest',
             },
             credentials: 'same-origin',
-            body: airoAssessPostBody(this),
           })
           .then(function (response) { return response.json(); })
           .then(function () {
@@ -138,51 +126,6 @@
         once.remove(
           'airo-accordion-reanalyze',
           '[data-airo-action="accordion-reanalyze"]',
-          context
-        );
-      }
-    },
-  };
-
-  // ── 3. Off-canvas panel footer Re-analyze ─────────────────────────────────
-  Drupal.behaviors.airoPanelOffCanvasReanalyze = {
-    attach: function (context) {
-      once(
-        'airo-panel-offcanvas-reanalyze',
-        '[data-airo-action="panel-reanalyze"]',
-        context
-      ).forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-          e.preventDefault();
-          var assessUrl = this.getAttribute('data-assess-url');
-          if (!assessUrl) {
-            return;
-          }
-          btn.disabled = true;
-          fetch(assessUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: airoAssessPostBody(btn),
-          })
-            .then(function (response) { return response.json(); })
-            .then(function () {
-              window.location.reload();
-            })
-            .catch(function () {
-              btn.disabled = false;
-            });
-        });
-      });
-    },
-    detach: function (context, settings, trigger) {
-      if (trigger === 'unload') {
-        once.remove(
-          'airo-panel-offcanvas-reanalyze',
-          '[data-airo-action="panel-reanalyze"]',
           context
         );
       }

@@ -8,14 +8,25 @@ use GuzzleHttp\ClientInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Fetches remote HTML with per-request in-memory caching.
+ * Provides shared HTTP page fetching with in-memory deduplication cache.
+ *
+ * This service extracts the fetchPageHtml() / getBaseUrl() logic that was
+ * previously duplicated across TechnicalAuditService so that AuditCheck
+ * plugins that need to inspect live HTML can share a single request per URL
+ * within a single audit run.
+ *
+ * Inject '@ai_content_audit.html_fetch' into any plugin that needs HTTP-based
+ * HTML inspection.
  *
  * @see \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase
  */
 class HtmlFetchService {
 
   /**
-   * In-memory cache keyed by URL (and auth flag); NULL means fetch failed.
+   * In-memory HTML cache keyed by absolute URL.
+   *
+   * A NULL value means the fetch was attempted but failed; this prevents
+   * repeated requests for the same URL in a single request cycle.
    *
    * @var array<string, string|null>
    */
@@ -35,64 +46,62 @@ class HtmlFetchService {
   ) {}
 
   /**
-   * Fetches page HTML (GET), optionally with a Cookie header.
+   * Fetches the HTML body of a page at the given absolute URL.
+   *
+   * Results are cached in memory for the lifetime of this service instance so
+   * that multiple plugins inspecting the same URL within a single audit run
+   * only issue one HTTP request.
    *
    * @param string $url
-   *   Absolute URL.
-   * @param string $cookieHeader
-   *   Optional Cookie header for authenticated or draft content.
+   *   The absolute URL to fetch.
    *
    * @return string|null
-   *   Response body, or NULL on failure.
+   *   The HTML body string, or NULL if the request failed or returned an error.
    */
-  public function fetchPageHtml(string $url, string $cookieHeader = ''): ?string {
-    $cacheKey = $url . ($cookieHeader ? '|auth' : '');
-    if (array_key_exists($cacheKey, $this->htmlCache)) {
-      return $this->htmlCache[$cacheKey];
-    }
-
-    $headers = ['User-Agent' => 'DrupalAiContentAudit/1.0'];
-    if ($cookieHeader !== '') {
-      $headers['Cookie'] = $cookieHeader;
+  public function fetchPageHtml(string $url): ?string {
+    if (array_key_exists($url, $this->htmlCache)) {
+      return $this->htmlCache[$url];
     }
 
     try {
       $response = $this->httpClient->request('GET', $url, [
         'timeout' => 10,
-        'headers' => $headers,
+        'headers' => ['User-Agent' => 'DrupalAiContentAudit/1.0'],
         'http_errors' => FALSE,
-        'allow_redirects' => ['max' => 5],
       ]);
-      $status = $response->getStatusCode();
-      // Only accept 2xx responses; 3xx redirects are followed automatically,
-      // 4xx/5xx mean the page is inaccessible.
-      $html = $status >= 200 && $status < 300 ? (string) $response->getBody() : NULL;
-      $this->htmlCache[$cacheKey] = $html;
+      $html = (string) $response->getBody();
+      $this->htmlCache[$url] = $html;
       return $html;
     }
     catch (\Exception $e) {
-      $this->htmlCache[$cacheKey] = NULL;
+      $this->htmlCache[$url] = NULL;
       return NULL;
     }
   }
 
   /**
-   * Returns the current request base URL (scheme + host).
+   * Returns the base URL of the current request (scheme + host).
+   *
+   * Falls back to 'http://localhost' when no current request is available
+   * (e.g. during CLI drush commands).
    *
    * @return string
-   *   Base URL, or http://localhost when there is no request.
+   *   The base URL, e.g. 'https://example.com'.
    */
   public function getBaseUrl(): string {
     $request = $this->requestStack->getCurrentRequest();
     if ($request) {
       return $request->getSchemeAndHttpHost();
     }
-    // CLI / tests.
+    // Fallback for CLI / test contexts.
     return 'http://localhost';
   }
 
   /**
    * Clears the in-memory HTML cache.
+   *
+   * Useful in long-running CLI batches where the same service instance is
+   * reused across multiple audit runs.
    */
   public function clearCache(): void {
     $this->htmlCache = [];

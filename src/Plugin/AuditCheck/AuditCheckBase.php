@@ -61,6 +61,10 @@ abstract class AuditCheckBase extends PluginBase implements AuditCheckInterface 
     return TRUE;
   }
 
+  // ---------------------------------------------------------------------------
+  // Protected result factory helpers
+  // ---------------------------------------------------------------------------
+
   /**
    * Creates a passing TechnicalAuditResult for this check.
    *

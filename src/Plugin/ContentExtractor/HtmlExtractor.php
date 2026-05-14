@@ -6,8 +6,6 @@ namespace Drupal\ai_content_audit\Plugin\ContentExtractor;
 
 use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\ai_content_audit\Extractor\EntityContextTrait;
-use Drupal\ai_content_audit\Service\HtmlFetchService;
-use Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -19,11 +17,30 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Extracts node content as structured plain text from rendered HTML.
+ * Extracts content from a node by rendering its HTML and converting to structured text.
  *
- * Parses HTML with DOMDocument, normalises headings, links, images, lists, and
- * tables into plain-text markers, and prepends metadata from
- * EntityContextTrait.
+ * Renders the node through Drupal's entity view builder, then parses the
+ * resulting HTML with DOMDocument to produce a semantically annotated
+ * plain-text string that preserves structural signals for the LLM:
+ *
+ * - Heading elements (h1–h6) are converted to markdown-style markers such as
+ *   "# H1: Title" so the LLM can interpret content hierarchy.
+ * - Image elements become "[Image: alt text]" or "[Image: no alt text]" so
+ *   image accessibility is visible without binary data.
+ * - Anchor elements become "[Link: anchor (internal|external: href)]" so link
+ *   presence and destinations are readable in plain text.
+ * - Table elements are serialised to a compact grid format bounded by [Table]
+ *   and [/Table] markers.
+ * - List items are converted to bullet or numbered markers.
+ * - Navigation chrome, scripts, styles, and visually-hidden elements are
+ *   stripped before content extraction.
+ *
+ * The extracted string is assembled in three sections:
+ * 1. A "--- Content Metadata ---" header block prepended via
+ *    EntityContextTrait::buildContentMetadataBlock().
+ * 2. The HTML body converted to structured plain text.
+ * 3. An "--- Entity Context ---" footer block appended via
+ *    EntityContextTrait::buildEntityContextBlock().
  *
  * @ContentExtractor(
  *   id = "html_rendered",
@@ -40,23 +57,19 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    * Constructs an HtmlExtractor plugin instance.
    *
    * @param array $configuration
-   *   The plugin configuration.
+   *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin ID.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
-   *   The plugin definition.
+   *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager.
+   *   The entity type manager service, used to obtain the node view builder.
    * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
+   *   The renderer service, used to render the node's build array to HTML.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The config factory.
+   *   The configuration factory, used to read max_chars_per_request.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
-   *   The request stack.
-   * @param \Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource $layoutBuilderPreviewSource
-   *   The Layout Builder preview source.
-   * @param \Drupal\ai_content_audit\Service\HtmlFetchService $htmlFetchService
-   *   The HTML fetch service.
+   *   The request stack, used to resolve the site host for link classification.
    */
   public function __construct(
     array $configuration,
@@ -66,8 +79,6 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     protected RendererInterface $renderer,
     protected ConfigFactoryInterface $configFactory,
     protected RequestStack $requestStack,
-    protected LayoutBuilderPreviewSource $layoutBuilderPreviewSource,
-    protected HtmlFetchService $htmlFetchService,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -84,8 +95,6 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       $container->get('renderer'),
       $container->get('config.factory'),
       $container->get('request_stack'),
-      $container->get('ai_content_audit.layout_builder_preview_source'),
-      $container->get('ai_content_audit.html_fetch'),
     );
   }
 
@@ -106,16 +115,44 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   /**
    * {@inheritdoc}
    *
-   * Tries HTTP fetch of the canonical URL (with session cookies), then PHP
-   * rendering, then plain text from Layout Builder inline block entities.
+   * Renders the node to HTML via the entity view builder, converts the HTML
+   * to structured plain text, then assembles the output in three sections:
+   * content metadata header, HTML body text, and entity context footer.
+   *
+   * Truncation to max_chars_per_request is applied after all sections are
+   * joined, with a "[Content truncated for assessment]" notice appended.
    */
   public function extract(NodeInterface $node): string {
     $maxChars = $this->getMaxChars();
 
+    // Build surrounding context blocks from the trait.
     $metadata = $this->buildContentMetadataBlock($node);
     $entityContext = $this->buildEntityContextBlock($node);
 
-    $bodyText = $this->extractBodyText($node);
+    // Render the node to HTML using an isolated render context to prevent
+    // "leaked render context" errors that occur when render calls are nested
+    // outside an active render context.
+    $viewBuilder = $this->entityTypeManager->getViewBuilder('node');
+    $renderArray = $viewBuilder->view($node, 'full');
+
+    $html = (string) $this->renderer->executeInRenderContext(
+      new RenderContext(),
+      function () use ($renderArray): string {
+        return (string) $this->renderer->render($renderArray);
+      }
+    );
+
+    if (empty(trim($html))) {
+      // Nothing rendered; assemble header and footer without body.
+      $parts = array_filter(
+        [$metadata, $entityContext],
+        fn(string $p): bool => $p !== ''
+      );
+      return implode("\n\n", $parts);
+    }
+
+    // Convert rendered HTML to structured plain text.
+    $bodyText = $this->convertHtmlToStructuredText($html);
 
     $parts = array_filter(
       [$metadata, $bodyText, $entityContext],
@@ -123,6 +160,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     );
     $content = implode("\n\n", $parts);
 
+    // Truncate to the configured character limit if necessary.
     if (mb_strlen($content) > $maxChars) {
       $content = mb_substr($content, 0, $maxChars) . "\n[Content truncated for assessment]";
     }
@@ -131,98 +169,26 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Returns body text using the HTTP, render, then inline-block fallbacks.
-   */
-  private function extractBodyText(NodeInterface $node): string {
-    $html = $this->fetchNodeHtmlViaHttp($node);
-    if (!empty(trim($html))) {
-      $bodyText = $this->convertHtmlToStructuredText($html);
-      if ($bodyText === '') {
-        $bodyText = $this->convertHtmlToPlainTextFallback($html);
-      }
-      if (mb_strlen($bodyText) >= 80) {
-        return $bodyText;
-      }
-    }
-
-    $html = $this->renderNodeToHtml($node);
-    if (!empty(trim($html))) {
-      $bodyText = $this->convertHtmlToStructuredText($html);
-      if ($bodyText === '') {
-        $bodyText = $this->convertHtmlToPlainTextFallback($html);
-      }
-      if (mb_strlen($bodyText) >= 80) {
-        return $bodyText;
-      }
-    }
-
-    $inlineText = $this->layoutBuilderPreviewSource->extractTextFromInlineBlocks($node, 'full');
-    if ($inlineText !== '') {
-      return $inlineText;
-    }
-
-    return '';
-  }
-
-  /**
-   * Fetches canonical page HTML, forwarding the current request cookies.
-   */
-  private function fetchNodeHtmlViaHttp(NodeInterface $node): string {
-    try {
-      $url = $node->toUrl('canonical')->setAbsolute(TRUE)->toString();
-    }
-    catch (\Throwable) {
-      return '';
-    }
-
-    $cookieHeader = '';
-    $request = $this->requestStack->getCurrentRequest();
-    if ($request !== NULL) {
-      $pairs = [];
-      foreach ($request->cookies->all() as $name => $value) {
-        $pairs[] = rawurlencode((string) $name) . '=' . rawurlencode((string) $value);
-      }
-      $cookieHeader = implode('; ', $pairs);
-    }
-
-    return $this->htmlFetchService->fetchPageHtml($url, $cookieHeader) ?? '';
-  }
-
-  /**
-   * Renders the node with Layout Builder sections when enabled.
-   */
-  private function renderNodeToHtml(NodeInterface $node): string {
-    $viewBuilder = $this->entityTypeManager->getViewBuilder('node');
-    $layoutBuild = $this->layoutBuilderPreviewSource->buildSectionsRenderArray($node, 'full');
-    $renderArray = $layoutBuild !== []
-      ? [
-        '#type' => 'container',
-        '#attributes' => ['class' => ['ai-content-audit__layout-builder-extract']],
-        'sections' => $layoutBuild,
-      ]
-      : $viewBuilder->view($node, 'full');
-
-    try {
-      return (string) $this->renderer->executeInRenderContext(
-        new RenderContext(),
-        function () use ($renderArray): string {
-          return (string) $this->renderer->render($renderArray);
-        }
-      );
-    }
-    catch (\Throwable) {
-      return '';
-    }
-  }
-
-  /**
-   * Converts HTML to structured plain text (headings, lists, tables, links).
+   * Converts a rendered HTML string to structured plain text.
+   *
+   * Uses DOMDocument and DOMXPath to walk the DOM tree, replacing structural
+   * elements with plain-text markers in-place before extracting the final
+   * text content of the cleaned document.
+   *
+   * Processing order:
+   * 1. Strip navigation chrome, scripts, styles, and visually-hidden elements.
+   * 2. Convert tables (innermost first to handle nested tables correctly).
+   * 3. Convert unordered and ordered lists to bullet/numbered markers.
+   * 4. Convert images to alt-text markers.
+   * 5. Convert links to classified link markers.
+   * 6. Convert headings to markdown-style markers.
    *
    * @param string $html
-   *   The HTML to convert.
+   *   The rendered HTML string to convert.
    *
    * @return string
-   *   The structured text, or an empty string when nothing can be extracted.
+   *   Structured plain text with whitespace normalised, or an empty string
+   *   when the HTML contains no extractable content.
    */
   protected function convertHtmlToStructuredText(string $html): string {
     if (empty(trim($html))) {
@@ -239,123 +205,62 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
 
     $xpath = new \DOMXPath($doc);
 
-    // Meta values live in attributes, not text nodes; collect before stripping.
-    $metaLines = $this->extractMetaTags($xpath);
-
-    // Strip navigation chrome, scripts, styles, and visually-hidden elements.
+    // Strip navigation chrome, scripts, styles, and hidden elements first so
+    // they do not contribute text to the output.
     $this->stripUnwantedElements($xpath);
 
-    // Tables before lists/images/links; inner tables first (reverse order).
+    // Convert structural elements to text node markers. Tables are processed
+    // before lists/images/links so that nested elements within cells are
+    // captured via textContent before the surrounding structure is removed.
+    // Tables are reversed so innermost tables are processed first, preventing
+    // outer table row queries from matching already-replaced inner tables.
     $this->convertTables($xpath);
     $this->convertLists($xpath);
     $this->convertImages($xpath);
     $this->convertLinks($xpath, $this->getSiteHost());
     $this->convertHeadings($xpath);
 
+    // Extract the full text content of the cleaned document.
     $text = $doc->textContent;
 
+    // Decode any remaining HTML entities present in text nodes.
     $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-    $text = (string) preg_replace('/[^\S\n]+/', ' ', $text);
-
-    // Lines that are only spaces collapse so consecutive newline runs normalize.
-    $text = (string) preg_replace('/^ +$/m', '', $text);
 
     // Collapse runs of three or more consecutive newlines to at most two.
     $text = (string) preg_replace('/\n{3,}/', "\n\n", $text);
 
-    $text = trim($text);
-
-    if (!empty($metaLines)) {
-      $metaBlock = "--- Page Meta Tags ---\n" . implode("\n", $metaLines);
-      $text = $metaBlock . "\n\n" . $text;
-    }
-
-    return $text;
-  }
-
-  /**
-   * Fallback when structured conversion returns an empty string.
-   */
-  protected function convertHtmlToPlainTextFallback(string $html): string {
-    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    // Collapse inline runs of horizontal whitespace (spaces/tabs) while
+    // preserving the structural newlines added by the converters above.
     $text = (string) preg_replace('/[^\S\n]+/', ' ', $text);
-    $text = (string) preg_replace('/^ +$/m', '', $text);
-    $text = (string) preg_replace('/\n{3,}/', "\n\n", $text);
+
     return trim($text);
   }
 
   /**
-   * Extracts meta tag values from the document head.
+   * Strips navigation chrome and invisible elements from the DOM.
    *
-   * Uses the name, property, or http-equiv attribute as the label and the
-   * content attribute as the value. Each line is formatted as "Meta {label}: {value}".
-   *
-   * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
-   *
-   * @return string[]
-   *   The formatted meta tag lines.
-   */
-  protected function extractMetaTags(\DOMXPath $xpath): array {
-    $lines = [];
-    $seen = [];
-
-    $nodes = iterator_to_array($xpath->query('//meta') ?: [], FALSE);
-    foreach ($nodes as $node) {
-      if (!$node instanceof \DOMElement) {
-        continue;
-      }
-
-      // Resolve the label: name > property > http-equiv.
-      $label = $node->getAttribute('name')
-        ?: $node->getAttribute('property')
-        ?: $node->getAttribute('http-equiv');
-      $label = trim($label);
-
-      $value = trim($node->getAttribute('content'));
-
-      if ($label === '' || $value === '') {
-        continue;
-      }
-
-      // Skip common non-content metas.
-      if (in_array(strtolower($label), ['viewport', 'charset', 'generator'], TRUE)) {
-        continue;
-      }
-
-      // Deduplicate by label (keep first occurrence).
-      if (isset($seen[$label])) {
-        continue;
-      }
-      $seen[$label] = TRUE;
-
-      $lines[] = 'Meta ' . $label . ': ' . $value;
-    }
-
-    return $lines;
-  }
-
-  /**
-   * Removes scripts, styles, nav, and visually hidden nodes from the DOM.
-   *
-   * Does not remove header or footer; Layout Builder output may place content
-   * there.
+   * Removes <script>, <style>, <nav>, <header>, <footer>, and any element
+   * whose class attribute contains "visually-hidden" or "hidden" so that
+   * Drupal theme chrome and screen-reader-only text do not pollute the
+   * LLM-facing content.
    *
    * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
+   *   The XPath object bound to the document being processed.
    */
   protected function stripUnwantedElements(\DOMXPath $xpath): void {
     $queries = [
       '//script',
       '//style',
       '//nav',
+      '//header',
+      '//footer',
       '//*[contains(concat(" ",normalize-space(@class)," ")," visually-hidden ")]',
       '//*[contains(concat(" ",normalize-space(@class)," ")," hidden ")]',
     ];
 
     foreach ($queries as $query) {
-      // DOMNodeList is live; copy nodes before removing.
+      // Collect into an array first because DOMNodeList is live; removing
+      // a node during forward iteration would skip its following sibling.
       $nodes = iterator_to_array($xpath->query($query) ?: [], FALSE);
       foreach ($nodes as $node) {
         if ($node->parentNode !== NULL) {
@@ -366,14 +271,21 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Replaces h1–h6 elements with plain-text heading markers.
+   * Converts heading elements (h1–h6) to markdown-style text markers.
+   *
+   * Each heading element is replaced with a text node in the format:
+   * @code
+   * \n{#markers} H{level}: {heading text}\n
+   * @endcode
+   *
+   * Example: <h2>Section Title</h2> → "\n## H2: Section Title\n"
    *
    * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
+   *   The XPath object bound to the document being processed.
    */
   protected function convertHeadings(\DOMXPath $xpath): void {
     for ($level = 1; $level <= 6; $level++) {
-      // DOMNodeList is live.
+      // Collect to array before modifying: DOMNodeList is live.
       $nodes = iterator_to_array($xpath->query("//h{$level}") ?: [], FALSE);
       foreach ($nodes as $node) {
         $text = trim($node->textContent);
@@ -387,10 +299,14 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Replaces img elements with alt-text markers.
+   * Converts image elements to plain-text alt-text markers.
+   *
+   * Each <img> element is replaced with a text node:
+   * - " [Image: {alt text}] " when the alt attribute is non-empty.
+   * - " [Image: no alt text] " when the alt attribute is absent or empty.
    *
    * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
+   *   The XPath object bound to the document being processed.
    */
   protected function convertImages(\DOMXPath $xpath): void {
     $nodes = iterator_to_array($xpath->query('//img') ?: [], FALSE);
@@ -403,12 +319,23 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Replaces anchor elements with internal/external link markers.
+   * Converts anchor elements to classified plain-text link markers.
+   *
+   * Each <a href="…"> element is replaced with a text node:
+   * - " [Link: {text} (internal: {path})] " for internal links.
+   * - " [Link: {text} (external: {url})] " for external links.
+   *
+   * Classification rules (applied in order):
+   * - href starts with "/" → internal (site-relative path).
+   * - href starts with "#" → internal (fragment-only).
+   * - href contains the site host name → internal.
+   * - All other hrefs → external.
    *
    * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
+   *   The XPath object bound to the document being processed.
    * @param string $siteHost
-   *   The current request host, or empty string when unavailable (e.g. CLI).
+   *   The site's host name (e.g. "example.com") used for internal link
+   *   classification. Pass an empty string to disable host matching.
    */
   protected function convertLinks(\DOMXPath $xpath, string $siteHost): void {
     $nodes = iterator_to_array($xpath->query('//a[@href]') ?: [], FALSE);
@@ -419,7 +346,8 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
         $text = $href;
       }
 
-      // Path-relative, fragment-only, or same host counts as internal.
+      // Classify as internal when the href is path-relative, fragment-only,
+      // or explicitly references the current site's host name.
       $isInternal = str_starts_with($href, '/')
         || str_starts_with($href, '#')
         || ($siteHost !== '' && str_contains($href, $siteHost));
@@ -433,16 +361,25 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Replaces table elements with a compact text grid.
+   * Converts table elements to compact text grid representations.
    *
-   * Processes tables in reverse document order so nested tables are handled
-   * before parents.
+   * Each <table> element is replaced with a text node in the format:
+   * @code
+   * [Table]
+   * | Header1 | Header2 | Header3 |
+   * | Cell1   | Cell2   | Cell3   |
+   * [/Table]
+   * @endcode
+   *
+   * Tables are processed in reverse document order so nested tables are
+   * converted before their containing tables are processed, preventing
+   * inner table rows from being double-counted in outer table cell text.
    *
    * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
+   *   The XPath object bound to the document being processed.
    */
   protected function convertTables(\DOMXPath $xpath): void {
-    // Innermost tables first.
+    // Reverse document order so innermost (deepest) tables are converted first.
     $tables = array_reverse(
       iterator_to_array($xpath->query('//table') ?: [], FALSE)
     );
@@ -459,6 +396,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
 
       foreach ($trNodes as $tr) {
         $cells = [];
+        // Collect direct <th> and <td> descendants of this row.
         $cellNodes = iterator_to_array(
           $xpath->query('.//th|.//td', $tr) ?: [],
           FALSE
@@ -478,15 +416,20 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Replaces ul/ol lists with plain-text bullets or numbering.
+   * Converts list elements (ul/ol) to plain-text bullet and numbered markers.
    *
-   * Ordered lists are processed before unordered lists.
+   * Unordered list items (<li> in <ul>) are prefixed with "• ".
+   * Ordered list items (<li> in <ol>) are prefixed with sequential numbers
+   * ("1. ", "2. ", …).
+   *
+   * Ordered lists are processed before unordered lists so that mixed nesting
+   * (ol inside ul or vice versa) is handled from innermost to outermost.
    *
    * @param \DOMXPath $xpath
-   *   The XPath object for the current document.
+   *   The XPath object bound to the document being processed.
    */
   protected function convertLists(\DOMXPath $xpath): void {
-    // Ordered lists first (collect before DOM mutations).
+    // Process ordered lists first (collect before any DOM mutations).
     $olNodes = iterator_to_array($xpath->query('//ol') ?: [], FALSE);
     foreach ($olNodes as $ol) {
       $items = iterator_to_array($xpath->query('./li', $ol) ?: [], FALSE);
@@ -500,7 +443,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       $ol->parentNode->replaceChild($textNode, $ol);
     }
 
-    // Unordered lists.
+    // Process unordered lists.
     $ulNodes = iterator_to_array($xpath->query('//ul') ?: [], FALSE);
     foreach ($ulNodes as $ul) {
       $items = iterator_to_array($xpath->query('./li', $ul) ?: [], FALSE);
@@ -514,10 +457,13 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Returns the maximum characters allowed per extracted content payload.
+   * Returns the maximum character count allowed per AI assessment request.
+   *
+   * Reads the max_chars_per_request key from ai_content_audit.settings
+   * configuration. Falls back to 8000 if the setting is absent or zero.
    *
    * @return int
-   *   The limit from configuration, or 8000 when unset or invalid.
+   *   The maximum character count for assembled content.
    */
   protected function getMaxChars(): int {
     $config = $this->configFactory->get('ai_content_audit.settings');
@@ -526,10 +472,15 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
-   * Returns the current request host for link classification.
+   * Returns the current site's host name for internal link classification.
+   *
+   * Retrieves the host from the current request via the request stack.
+   * Returns an empty string when no request is available (e.g. during
+   * CLI/drush execution), which disables host-based link classification and
+   * falls back to path-relative detection only.
    *
    * @return string
-   *   The hostname, or an empty string when there is no current request.
+   *   The hostname (e.g. "example.com"), or an empty string if unavailable.
    */
   protected function getSiteHost(): string {
     $request = $this->requestStack->getCurrentRequest();
