@@ -20,6 +20,7 @@
  * - pass_count: Number of passing checks.
  * - total_count: Total number of checks.
  * - node_id: The node ID.
+ * - revision_id: The revision used when checks ran (for client diagnostics).
  *
  * Grouping (derived from check machine names — no data-contract changes):
  *   1. Structured Data      — schema_markup
@@ -82,7 +83,7 @@
   'entity_relationships',
 ] %}
 
-<div class="airo-audit" data-node-id="{{ node_id }}">
+<div class="airo-audit" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
 
   {# ── Top summary row (pass_count / total_count) ──────────────────────────── #}
   <div class="airo-audit__summary">

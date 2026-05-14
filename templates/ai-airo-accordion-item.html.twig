@@ -29,7 +29,7 @@
      the finite-height off-canvas drawer but not appropriate for an inline
      accordion item.
 #}
-<div class="airo-panel airo-panel--accordion" data-node-id="{{ node_id }}">
+<div class="airo-panel airo-panel--accordion" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
 
   {% if is_analyzing %}
     {# Analyzing State — aria-live so screen readers announce the transition #}
@@ -125,6 +125,7 @@
     <button type="button"
       class="button button--small airo-panel__footer__action"
       data-assess-url="{{ assess_url }}"
+      data-revision-id="{{ revision_id }}"
       data-airo-action="accordion-reanalyze"
       data-node-id="{{ node_id }}"
       aria-label="{{ 'Re-run AI analysis for this node'|t }}">

@@ -7,27 +7,13 @@ namespace Drupal\ai_content_audit\Annotation;
 use Drupal\Component\Annotation\Plugin;
 
 /**
- * Defines a Content Extractor plugin annotation object.
+ * Annotation for ContentExtractor plugins.
  *
- * Plugins implementing this annotation are discovered automatically from
- * the Plugin/ContentExtractor/ subdirectory of any module.
- *
- * Other modules may alter plugin definitions via
- * hook_content_extractor_info_alter(&$definitions).
- *
- * Example usage:
- * @code
- * @ContentExtractor(
- *   id = "field_text",
- *   label = @Translation("Field text extractor"),
- *   description = @Translation("Extracts text content from entity field values."),
- *   render_mode = "text"
- * )
- * @endcode
+ * Plugins live under Plugin/ContentExtractor/ and may be altered with
+ * hook_content_extractor_info_alter().
  *
  * @see \Drupal\ai_content_audit\Extractor\ContentExtractorManager
  * @see \Drupal\ai_content_audit\Extractor\ContentExtractorInterface
- * @see plugin_api
  *
  * @Annotation
  */

@@ -14,27 +14,10 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\node\NodeInterface;
 
 /**
- * Plugin manager for AuditCheck plugins.
+ * Plugin manager for AuditCheck plugins (#[AuditCheck] attribute discovery).
  *
- * Discovers plugins using the PHP 8 #[AuditCheck] attribute from any enabled
- * module's Plugin/AuditCheck/ sub-namespace.
- *
- * Other modules can alter discovered definitions via:
- * @code
- *   function mymodule_audit_check_info_alter(array &$definitions): void {
- *     // Modify $definitions keyed by plugin ID.
- *   }
- * @endcode
- *
- * Usage:
- * @code
- *   $results = $this->auditCheckManager->runAll($node);
- * @endcode
- *
+ * @see hook_audit_check_info_alter()
  * @see \Drupal\ai_content_audit\Attribute\AuditCheck
- * @see \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckInterface
- * @see \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase
- * @see \Drupal\Core\Plugin\DefaultPluginManager
  */
 class AuditCheckManager extends DefaultPluginManager {
 

@@ -16,6 +16,10 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
+use Drupal\ai_content_audit\Enum\RenderMode;
+use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\node\NodeInterface;
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\FilesystemAuditService;
@@ -37,6 +41,7 @@ class AiroPanelController extends ControllerBase {
     protected FilesystemAuditService $filesystemAuditService,
     protected PrivateTempStoreFactory $tempStoreFactory,
     protected ProviderModelChoices $providerModelChoices,
+    protected ContentExtractorManager $contentExtractorManager,
   ) {}
 
   /**
@@ -51,6 +56,7 @@ class AiroPanelController extends ControllerBase {
       $container->get('ai_content_audit.filesystem_audit'),
       $container->get('tempstore.private'),
       $container->get('ai_content_audit.provider_model_choices'),
+      $container->get('ai_content_audit.extractor_manager'),
     );
   }
 
@@ -102,6 +108,7 @@ class AiroPanelController extends ControllerBase {
     $build = [
       '#theme'           => 'ai_airo_panel',
       '#node_id'         => $node->id(),
+      '#revision_id'     => (int) $node->getRevisionId(),
       '#score'           => $assessment?->get('score')->value,
       '#node_title'      => $node->getTitle(),
       '#is_analyzing'    => FALSE,
@@ -147,7 +154,14 @@ class AiroPanelController extends ControllerBase {
    */
   public function assessNode(NodeInterface $node): JsonResponse {
     try {
-      $result = $this->assessmentService->assessNode($node);
+      $decoded = json_decode(\Drupal::request()->getContent() ?: '{}', TRUE);
+      $decoded = is_array($decoded) ? $decoded : [];
+      $node = $this->resolveNodeRevisionFromRequestBody($node, $decoded);
+      // AIRO panel analysis must evaluate rendered page content (LB-aware),
+      // not plain text field extraction.
+      $result = $this->assessmentService->assessNode($node, [
+        'render_mode' => RenderMode::HTML->value,
+      ]);
 
       if (!$result['success']) {
         $this->getLogger('ai_content_audit')->error('Assessment failed: @message', [
@@ -191,6 +205,35 @@ class AiroPanelController extends ControllerBase {
         'message' => $this->t('Assessment failed. Please try again.'),
       ], 500);
     }
+  }
+
+  /**
+   * Uses optional JSON `revision_id` to load the node revision being edited.
+   *
+   * The route `{node}` is often the default revision; node forms and AIRO
+   * clients send the form entity revision ID so drafts and Layout Builder
+   * overrides match what the editor sees.
+   *
+   * @param array<string, mixed> $decoded
+   *   Decoded JSON request body.
+   */
+  private function resolveNodeRevisionFromRequestBody(NodeInterface $route_node, array $decoded): NodeInterface {
+    if (empty($decoded['revision_id'])) {
+      return $route_node;
+    }
+    $vid = (int) $decoded['revision_id'];
+    if ($vid <= 0) {
+      return $route_node;
+    }
+    $storage = $this->entityTypeManager()->getStorage('node');
+    $revision = $storage->loadRevision($vid);
+    if (!$revision instanceof NodeInterface) {
+      return $route_node;
+    }
+    if ((int) $revision->id() !== (int) $route_node->id()) {
+      return $route_node;
+    }
+    return $revision;
   }
 
   /**
@@ -275,6 +318,7 @@ class AiroPanelController extends ControllerBase {
       '#donut_offset'       => $donut_offset,
       '#view_analysis_link' => $view_analysis_link,
       '#assess_url'         => $assess_url,
+      '#revision_id'        => (int) $node->getRevisionId(),
       '#attached'           => ['library' => ['ai_content_audit/inline-widget']],
     ];
 
@@ -355,7 +399,7 @@ class AiroPanelController extends ControllerBase {
         $category = $cp['category'] ?? 'Other';
         $checkpoints_by_category[$category][] = $cp;
         }
-  
+
         // Extract metadata from result_json for the overview metadata row.
       $result_json = $assessment->getParsedResult();
       $grade_raw = $result_json['readability']['grade_level'] ?? NULL;
@@ -410,6 +454,7 @@ class AiroPanelController extends ControllerBase {
       '#history' => $history,
       '#trend_delta' => $trend_delta,
       '#node_id' => $node->id(),
+      '#revision_id' => (int) $node->getRevisionId(),
       '#assess_url' => \Drupal\Core\Url::fromRoute(
         'ai_content_audit.panel.assess',
         ['node' => $node->id()]
@@ -484,6 +529,7 @@ class AiroPanelController extends ControllerBase {
       '#completed_count' => $completed_count,
       '#high_count' => count($high_items),
       '#node_id' => $node->id(),
+      '#revision_id' => (int) $node->getRevisionId(),
       '#assess_url' => \Drupal\Core\Url::fromRoute('ai_content_audit.panel.assess', ['node' => $node->id()])->toString(),
       '#attached' => [
         'library' => [
@@ -590,6 +636,7 @@ class AiroPanelController extends ControllerBase {
       '#pass_count'  => $passCount,
       '#total_count' => count($checks),
       '#node_id'     => $node->id(),
+      '#revision_id' => (int) $node->getRevisionId(),
       '#attached'    => [
         'library' => [
           'ai_content_audit/technical-audit-tab',
@@ -657,6 +704,7 @@ class AiroPanelController extends ControllerBase {
       '#has_permission'   => $hasPermission,
       '#suggested_prompts' => $suggested_prompts,
       '#node_id'          => $node->id(),
+      '#revision_id'      => (int) $node->getRevisionId(),
       '#query_url'        => \Drupal\Core\Url::fromRoute(
         'ai_content_audit.panel.preview_query',
         ['node' => $node->id()]
@@ -678,7 +726,11 @@ class AiroPanelController extends ControllerBase {
    * Handles multi-provider preview query POST and returns an N-result response.
    *
    * Request body JSON:
-   *   { "question": "...", "provider_models": ["openai__gpt-4o-mini", ...] }
+   *   {
+   *     "question": "...",
+   *     "provider_models": ["openai__gpt-4o-mini", ...],
+   *     "revision_id": <optional int — same nid, specific revision for drafts/LB>
+   *   }
    *
    * Response JSON:
    *   { "results": [{ "key", "provider_id", "model_id", "label",
@@ -689,8 +741,10 @@ class AiroPanelController extends ControllerBase {
    * its error string is embedded in the per-result "error" field.
    */
   public function submitPreviewQuery(NodeInterface $node): JsonResponse {
-    $request  = \Drupal::request();
-    $body     = json_decode($request->getContent(), TRUE);
+    $request = \Drupal::request();
+    $body = json_decode($request->getContent(), TRUE);
+    $body = is_array($body) ? $body : [];
+    $node = $this->resolveNodeRevisionFromRequestBody($node, $body);
     $question = trim($body['question'] ?? '');
 
     if ($question === '') {
@@ -714,10 +768,12 @@ class AiroPanelController extends ControllerBase {
       }
     }
 
-    // Build the shared prompts once — the page content doesn't change per provider.
-    $nodeContent  = $this->extractNodeContent($node);
+    // Build the shared prompts once — same rendered node text for every provider.
+    $nodeContent  = $this->extractRenderedNodeContextForPreview($node);
+    $nodeContent  = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
     $systemPrompt = 'You are simulating how an AI system would answer questions about web content. '
-      . "You have been given the full text of a web page. Answer the user's question "
+      . 'You have been given a structured text representation of the page as rendered by Drupal '
+      . '(including Layout Builder regions when present). Answer the user\'s question '
       . 'based solely on this content. If the content does not contain enough information '
       . 'to fully answer, note what is missing. Format your response in clear paragraphs.';
     $userPrompt   = "PAGE CONTENT:\n---\n{$nodeContent}\n---\n\n"
@@ -848,9 +904,156 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Extracts plain-text content from a node for use in an AI prompt.
+   * Builds page context for AI Preview using the HTML render extractor (LB-aware).
+   *
+   * Falls back to title + body plain text if the HTML extractor is unavailable
+   * or throws.
    */
-  private function extractNodeContent(NodeInterface $node): string {
+  private function extractRenderedNodeContextForPreview(NodeInterface $node): string {
+    try {
+      return $this->contentExtractorManager
+        ->getExtractorForMode(RenderMode::HTML->value)
+        ->extract($node);
+    }
+    catch (\Throwable $e) {
+      $this->getLogger('ai_content_audit')->warning(
+        'AI Preview: HTML extraction failed; using title/body fallback. @message',
+        ['@message' => $e->getMessage()],
+      );
+      return $this->extractNodeContentLegacy($node);
+    }
+  }
+
+  /**
+   * Ensures preview content includes meaningful textual field content.
+   *
+   * Some themes/layouts can render very little extractable text (or only title/
+   * metadata) after DOM conversion. This safety net appends plain text from
+   * textual fields (body/summary/string fields) when the extracted payload
+   * appears too short, so AI Preview does not collapse to title-only answers.
+   */
+  private function enrichPreviewContentWithTextFields(NodeInterface $node, string $content): string {
+    $textFallback = $this->extractNodeTextFieldsFallback($node);
+    if ($textFallback === '') {
+      return $content;
+    }
+
+    // If extraction is very short, append text fields unconditionally.
+    if (mb_strlen(trim($content)) < 300) {
+      return trim($content . "\n\n--- Content Fields Fallback ---\n" . $textFallback);
+    }
+
+    // If payload does not already contain both the start and end of fallback
+    // text, append it. Checking only the beginning can produce false positives
+    // because "Title: ..." often exists in metadata already.
+    $sampleStart = mb_substr($textFallback, 0, 120);
+    $sampleEnd = mb_substr($textFallback, max(0, mb_strlen($textFallback) - 120));
+    $hasStart = $sampleStart !== '' && str_contains($content, $sampleStart);
+    $hasEnd = $sampleEnd !== '' && str_contains($content, $sampleEnd);
+    if (!$hasStart || !$hasEnd) {
+      return trim($content . "\n\n--- Content Fields Fallback ---\n" . $textFallback);
+    }
+
+    return $content;
+  }
+
+  /**
+   * Extracts plain text from node fields and nested entity references.
+   *
+   * This catches common editorial models where body copy lives in referenced
+   * Paragraphs/components rather than in node.body.
+   */
+  private function extractNodeTextFieldsFallback(NodeInterface $node): string {
+    $visited = [];
+    $lines = $this->extractEntityTextRecursive($node, 0, $visited);
+    $text = trim(implode("\n\n", $lines));
+
+    // Keep fallback bounded so prompts stay predictable.
+    $max = 6000;
+    if (mb_strlen($text) > $max) {
+      $text = mb_substr($text, 0, $max) . "\n[Fallback content truncated]";
+    }
+
+    return $text;
+  }
+
+  /**
+   * Recursively collects textual content from an entity and child references.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Current entity.
+   * @param int $depth
+   *   Recursion depth.
+   * @param array<string, bool> $visited
+   *   Cycle guard map.
+   *
+   * @return string[]
+   *   Extracted text lines.
+   */
+  private function extractEntityTextRecursive(EntityInterface $entity, int $depth, array &$visited): array {
+    if (!$entity instanceof FieldableEntityInterface) {
+      return [];
+    }
+
+    if ($depth > 3) {
+      return [];
+    }
+
+    $id = (string) ($entity->id() ?? 'new');
+    $revisionId = method_exists($entity, 'getRevisionId') ? (string) ($entity->getRevisionId() ?? '0') : '0';
+    $visitedKey = $entity->getEntityTypeId() . ':' . $id . ':' . $revisionId;
+    if (isset($visited[$visitedKey])) {
+      return [];
+    }
+    $visited[$visitedKey] = TRUE;
+
+    $lines = [];
+    foreach ($entity->getFieldDefinitions() as $fieldName => $definition) {
+      if (!$entity->hasField($fieldName) || $entity->get($fieldName)->isEmpty()) {
+        continue;
+      }
+
+      $type = (string) $definition->getType();
+      $label = (string) $definition->getLabel();
+      $field = $entity->get($fieldName);
+
+      if (in_array($type, ['text', 'text_long', 'text_with_summary', 'string', 'string_long'], TRUE)) {
+        foreach ($field as $item) {
+          $value = '';
+          if (isset($item->value) && is_string($item->value)) {
+            $value = $item->value;
+          }
+          elseif (isset($item->summary) && is_string($item->summary)) {
+            $value = $item->summary;
+          }
+          $value = trim(strip_tags($value));
+          if ($value !== '') {
+            $lines[] = sprintf('%s: %s', $label, $value);
+          }
+        }
+        continue;
+      }
+
+      if (in_array($type, ['entity_reference', 'entity_reference_revisions'], TRUE)) {
+        foreach ($field->referencedEntities() as $referenced) {
+          $nested = $this->extractEntityTextRecursive($referenced, $depth + 1, $visited);
+          if ($nested !== []) {
+            $entityLabel = method_exists($referenced, 'label') ? (string) ($referenced->label() ?? '') : '';
+            $header = $entityLabel !== '' ? sprintf('%s (%s):', $label, $entityLabel) : sprintf('%s:', $label);
+            $lines[] = $header;
+            $lines = array_merge($lines, $nested);
+          }
+        }
+      }
+    }
+
+    return $lines;
+  }
+
+  /**
+   * Minimal fallback when HTML extraction is not available.
+   */
+  private function extractNodeContentLegacy(NodeInterface $node): string {
     $content = 'Title: ' . $node->getTitle() . "\n\n";
 
     if ($node->hasField('body') && !$node->get('body')->isEmpty()) {

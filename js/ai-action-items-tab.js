@@ -5,6 +5,17 @@
 (function (Drupal, once) {
   'use strict';
 
+  function airoAssessPostBody(el) {
+    var rid =
+      el.getAttribute('data-revision-id') ||
+      (el.closest('.airo-actions') && el.closest('.airo-actions').getAttribute('data-revision-id')) ||
+      '';
+    if (!rid) {
+      return '{}';
+    }
+    return JSON.stringify({ revision_id: parseInt(rid, 10) });
+  }
+
   Drupal.behaviors.airoActionItems = {
     attach: function (context) {
       // Checkbox toggle
@@ -106,6 +117,7 @@
               'X-Requested-With': 'XMLHttpRequest',
             },
             credentials: 'same-origin',
+            body: airoAssessPostBody(btn),
           })
           .then(function (response) { return response.json(); })
           .then(function (data) {

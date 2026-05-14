@@ -5,6 +5,17 @@
 (function (Drupal, once) {
   'use strict';
 
+  function airoAssessPostBody(el) {
+    var rid =
+      el.getAttribute('data-revision-id') ||
+      (el.closest('.airo-score') && el.closest('.airo-score').getAttribute('data-revision-id')) ||
+      '';
+    if (!rid) {
+      return '{}';
+    }
+    return JSON.stringify({ revision_id: parseInt(rid, 10) });
+  }
+
   Drupal.behaviors.airoScoreTab = {
     attach: function (context) {
       // Re-analyze button in Score tab
@@ -24,6 +35,7 @@
               'X-Requested-With': 'XMLHttpRequest',
             },
             credentials: 'same-origin',
+            body: airoAssessPostBody(btn),
           })
           .then(function (response) { return response.json(); })
           .then(function (data) {
