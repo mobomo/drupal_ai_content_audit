@@ -95,6 +95,37 @@ ai_content_audit.widget.refresh:
       node:
         type: entity:node
 
+# AIRO Analysis workspace — node tab with main content + side panel.
+ai_content_audit.node.airo_analysis:
+  path: '/node/{node}/airo-analysis'
+  defaults:
+    _entity_form: 'node.edit'
+    _controller: 'Drupal\ai_content_audit\Controller\AiroEntityFormController::getContentResult'
+    _title: 'AIRO Analysis'
+  requirements:
+    _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::access'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.node.airo_analysis_panel_refresh:
+  path: '/node/{node}/airo-analysis/panel-refresh'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::panelRefresh'
+  requirements:
+    _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::access'
+    node: \d+
+  methods: [GET]
+  options:
+    _admin_route: FALSE
+    parameters:
+      node:
+        type: entity:node
+
 # Node assessment history tab — local task on node canonical.
 ai_content_audit.node.assessment_history:
   path: '/node/{node}/ai-assessment'

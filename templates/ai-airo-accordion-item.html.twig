@@ -2,37 +2,29 @@
 /**
  * @file
  * Accordion-item variant of the AIRO analysis panel.
- *
- * Rendered as the inner content of a #type => 'details' accordion element
- * that lives in the node-edit sidebar (group: advanced). All four tab panes
- * are passed as Drupal render arrays and output directly — no pre-rendering
- * to HTML strings is required.
- *
- * Variables:
- * - node_id: The node ID.
- * - score: The overall score or null.
- * - is_analyzing: Whether analysis is in progress.
- * - active_tab: The ID of the tab that should be visible on load.
- * - tab_panes: Associative array keyed by tab ID; values are render arrays.
- *   Twig auto-renders them when output with {{ pane }}.
- * - assess_url: URL to the Re-analyze endpoint (POST).
- * - full_report_url: URL to the full assessment report, or null if none.
  */
 #}
 {% set active_tab = active_tab|default('preview-tab') %}
+{% set use_page_skin = use_page_skin|default(false) %}
 
-{#
-  .airo-panel--accordion modifier:
-  1. Provides the same .airo-panel JS context that ai-airo-panel.js expects
-     (tab switching uses .closest('.airo-panel') as the scoping ancestor).
-  2. Provides a CSS hook to override height/overflow rules that are suited to
-     the finite-height off-canvas drawer but not appropriate for an inline
-     accordion item.
-#}
-<div class="airo-panel airo-panel--accordion" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+<div class="airo-panel airo-panel--accordion{% if use_page_skin %} airo-panel--page-skin{% endif %}" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+
+  {% if use_page_skin %}
+    <header class="airo-panel__brand-header">
+      {% if logo_url %}
+        <img class="airo-panel__brand-logo" src="{{ logo_url }}" width="40" height="40" alt="" aria-hidden="true">
+      {% endif %}
+      <div class="airo-panel__brand-text">
+        <h2 class="airo-panel__brand-title">{{ 'AIRO Analysis'|t }}</h2>
+        <p class="airo-panel__brand-subtitle">{{ 'AI Readiness & Optimization - by Mobomo Labs'|t }}</p>
+      </div>
+      {% if close_url %}
+        <a href="{{ close_url }}" class="airo-panel__brand-close" aria-label="{{ 'Close AIRO Analysis'|t }}">&times;</a>
+      {% endif %}
+    </header>
+  {% endif %}
 
   {% if is_analyzing %}
-    {# Analyzing State — aria-live so screen readers announce the transition #}
     <div class="airo-panel__analyzing" role="status" aria-live="polite">
       <div class="airo-panel__analyzing-spinner" aria-hidden="true"></div>
       <div class="airo-panel__analyzing-label">{{ 'Analyzing content...'|t }}</div>
@@ -40,97 +32,99 @@
     </div>
   {% endif %}
 
-  {# Tab Bar — Drupal .tabs--primary structure. #}
-  {#
-    IDs include node_id to guarantee uniqueness on the page (avoids collisions
-    with any other elements using the same base IDs).
-  #}
-  <nav class="tabs-wrapper is-horizontal" aria-label="{{ 'Analysis sections'|t }}">
-    <ul class="tabs tabs--primary is-horizontal clearfix" role="tablist">
-      <li class="tabs__tab{% if active_tab == 'preview-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="preview-tab-btn--{{ node_id }}"
-          class="tabs__link{% if active_tab == 'preview-tab' %} is-active{% endif %}"
-          data-airo-tab="preview-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'preview-tab' ? 'true' : 'false' }}"
-          aria-controls="preview-tab-pane--{{ node_id }}"
-          tabindex="{{ active_tab == 'preview-tab' ? '0' : '-1' }}">
-          {{ 'AI Preview'|t }}
-        </button>
-      </li>
-      <li class="tabs__tab{% if active_tab == 'score-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="score-tab-btn--{{ node_id }}"
-          class="tabs__link{% if active_tab == 'score-tab' %} is-active{% endif %}"
-          data-airo-tab="score-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'score-tab' ? 'true' : 'false' }}"
-          aria-controls="score-tab-pane--{{ node_id }}"
-          tabindex="{{ active_tab == 'score-tab' ? '0' : '-1' }}">
-          {{ 'AI Score'|t }}
-        </button>
-      </li>
-      <li class="tabs__tab{% if active_tab == 'action-items-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="action-items-tab-btn--{{ node_id }}"
-          class="tabs__link{% if active_tab == 'action-items-tab' %} is-active{% endif %}"
-          data-airo-tab="action-items-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'action-items-tab' ? 'true' : 'false' }}"
-          aria-controls="action-items-tab-pane--{{ node_id }}"
-          tabindex="{{ active_tab == 'action-items-tab' ? '0' : '-1' }}">
-          {{ 'Action Items'|t }}
-        </button>
-      </li>
-      <li class="tabs__tab{% if active_tab == 'technical-audit-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="technical-audit-tab-btn--{{ node_id }}"
-          class="tabs__link{% if active_tab == 'technical-audit-tab' %} is-active{% endif %}"
-          data-airo-tab="technical-audit-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'technical-audit-tab' ? 'true' : 'false' }}"
-          aria-controls="technical-audit-tab-pane--{{ node_id }}"
-          tabindex="{{ active_tab == 'technical-audit-tab' ? '0' : '-1' }}">
-          {{ 'Technical Audit'|t }}
-        </button>
-      </li>
-    </ul>
-  </nav>
+  <div class="airo-panel__body{% if use_page_skin %} airo-panel__body--chat-only{% endif %}">
+    {% if use_page_skin %}
+      <div class="airo-panel__content airo-panel__content--chat-only"
+        id="preview-tab-pane--{{ node_id }}"
+        data-tab-pane="preview-tab">
+        {{ tab_panes['preview-tab'] }}
+      </div>
+    {% else %}
+      <nav class="airo-panel__tabs tabs-wrapper is-horizontal" aria-label="{{ 'Analysis sections'|t }}">
+        <ul class="tabs tabs--primary is-horizontal clearfix" role="tablist">
+          <li class="tabs__tab{% if active_tab == 'preview-tab' %} is-active{% endif %}">
+            <button type="button"
+              id="preview-tab-btn--{{ node_id }}"
+              class="tabs__link{% if active_tab == 'preview-tab' %} is-active{% endif %}"
+              data-airo-tab="preview-tab"
+              role="tab"
+              aria-selected="{{ active_tab == 'preview-tab' ? 'true' : 'false' }}"
+              aria-controls="preview-tab-pane--{{ node_id }}"
+              tabindex="{{ active_tab == 'preview-tab' ? '0' : '-1' }}">
+              {{ 'AI Preview'|t }}
+            </button>
+          </li>
+          <li class="tabs__tab{% if active_tab == 'score-tab' %} is-active{% endif %}">
+            <button type="button"
+              id="score-tab-btn--{{ node_id }}"
+              class="tabs__link{% if active_tab == 'score-tab' %} is-active{% endif %}"
+              data-airo-tab="score-tab"
+              role="tab"
+              aria-selected="{{ active_tab == 'score-tab' ? 'true' : 'false' }}"
+              aria-controls="score-tab-pane--{{ node_id }}"
+              tabindex="{{ active_tab == 'score-tab' ? '0' : '-1' }}">
+              {{ 'AI Score'|t }}
+            </button>
+          </li>
+          <li class="tabs__tab{% if active_tab == 'action-items-tab' %} is-active{% endif %}">
+            <button type="button"
+              id="action-items-tab-btn--{{ node_id }}"
+              class="tabs__link{% if active_tab == 'action-items-tab' %} is-active{% endif %}"
+              data-airo-tab="action-items-tab"
+              role="tab"
+              aria-selected="{{ active_tab == 'action-items-tab' ? 'true' : 'false' }}"
+              aria-controls="action-items-tab-pane--{{ node_id }}"
+              tabindex="{{ active_tab == 'action-items-tab' ? '0' : '-1' }}">
+              {{ 'Action Items'|t }}
+            </button>
+          </li>
+          <li class="tabs__tab{% if active_tab == 'technical-audit-tab' %} is-active{% endif %}">
+            <button type="button"
+              id="technical-audit-tab-btn--{{ node_id }}"
+              class="tabs__link{% if active_tab == 'technical-audit-tab' %} is-active{% endif %}"
+              data-airo-tab="technical-audit-tab"
+              role="tab"
+              aria-selected="{{ active_tab == 'technical-audit-tab' ? 'true' : 'false' }}"
+              aria-controls="technical-audit-tab-pane--{{ node_id }}"
+              tabindex="{{ active_tab == 'technical-audit-tab' ? '0' : '-1' }}">
+              {{ 'Technical Audit'|t }}
+            </button>
+          </li>
+        </ul>
+      </nav>
 
-  {# Tab Panes — render arrays are auto-rendered by Twig. #}
-  {% for tab_id, pane in tab_panes %}
-    <div class="airo-panel__content"
-      id="{{ tab_id }}-pane--{{ node_id }}"
-      data-tab-pane="{{ tab_id }}"
-      role="tabpanel"
-      aria-labelledby="{{ tab_id }}-btn--{{ node_id }}"
-      {% if tab_id != active_tab %}hidden{% endif %}>
-      {{ pane }}
-    </div>
-  {% endfor %}
-
-  {#
-    Footer — inline positioning (no sticky elevation needed in the accordion
-    context since the item expands naturally rather than being scroll-clipped).
-  #}
-  <footer class="airo-panel__footer airo-panel__footer--accordion">
-    {% if full_report_url %}
-      <a href="{{ full_report_url }}"
-        class="button button--primary button--small airo-panel__footer__action"
-        aria-label="{{ 'View full AI analysis report'|t }}">
-        {{ 'View Full Report'|t }}
-      </a>
+      {% for tab_id, pane in tab_panes %}
+        <div class="airo-panel__content"
+          id="{{ tab_id }}-pane--{{ node_id }}"
+          data-tab-pane="{{ tab_id }}"
+          role="tabpanel"
+          aria-labelledby="{{ tab_id }}-btn--{{ node_id }}"
+          {% if tab_id != active_tab %}hidden{% endif %}>
+          {{ pane }}
+        </div>
+      {% endfor %}
     {% endif %}
-    <button type="button"
-      class="button button--small airo-panel__footer__action"
-      data-assess-url="{{ assess_url }}"
-      data-revision-id="{{ revision_id }}"
-      data-airo-action="accordion-reanalyze"
-      data-node-id="{{ node_id }}"
-      aria-label="{{ 'Re-run AI analysis for this node'|t }}">
-      {{ 'Re-analyze'|t }}
-    </button>
-  </footer>
+  </div>
+
+  {% if not use_page_skin %}
+    <footer class="airo-panel__footer airo-panel__footer--accordion">
+      {% if full_report_url %}
+        <a href="{{ full_report_url }}"
+          class="button button--primary button--small airo-panel__footer__action"
+          aria-label="{{ 'View full AI analysis report'|t }}">
+          {{ 'View Full Report'|t }}
+        </a>
+      {% endif %}
+      <button type="button"
+        class="button button--small airo-panel__footer__action"
+        data-assess-url="{{ assess_url }}"
+        data-revision-id="{{ revision_id }}"
+        data-airo-action="accordion-reanalyze"
+        data-node-id="{{ node_id }}"
+        aria-label="{{ 'Re-run AI analysis for this node'|t }}">
+        {{ 'Re-analyze'|t }}
+      </button>
+    </footer>
+  {% endif %}
 
 </div>

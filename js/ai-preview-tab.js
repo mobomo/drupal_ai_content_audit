@@ -32,12 +32,21 @@
     return el.closest('.' + P) || document.querySelector('.' + P);
   }
 
+  /** @param {Element} wrapper @returns {boolean} */
+  function usesPageSkin(wrapper) {
+    return wrapper && wrapper.getAttribute('data-page-skin') === '1';
+  }
+
   /**
    * Returns all checked provider__model keys inside the given wrapper.
    * @param {Element} wrapper
    * @returns {string[]}
    */
   function getSelectedKeys(wrapper) {
+    var select = wrapper.querySelector('.' + P + '__model-select');
+    if (select && select.value) {
+      return [select.value];
+    }
     var boxes = wrapper.querySelectorAll('.' + P + '__model-checkbox:checked');
     return Array.prototype.map.call(boxes, function (b) { return b.value; });
   }
@@ -50,16 +59,53 @@
    * @returns {string}
    */
   function getLabelForKey(key, wrapper) {
+    var select = wrapper.querySelector('.' + P + '__model-select');
+    if (select) {
+      var i;
+      for (i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === key) {
+          return select.options[i].textContent.trim();
+        }
+      }
+    }
     var boxes = wrapper.querySelectorAll('.' + P + '__model-checkbox');
-    for (var i = 0; i < boxes.length; i++) {
-      if (boxes[i].value === key) {
-        var lbl = boxes[i].parentElement
-          ? boxes[i].parentElement.querySelector('.' + P + '__model-option-label')
+    for (var j = 0; j < boxes.length; j++) {
+      if (boxes[j].value === key) {
+        var lbl = boxes[j].parentElement
+          ? boxes[j].parentElement.querySelector('.' + P + '__model-option-label')
           : null;
         return lbl ? lbl.textContent.trim() : key;
       }
     }
     return key;
+  }
+
+  /** @returns {string} */
+  function formatQueryTimestamp() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var mo = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    var h = d.getHours();
+    var m = String(d.getMinutes()).padStart(2, '0');
+    var ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12;
+    if (h === 0) {
+      h = 12;
+    }
+    return y + '-' + mo + '-' + day + ' - ' + h + ':' + m + ' ' + ampm;
+  }
+
+  /** @returns {string} */
+  function formatGeneratedTimestamp() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var mo = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    var h = String(d.getHours()).padStart(2, '0');
+    var mi = String(d.getMinutes()).padStart(2, '0');
+    var s = String(d.getSeconds()).padStart(2, '0');
+    return y + '-' + mo + '-' + day + ' ' + h + ':' + mi + ':' + s;
   }
 
   /**
@@ -75,6 +121,11 @@
 
     var hasQ = input.value.trim() !== '';
     btn.disabled = !hasQ;
+
+    if (usesPageSkin(wrapper)) {
+      btn.textContent = Drupal.t('Ask');
+      return;
+    }
 
     var checkedCount = wrapper.querySelectorAll('.' + P + '__model-checkbox:checked').length;
     btn.textContent = (checkedCount >= 2)
@@ -181,8 +232,112 @@
    * @param {string}  question
    * @param {Element} wrapper
    */
+  /**
+   * Renders or updates an AI answer card (page skin).
+   */
+  function renderPageSkinAnswerCard(card, result, providerLabel, queryUrl, question, key, wrapper) {
+    var label = Drupal.checkPlain(result.label || providerLabel || 'AI');
+    var body = result.error
+      ? '<div class="' + P + '__error">' + Drupal.checkPlain(result.error) + '</div>'
+      : '<div class="' + P + '__answer-card-body">' + (result.html || '') + '</div>';
+
+    card.classList.remove(P + '__answer-card--loading');
+    card.innerHTML =
+      '<div class="' + P + '__answer-card-header">' +
+        '<span class="' + P + '__answer-card-provider">' + label + '</span>' +
+        '<button type="button" class="' + P + '__answer-card-rerun" aria-label="' + Drupal.t('Regenerate response') + '" title="' + Drupal.t('Regenerate') + '">' +
+          '<span aria-hidden="true">&#8635;</span>' +
+        '</button>' +
+      '</div>' +
+      body +
+      '<footer class="' + P + '__answer-card-footer">' +
+        '<span>' + Drupal.t('Simulated response') + '</span>' +
+        '<span>' + Drupal.t('Generated:') + ' ' + Drupal.checkPlain(formatGeneratedTimestamp()) + '</span>' +
+      '</footer>';
+
+    var rerunBtn = card.querySelector('.' + P + '__answer-card-rerun');
+    if (rerunBtn) {
+      rerunBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        card.classList.add(P + '__answer-card--loading');
+        card.innerHTML =
+          '<div class="' + P + '__answer-card-header">' +
+            '<span class="' + P + '__answer-card-provider">' + Drupal.checkPlain(providerLabel) + '</span>' +
+          '</div>' +
+          '<div class="' + P + '__loading">' +
+            '<div class="' + P + '__loading-spinner"></div>' +
+            '<div class="' + P + '__loading-text">' + Drupal.t('Querying\u2026') + '</div>' +
+          '</div>';
+        fetchOneProvider(queryUrl, question, key, wrapper).then(function (rerunResult) {
+          if (!card.isConnected) return;
+          renderPageSkinAnswerCard(card, rerunResult, providerLabel, queryUrl, question, key, wrapper);
+        });
+      });
+    }
+  }
+
+  /**
+   * Figma-style stacked query + answer cards (page skin).
+   *
+   * @param {string} question
+   * @param {Element} wrapper
+   * @param {boolean} append
+   */
+  function submitQueryPageSkin(question, wrapper, append) {
+    if (!question || !wrapper) return;
+
+    var nodeId = wrapper.getAttribute('data-node-id');
+    var queryUrl = wrapper.getAttribute('data-query-url');
+    var resultsEl = document.getElementById(P + '-results-' + nodeId);
+    if (!queryUrl || !nodeId || !resultsEl) return;
+
+    var keys = getSelectedKeys(wrapper);
+    var key = keys.length > 0 ? keys[0] : '';
+    var providerLabel = key ? getLabelForKey(key, wrapper) : Drupal.t('AI');
+    var threadId = 'thread-' + nodeId + '-' + Date.now();
+
+    if (!append) {
+      resultsEl.innerHTML = '';
+    }
+
+    var queryCard =
+      '<article class="' + P + '__query-card" data-thread-id="' + threadId + '">' +
+        '<div class="' + P + '__query-card-header">' +
+          '<span>' + Drupal.t('Your query:') + '</span>' +
+          '<time datetime="">' + Drupal.checkPlain(formatQueryTimestamp()) + '</time>' +
+        '</div>' +
+        '<p class="' + P + '__query-card-text">' + Drupal.checkPlain(question) + '</p>' +
+      '</article>';
+
+    var answerId = threadId + '-answer';
+    var loadingCard =
+      '<article class="' + P + '__answer-card ' + P + '__answer-card--loading" id="' + answerId + '" data-thread-id="' + threadId + '">' +
+        '<div class="' + P + '__answer-card-header">' +
+          '<span class="' + P + '__answer-card-provider">' + Drupal.checkPlain(providerLabel) + '</span>' +
+        '</div>' +
+        '<div class="' + P + '__loading">' +
+          '<div class="' + P + '__loading-spinner"></div>' +
+          '<div class="' + P + '__loading-text">' + Drupal.t('Querying\u2026') + '</div>' +
+        '</div>' +
+      '</article>';
+
+    resultsEl.insertAdjacentHTML('beforeend', queryCard + loadingCard);
+    resultsEl.scrollTop = resultsEl.scrollHeight;
+
+    fetchOneProvider(queryUrl, question, key, wrapper).then(function (result) {
+      var card = document.getElementById(answerId);
+      if (!card) return;
+      renderPageSkinAnswerCard(card, result, providerLabel, queryUrl, question, key, wrapper);
+    });
+  }
+
   function submitQueryParallel(question, wrapper) {
     if (!question || !wrapper) return;
+
+    if (usesPageSkin(wrapper)) {
+      submitQueryPageSkin(question, wrapper, false);
+      return;
+    }
 
     var nodeId    = wrapper.getAttribute('data-node-id');
     var queryUrl  = wrapper.getAttribute('data-query-url');
@@ -322,6 +477,23 @@
       once('airo-preview-checkbox', '.' + P + '__model-checkbox', context).forEach(function (cb) {
         cb.addEventListener('change', function () {
           syncButton(getWrapper(cb));
+        });
+      });
+
+      once('airo-preview-reset', '.' + P + '__reset', context).forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          var wrapper = getWrapper(btn);
+          if (!wrapper) return;
+          var input = wrapper.querySelector('.' + P + '__input');
+          if (input) {
+            input.value = '';
+          }
+          var resultsEl = document.getElementById(P + '-results-' + wrapper.getAttribute('data-node-id'));
+          if (resultsEl) {
+            resultsEl.innerHTML = '';
+          }
+          syncButton(wrapper);
         });
       });
 

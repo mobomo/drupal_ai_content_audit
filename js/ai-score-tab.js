@@ -40,11 +40,24 @@
           .then(function (response) { return response.json(); })
           .then(function (data) {
             if (data.status === 'complete') {
-              // Reload the score tab via the tab click handler
+              var panel = btn.closest('.airo-panel--accordion');
+              var analysisPage = document.querySelector('.airo-analysis-page');
+              if (analysisPage && panel) {
+                var nodeId = panel.getAttribute('data-node-id');
+                if (nodeId) {
+                  Drupal.ajax({
+                    url: Drupal.url('node/' + nodeId + '/airo-analysis/panel-refresh'),
+                  }).execute();
+                  btn.disabled = false;
+                  btn.textContent = Drupal.t('Re-analyze');
+                  return;
+                }
+              }
               var scoreTabBtn = document.querySelector('.tabs__link[data-airo-tab="score-tab"]');
               if (scoreTabBtn) {
                 scoreTabBtn.click();
-              } else {
+              }
+              else {
                 window.location.reload();
               }
             }

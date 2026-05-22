@@ -35,6 +35,41 @@
     return JSON.stringify({ revision_id: parseInt(rid, 10) });
   }
 
+  /**
+   * Escapes text for safe insertion into HTML attribute / body.
+   *
+   * @param {string} str
+   *   Raw message (e.g. from JSON).
+   *
+   * @return {string}
+   *   Escaped string.
+   */
+  function airoEscapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /**
+   * Renders an error state inside the widget card.
+   *
+   * @param {HTMLElement} widget
+   *   The .airo-widget element.
+   * @param {string} message
+   *   User-visible error text (escaped before display).
+   */
+  function airoShowWidgetError(widget, message) {
+    var safe = airoEscapeHtml(message || Drupal.t('Analysis failed. Please try again.'));
+    widget.innerHTML =
+      '<div class="card__content-wrapper airo-widget__body">' +
+        '<div class="messages messages--error" role="alert">' +
+          '<div class="messages__content">' + safe + '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
   Drupal.behaviors.airoInlineWidget = {
     attach: function (context) {
       // G8: Use data-attribute selectors — stable across template class renames.
@@ -73,28 +108,36 @@
             credentials: 'same-origin',
             body: airoAssessPostBody(this),
           })
-          .then(function (response) { return response.json(); })
-          .then(function (data) {
-            if (data.status === 'complete') {
-              // G5: Swap only the widget card — no full page reload.
-              Drupal.behaviors.airoInlineWidget.refreshWidget(nodeId);
-            }
-            else {
-              // Start polling (assessment may be async).
-              Drupal.behaviors.airoInlineWidget.pollStatus(widget, nodeId);
-            }
-          })
-          .catch(function () {
-            // Show an inline error using GIN's .messages--error pattern.
-            widget.innerHTML =
-              '<div class="card__content-wrapper airo-widget__body">' +
-                '<div class="messages messages--error" role="alert">' +
-                  '<div class="messages__content">' +
-                    Drupal.t('Analysis failed. Please try again.') +
-                  '</div>' +
-                '</div>' +
-              '</div>';
-          });
+            .then(function (response) {
+              return response.json().then(function (data) {
+                return { response: response, data: data };
+              });
+            })
+            .then(function (pack) {
+              var data = pack.data || {};
+              // HTTP errors and explicit JSON errors must not fall through to
+              // pollStatus — the server returns JSON with status "error" and
+              // HTTP 500 on assessment failure.
+              if (!pack.response.ok || data.status === 'error') {
+                var serverMsg = typeof data.message === 'string' ? data.message : '';
+                airoShowWidgetError(
+                  widget,
+                  serverMsg || Drupal.t('Analysis failed. Please try again.')
+                );
+                return;
+              }
+              if (data.status === 'complete') {
+                // G5: Swap only the widget card — no full page reload.
+                Drupal.behaviors.airoInlineWidget.refreshWidget(nodeId);
+              }
+              else {
+                // Start polling (assessment may be async).
+                Drupal.behaviors.airoInlineWidget.pollStatus(widget, nodeId);
+              }
+            })
+            .catch(function () {
+              airoShowWidgetError(widget, Drupal.t('Analysis failed. Please try again.'));
+            });
         });
       });
     },

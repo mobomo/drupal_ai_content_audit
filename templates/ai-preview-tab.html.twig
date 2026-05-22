@@ -2,30 +2,26 @@
 /**
  * @file
  * AI Preview tab — multi-provider comparison mode.
- *
- * Variables:
- * - model_choices: Array of choice objects:
- *     { key, label, provider_id, model_id }
- * - selected_keys: Array of pre-selected provider__model keys (from tempstore).
- * - has_permission: TRUE if the user may choose providers; FALSE = site default only.
- * - suggested_prompts: Array of suggested question strings.
- * - node_id: The node ID.
- * - revision_id: The node revision ID (for client POSTs to preview_query).
- * - query_url: POST endpoint URL for submitting preview queries.
  */
 #}
+{% set use_page_skin = use_page_skin|default(false) %}
 {{ attach_library('ai_content_audit/provider_tabs') }}
-<div class="airo-preview"
+<div class="airo-preview{% if use_page_skin %} airo-preview--page-skin{% endif %}"
   data-node-id="{{ node_id }}"
   data-revision-id="{{ revision_id }}"
-  data-query-url="{{ query_url }}">
+  data-query-url="{{ query_url }}"
+  {% if use_page_skin %}data-page-skin="1"{% endif %}>
 
-  {# ── Question input ─────────────────────────────────────────────────── #}
   <div class="airo-preview__query">
     <label class="airo-preview__query-label" for="airo-preview-input-{{ node_id }}">
-      {{ 'Ask a question about this content'|t }}
+      {% if use_page_skin %}
+        {{ 'Ask an AI about this content'|t }}
+      {% else %}
+        {{ 'Ask a question about this content'|t }}
+      {% endif %}
     </label>
-    <div class="airo-preview__query-row">
+
+    {% if use_page_skin %}
       <input
         id="airo-preview-input-{{ node_id }}"
         class="airo-preview__input"
@@ -33,19 +29,63 @@
         placeholder="{{ 'e.g. What are the key points of this content?'|t }}"
         autocomplete="off"
       />
-      <button type="button"
-        class="airo-preview__submit button button--primary button--small"
-        disabled>
-        {{ 'Ask'|t }}
-      </button>
-    </div>
+      {% if model_choices is not empty %}
+        <label class="airo-preview__model-row-label" for="airo-preview-model-{{ node_id }}">
+          {{ 'Select Language Model'|t }}
+        </label>
+        <div class="airo-preview__model-row">
+          <select id="airo-preview-model-{{ node_id }}" class="airo-preview__model-select" name="provider_model">
+            {% for choice in model_choices %}
+              <option value="{{ choice.key }}" {{ choice.key in selected_keys ? 'selected' : '' }}>
+                {{ choice.label }}
+              </option>
+            {% endfor %}
+          </select>
+          <button type="button" class="airo-preview__submit" disabled>
+            {{ 'Ask'|t }}
+          </button>
+        </div>
+      {% else %}
+        <div class="airo-preview__model-row">
+          <button type="button" class="airo-preview__submit" disabled>
+            {{ 'Ask'|t }}
+          </button>
+        </div>
+      {% endif %}
+      <div class="airo-preview__reset-row">
+        <span class="airo-preview__reset-line" aria-hidden="true"></span>
+        <button type="button" class="airo-preview__reset">{{ 'Reset'|t }}</button>
+        <span class="airo-preview__reset-line" aria-hidden="true"></span>
+      </div>
+      <div class="airo-preview__simulation-notice" role="note">
+        <svg class="airo-preview__simulation-icon" viewBox="0 0 20 20" aria-hidden="true">
+          <rect x="1" y="1" width="18" height="18" rx="3" fill="currentColor" opacity="0.2"/>
+          <text x="10" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">i</text>
+        </svg>
+        <span>
+          <strong>{{ 'Simulation Mode:'|t }}</strong>
+          {{ 'These responses are generated based on your content analysis. They represent how AI systems might answer questions about your content.'|t }}
+        </span>
+      </div>
+    {% else %}
+      <div class="airo-preview__query-row">
+        <input
+          id="airo-preview-input-{{ node_id }}"
+          class="airo-preview__input"
+          type="text"
+          placeholder="{{ 'e.g. What are the key points of this content?'|t }}"
+          autocomplete="off"
+        />
+        <button type="button" class="airo-preview__submit button button--primary button--small" disabled>
+          {{ 'Ask'|t }}
+        </button>
+      </div>
+    {% endif %}
   </div>
 
-  {# ── Provider + model selector ───────────────────────────────────────── #}
-  {% if model_choices is not empty %}
+  {% if not use_page_skin and model_choices is not empty %}
     <div class="airo-preview__model-selector">
       {% if has_permission and model_choices|length > 1 %}
-        {# Multi-select: checkboxes for all configured provider+model combos #}
         <details class="ai-content-audit-compare airo-preview__model-fieldset">
           <summary class="airo-preview__model-legend">
             {{ 'Compare providers'|t }}
@@ -69,7 +109,6 @@
           </p>
         </details>
       {% else %}
-        {# Single-provider: just show which provider is active, no controls #}
         <div class="airo-preview__model-single">
           <span class="airo-preview__model-single-label">
             {% if model_choices[0] is defined %}
@@ -83,7 +122,6 @@
     </div>
   {% endif %}
 
-  {# ── Results area — populated by JS after the query completes ────────── #}
   <div class="airo-preview__results" id="airo-preview-results-{{ node_id }}">
   </div>
 

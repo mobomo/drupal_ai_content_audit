@@ -653,7 +653,7 @@ class AiroPanelController extends ControllerBase {
    * user.permissions cache context so the permission-gated selector is not
    * served incorrectly from cache.
    */
-  public function buildPreviewTab(NodeInterface $node): array {
+  public function buildPreviewTab(NodeInterface $node, bool $pageSkin = FALSE): array {
     $hasPermission = $this->currentUser()->hasPermission('use any ai provider in airo');
 
     // Get all configured chat-capable provider+model pairs.
@@ -699,6 +699,7 @@ class AiroPanelController extends ControllerBase {
 
     return [
       '#theme'            => 'ai_preview_tab',
+      '#use_page_skin'    => $pageSkin,
       '#model_choices'    => $allChoices,
       '#selected_keys'    => $selectedKeys,
       '#has_permission'   => $hasPermission,

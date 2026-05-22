@@ -80,6 +80,8 @@ score-tab:
     js/ai-score-tab.js: {}
   dependencies:
     - core/drupal
+    - core/drupal.ajax
+    - core/once
     - core/once
     - ai_content_audit/design-tokens
 
@@ -92,6 +94,7 @@ action-items-tab:
     js/ai-action-items-tab.js: {}
   dependencies:
     - core/drupal
+    - core/drupal.ajax
     - core/once
     - ai_content_audit/design-tokens
 
@@ -141,4 +144,26 @@ assessment-report:
   dependencies:
     - core/drupal
     - core/once
+    - ai_content_audit/design-tokens
+
+airo-panel-page-skin:
+  version: 1.x
+  css:
+    component:
+      css/airo-panel-page-skin.css: {}
+  dependencies:
+    - ai_content_audit/design-tokens
+
+airo-analysis-page:
+  version: 1.x
+  css:
+    component:
+      css/airo-analysis-page.css: {}
+  js:
+    js/airo-analysis-sidebar-opener.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - ai_content_audit/airo-panel
+    - ai_content_audit/airo-panel-page-skin
     - ai_content_audit/design-tokens

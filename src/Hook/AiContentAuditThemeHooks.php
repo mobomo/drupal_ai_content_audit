@@ -69,6 +69,9 @@ final class AiContentAuditThemeHooks {
           'tab_panes' => [],
           'assess_url' => NULL,
           'full_report_url' => NULL,
+          'use_page_skin' => FALSE,
+          'close_url' => NULL,
+          'logo_url' => NULL,
         ],
         'template' => 'ai-airo-accordion-item',
       ],
@@ -143,6 +146,7 @@ final class AiContentAuditThemeHooks {
       ],
       'ai_preview_tab' => [
         'variables' => [
+          'use_page_skin' => FALSE,
           'model_choices' => [],
           'selected_keys' => [],
           'has_permission' => FALSE,
@@ -198,6 +202,19 @@ final class AiContentAuditThemeHooks {
           'result_json_formatted' => NULL,
         ],
         'template' => 'ai-assessment-report',
+      ],
+      'airo_analysis_node_page' => [
+        'variables' => [
+          'node' => NULL,
+          'node_render' => [],
+          'analysis_panel' => [],
+          'has_layout_builder' => FALSE,
+        ],
+        'template' => 'airo-analysis-node-page',
+      ],
+      'form__layout_builder_form__gin_lb__airo_analysis' => [
+        'render element' => 'element',
+        'template' => 'form--layout-builder-form--gin-lb--airo-analysis',
       ],
     ];
   }

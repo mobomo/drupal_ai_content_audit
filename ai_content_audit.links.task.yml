@@ -1,6 +1,11 @@
-# AI Assessment history tab on node view pages.
+ai_content_audit.node.airo_analysis:
+  route_name: ai_content_audit.node.airo_analysis
+  base_route: entity.node.canonical
+  title: 'AIRO Analysis'
+  weight: 12
+
 ai_content_audit.node.assessment_history:
-  title: 'AI Assessment'
   route_name: ai_content_audit.node.assessment_history
   base_route: entity.node.canonical
-  weight: 50
+  title: 'AI Assessment History'
+  weight: 14

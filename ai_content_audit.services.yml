@@ -80,6 +80,32 @@ services:
     tags:
       - { name: event_subscriber }
 
+  ai_content_audit.airo_analysis_route_subscriber:
+    class: Drupal\ai_content_audit\EventSubscriber\AiroAnalysisRouteSubscriber
+    arguments:
+      - '@ai_content_audit.node_layout_builder_detector'
+    tags:
+      - { name: event_subscriber }
+
+  ai_content_audit.airo_entity_form_controller:
+    class: Drupal\ai_content_audit\Controller\AiroEntityFormController
+    arguments:
+      - '@http_kernel.controller.argument_resolver'
+      - '@form_builder'
+      - '@entity_type.manager'
+      - '@ai_content_audit.node_layout_builder_detector'
+
+  Drupal\ai_content_audit\Controller\AiroEntityFormController: '@ai_content_audit.airo_entity_form_controller'
+
+  ai_content_audit.airo_analysis_layout_route_enhancer:
+    class: Drupal\ai_content_audit\Routing\AiroAnalysisLayoutRouteEnhancer
+    arguments:
+      - '@ai_content_audit.node_layout_builder_detector'
+      - '@layout_builder.param_converter'
+      - '@layout_builder.tempstore_repository'
+    tags:
+      - { name: route_enhancer, priority: 4900 }
+
   ai_content_audit.score_meta:
     class: Drupal\ai_content_audit\Service\ScoreMetaBuilder
     arguments: ['@string_translation']
@@ -89,12 +115,34 @@ services:
     factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
     arguments: ['@service_container']
 
+  ai_content_audit.node_layout_builder_detector:
+    class: Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector
+    arguments:
+      - '@entity_type.manager'
+
+  ai_content_audit.airo_analysis_panel_builder:
+    class: Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+      - '@ai_content_audit.airo_panel_controller'
+      - '@ai_content_audit.audit_check_manager'
+      - '@ai_content_audit.technical_audit'
+      - '@module_handler'
+      - '@extension.list.theme'
+
   ai_content_audit.node_edit_form_alterer:
     class: Drupal\ai_content_audit\Service\NodeEditFormAlterer
     arguments:
-      - '@entity_type.manager'
+      - '@ai_content_audit.airo_analysis_panel_builder'
       - '@ai_content_audit.assessment_repository'
-      - '@ai_content_audit.airo_panel_controller'
+      - '@string_translation'
+
+  ai_content_audit.airo_node_analysis_form_alterer:
+    class: Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer
+    arguments:
+      - '@ai_content_audit.airo_analysis_panel_builder'
+      - '@current_route_match'
+      - '@ai_content_audit.node_layout_builder_detector'
       - '@string_translation'
 
   ai_content_audit.lifecycle:
@@ -124,7 +172,15 @@ services:
     arguments: ['@ai_content_audit.lifecycle']
 
   Drupal\ai_content_audit\Hook\AiContentAuditPageHooks:
-    arguments: ['@config.factory']
+    arguments:
+      - '@config.factory'
+      - '@current_route_match'
+      - '@ai_content_audit.node_layout_builder_detector'
+
+  Drupal\ai_content_audit\Hook\AiContentAuditFormHooks:
+    arguments:
+      - '@ai_content_audit.airo_node_analysis_form_alterer'
+      - '@current_route_match'
 
   Drupal\ai_content_audit\Hook\AiContentAuditAiHooks:
     class: Drupal\ai_content_audit\Hook\AiContentAuditAiHooks

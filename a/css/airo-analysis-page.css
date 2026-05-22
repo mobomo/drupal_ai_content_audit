@@ -1,0 +1,50 @@
+/**
+ * @file
+ * Two-column layout for the AIRO Analysis node tab.
+ */
+
+.airo-analysis-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(360px, 100%);
+  gap: 1.5rem;
+  align-items: start;
+  margin-block: 1rem;
+}
+
+.airo-analysis-page__main {
+  min-width: 0;
+}
+
+.airo-analysis-page__panel {
+  position: sticky;
+  top: var(--drupal-displace-offset-top, 4rem);
+  max-height: calc(100vh - var(--drupal-displace-offset-top, 4rem) - 2rem);
+  overflow-y: auto;
+}
+
+.airo-analysis-panel__section {
+  margin-bottom: 1.25rem;
+}
+
+.airo-analysis-panel__heading {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.airo-analysis-panel--page .airo-panel--accordion {
+  max-height: none;
+}
+
+@media (max-width: 960px) {
+  .airo-analysis-page {
+    grid-template-columns: 1fr;
+  }
+
+  .airo-analysis-page__panel {
+    position: static;
+    max-height: none;
+  }
+}

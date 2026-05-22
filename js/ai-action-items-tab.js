@@ -122,11 +122,24 @@
           .then(function (response) { return response.json(); })
           .then(function (data) {
             if (data.status === 'complete') {
-              // Reload the action items tab
+              var panel = btn.closest('.airo-panel--accordion');
+              var analysisPage = document.querySelector('.airo-analysis-page');
+              if (analysisPage && panel) {
+                var nodeId = panel.getAttribute('data-node-id');
+                if (nodeId) {
+                  Drupal.ajax({
+                    url: Drupal.url('node/' + nodeId + '/airo-analysis/panel-refresh'),
+                  }).execute();
+                  btn.disabled = false;
+                  btn.textContent = Drupal.t('Re-check');
+                  return;
+                }
+              }
               var tabBtn = document.querySelector('.tabs__link[data-airo-tab="action-items-tab"]');
               if (tabBtn) {
                 tabBtn.click();
-              } else {
+              }
+              else {
                 window.location.reload();
               }
             }

@@ -29,6 +29,28 @@
     return JSON.stringify({ revision_id: parseInt(rid, 10) });
   }
 
+  /**
+   * On the AIRO Analysis tab, refresh only the side panel (no full page reload).
+   *
+   * @param {Element|null} panel
+   *   .airo-panel--accordion element (for node id).
+   */
+  function airoRefreshAfterAssess(panel) {
+    var analysisPage = document.querySelector('.airo-analysis-route');
+    if (!analysisPage || !panel) {
+      window.location.reload();
+      return;
+    }
+    var nodeId = panel.getAttribute('data-node-id');
+    if (!nodeId) {
+      window.location.reload();
+      return;
+    }
+    Drupal.ajax({
+      url: Drupal.url('node/' + nodeId + '/airo-analysis/panel-refresh'),
+    }).execute();
+  }
+
   // ── 1. Tab switching ──────────────────────────────────────────────────────
   Drupal.behaviors.airoPanel = {
     attach: function (context) {
@@ -117,9 +139,7 @@
           })
           .then(function (response) { return response.json(); })
           .then(function () {
-            // Reload the page — the accordion item re-renders from the
-            // freshly saved assessment entity in the database.
-            window.location.reload();
+            airoRefreshAfterAssess(panel);
           })
           .catch(function () {
             panel.innerHTML =
