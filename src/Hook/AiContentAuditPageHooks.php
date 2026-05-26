@@ -17,6 +17,27 @@ use Drupal\node\NodeInterface;
  */
 final class AiContentAuditPageHooks {
 
+  /**
+   * Gin LB styles for the AIRO panel shell (CON and SIN LB).
+   */
+  private const GIN_LB_PANEL_LIBRARIES = [
+    'gin_lb/gin_lb',
+    'gin_lb/gin_lb_10',
+  ];
+
+  /**
+   * Extra Gin LB assets for Layout Builder canvas (CON LB only).
+   */
+  private const GIN_LB_LAYOUT_LIBRARIES = [
+    'gin_lb/gin_lb_init',
+    'gin_lb/offcanvas',
+    'gin_lb/preview',
+    'gin_lb/toolbar',
+    'gin/gin_ckeditor',
+    'claro/claro.jquery.ui',
+    'claro/global-styling',
+  ];
+
   public function __construct(
     protected ConfigFactoryInterface $configFactory,
     protected RouteMatchInterface $routeMatch,
@@ -75,7 +96,7 @@ final class AiContentAuditPageHooks {
   }
 
   /**
-   * Attaches Gin LB assets on AIRO Analysis when Layout Builder is active.
+   * Attaches Gin LB assets on the AIRO Analysis tab.
    */
   #[Hook('page_attachments')]
   public function pageAttachments(array &$attachments): void {
@@ -83,22 +104,14 @@ final class AiContentAuditPageHooks {
       return;
     }
 
+    $libraries = self::GIN_LB_PANEL_LIBRARIES;
+
     $node = $this->routeMatch->getParameter('node');
-    if (!$node instanceof NodeInterface || !$this->layoutBuilderDetector->isLayoutBuilderEnabled($node)) {
-      return;
+    if ($node instanceof NodeInterface && $this->layoutBuilderDetector->isLayoutBuilderEnabled($node)) {
+      $libraries = [...self::GIN_LB_PANEL_LIBRARIES, ...self::GIN_LB_LAYOUT_LIBRARIES];
     }
 
-    foreach ([
-      'gin_lb/gin_lb_init',
-      'gin_lb/offcanvas',
-      'gin_lb/preview',
-      'gin_lb/toolbar',
-      'gin/gin_ckeditor',
-      'claro/claro.jquery.ui',
-      'gin_lb/gin_lb',
-      'claro/global-styling',
-      'gin_lb/gin_lb_10',
-    ] as $library) {
+    foreach ($libraries as $library) {
       $attachments['#attached']['library'][] = $library;
     }
   }

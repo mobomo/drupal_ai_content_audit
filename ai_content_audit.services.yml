@@ -94,6 +94,7 @@ services:
       - '@form_builder'
       - '@entity_type.manager'
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@ai_content_audit.airo_analysis_panel_builder'
 
   Drupal\ai_content_audit\Controller\AiroEntityFormController: '@ai_content_audit.airo_entity_form_controller'
 
@@ -128,13 +129,13 @@ services:
       - '@ai_content_audit.audit_check_manager'
       - '@ai_content_audit.technical_audit'
       - '@module_handler'
-      - '@extension.list.theme'
 
   ai_content_audit.node_edit_form_alterer:
     class: Drupal\ai_content_audit\Service\NodeEditFormAlterer
     arguments:
       - '@ai_content_audit.airo_analysis_panel_builder'
       - '@ai_content_audit.assessment_repository'
+      - '@current_route_match'
       - '@string_translation'
 
   ai_content_audit.airo_node_analysis_form_alterer:

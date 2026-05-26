@@ -501,6 +501,13 @@
       once('airo-preview-init', '.' + P, context).forEach(function (wrapper) {
         syncButton(wrapper);
       });
+
+      // Panel host is a <form> for gin_lb field styles; block native submit.
+      once('airo-analysis-panel-host', 'form.airo-analysis-panel-host', context).forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+        });
+      });
     },
   };
 

@@ -8,7 +8,6 @@ use Drupal\ai_content_audit\Controller\AiroPanelController;
 use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Extension\ThemeExtensionList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
@@ -36,15 +35,11 @@ final class AiroAnalysisPanelBuilder {
     protected AuditCheckManager $auditCheckManager,
     protected TechnicalAuditService $technicalAuditService,
     protected ModuleHandlerInterface $moduleHandler,
-    protected ThemeExtensionList $themeExtensionList,
   ) {}
 
-  /**
-   * Public URL for the AIRO bird logo (Mobomo theme asset).
-   */
   public function getAiroLogoUrl(): string {
-    $theme_path = $this->themeExtensionList->getPath('mobomo');
-    return base_path() . $theme_path . '/images/airo-logo.png';
+    $module_path = $this->moduleHandler->getModule('ai_content_audit')->getPath();
+    return Url::fromUri('base:' . $module_path . '/images/airo-logo.svg')->toString();
   }
 
   /**
