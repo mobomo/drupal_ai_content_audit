@@ -1,44 +1,47 @@
 /**
  * @file
- * AIRO Analysis tab — native Layout/Edit pages with custom right sidebar.
- */
-
-/*
- * Layout Builder: Gin LB keeps a single #gin_sidebar; the AIRO panel is injected
- * inside its <form> (see form--layout-builder-form--gin-lb--airo-analysis.html.twig).
- * Do NOT use display:none on #gin_sidebar — the panel is nested inside it.
+ * AIRO Analysis tab — LB uses #gin_sidebar; Edit (no LB) mirrors it via fixed panel.
  */
 
 .airo-analysis-route .meta-sidebar__overlay {
   display: none !important;
 }
 
-/*
- * Sidebar top: Gin LB offset minus a small nudge (full formula sits ~10px low here).
- * Use top/height — not margin-top on #gin_sidebar.
- */
 body.airo-analysis-route {
   --airo-sidebar-top-nudge: 10px;
+  --airo-panel-max-width: 374px;
 }
 
-body.airo-analysis-route.gin--horizontal-toolbar #gin_sidebar.glb-sidebar {
-  top: calc(var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) + var(--gin-toolbar-secondary-height, 0px) - var(--airo-sidebar-top-nudge)) !important;
-  margin-top: 0 !important;
+/* ── Shared panel width (LB sidebar + Edit aside) ─────────────────────────── */
+
+.airo-analysis-route #gin_sidebar.glb-sidebar,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+  width: var(--airo-panel-max-width) !important;
+  max-width: var(--airo-panel-max-width) !important;
+}
+
+/* ── Layout Builder: #gin_sidebar (gin_lb) ─────────────────────────────────── */
+
+body.airo-analysis-route.gin--horizontal-toolbar #gin_sidebar.glb-sidebar,
+body.airo-analysis-route.gin--horizontal-toolbar .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+  top: calc(var(--gin-toolbar-secondary-height) + 1px) !important;
+  margin-top: 53px;
   height: calc(100% - var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) - var(--gin-toolbar-secondary-height, 0px) + var(--airo-sidebar-top-nudge)) !important;
 }
 
-body.airo-analysis-route.gin--vertical-toolbar #gin_sidebar.glb-sidebar {
+body.airo-analysis-route.gin--vertical-toolbar #gin_sidebar.glb-sidebar,
+body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
   top: calc(var(--gin-toolbar-secondary-height, 0px) - var(--airo-sidebar-top-nudge)) !important;
   margin-top: 0 !important;
   height: calc(100% - var(--gin-toolbar-secondary-height, 0px) + var(--airo-sidebar-top-nudge)) !important;
 }
 
-/* AIRO panel only — hide Gin LB "Layout builder setting" titlebar. */
 .airo-analysis-route #gin_sidebar .glb-sidebar__titlebar {
   display: none !important;
 }
 
-.airo-analysis-route #gin_sidebar .glb-sidebar__content {
+.airo-analysis-route #gin_sidebar .glb-sidebar__content,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel .glb-sidebar__content {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -47,61 +50,71 @@ body.airo-analysis-route.gin--vertical-toolbar #gin_sidebar.glb-sidebar {
   overflow-x: hidden;
 }
 
-/* LB: only the AIRO slot in the Gin sidebar (hides duplicate empty LB regions). */
 .airo-analysis-route #gin_sidebar form.layout-builder-form > *:not(#edit-airo-panel-slot) {
   display: none !important;
 }
 
 .airo-analysis-route #gin_sidebar #edit-airo-panel-slot,
-.airo-analysis-route #gin_sidebar .airo-analysis-panel--page {
+.airo-analysis-route #gin_sidebar .airo-analysis-panel--page,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-panel--page {
   flex: 0 0 auto;
   min-height: 0;
   max-height: none;
+  border-radius: 0;
+  box-shadow: none;
   overflow: visible;
 }
 
-.airo-analysis-route #gin_sidebar form.layout-builder-form {
+.airo-analysis-route #gin_sidebar form.layout-builder-form,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel form.airo-analysis-panel-host {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-}
-
-/* Edit tab (no Layout Builder): fixed right column for the AIRO panel. */
-.airo-analysis-route .airo-analysis-sidebar--edit {
-  position: fixed;
-  top: var(--drupal-displace-offset-top, 4rem);
-  right: 0;
-  z-index: 101;
-  width: min(420px, 100vw);
-  max-height: calc(100vh - var(--drupal-displace-offset-top, 4rem));
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-@media (min-width: 1200px) {
-  .airo-analysis-route.path-node--edit .layout-content,
-  .airo-analysis-route .region-sticky,
-  .airo-analysis-route .block-local-tasks-block,
-  /* Main column only — not the LB form nested in #gin_sidebar. */
-  .airo-analysis-route form.airo-analysis-native-form:not(.layout-builder-form) {
-    margin-right: min(420px, 35vw);
-  }
-}
-
-.airo-analysis-route #gin_sidebar form.layout-builder-form {
   margin-right: 0;
   max-width: 100%;
 }
 
-.airo-analysis-panel--page {
-  padding: 0;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
-  overflow: hidden;
-  max-width: 100%;
+/* ── Edit sin LB: panel fijo, misma geometría que #gin_sidebar ─────────────── */
+
+.airo-analysis-route .airo-analysis-page--edit-form {
+  display: block;
+  margin-block: 1rem;
+}
+
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main {
+  min-width: 0;
+  margin-right: var(--airo-panel-max-width);
+}
+
+/*
+ * Sin LB: Gin renders entity-meta (accordion sidebar) at the bottom of the main
+ * column — hide it; the panel lives only in .airo-analysis-page__panel.
+ */
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .entity-meta,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .layout-region--node-secondary,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .layout-region-node-secondary,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main #edit-airo-analysis,
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main details.accordion__item:has(.airo-panel--page-skin),
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .entity-meta__header.accordion__item:has(.airo-panel),
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .airo-analysis-panel--page {
+  display: none !important;
+}
+
+.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+  position: fixed;
+  right: 0;
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin-top: 117px !important;
+}
+
+.airo-analysis-route .airo-analysis-page--edit-form .airo-panel--page-skin .airo-panel__brand-header {
+  border-radius: 0;
 }
 
 .airo-analysis-panel--page .airo-panel--accordion {
@@ -109,10 +122,15 @@ body.airo-analysis-route.gin--vertical-toolbar #gin_sidebar.glb-sidebar {
 }
 
 @media (max-width: 960px) {
-  .airo-analysis-route .airo-analysis-sidebar--edit {
+  .airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main {
+    margin-right: 0;
+  }
+
+  .airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
     position: static;
-    width: 100%;
-    max-height: none;
-    margin-top: 1rem;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    margin-top: 0;
   }
 }

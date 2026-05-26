@@ -1,13 +1,15 @@
 /**
  * @file
- * Auto-open Gin's meta sidebar and the AIRO Analysis accordion on
- * `/node/{node}/airo-analysis`.
+ * Auto-open Gin LB sidebar on `/node/{node}/airo-analysis` when Layout Builder is on.
+ *
+ * Edit without LB uses the two-column page template; no Gin meta-sidebar toggle.
  */
 (function (Drupal, once) {
   'use strict';
 
   var STORAGE_DESKTOP = 'Drupal.gin.sidebarExpanded.desktop';
   var STORAGE_MOBILE = 'Drupal.gin.sidebarExpanded.mobile';
+  var SESSION_KEY_LB = 'airo-analysis-sidebar-initialized-lb';
 
   function isAiroRoute() {
     return document.body && document.body.classList.contains('airo-analysis-route');
@@ -20,10 +22,10 @@
   }
 
   /**
-   * Opens Gin / Gin LB sidebar once on load (does not fight the toggle afterward).
+   * Opens Gin LB #gin_sidebar once per tab (Layout Builder nodes only).
    */
-  function openGinSidebar() {
-    if (sessionStorage.getItem('airo-analysis-sidebar-initialized') === '1') {
+  function openLayoutBuilderSidebar() {
+    if (sessionStorage.getItem(SESSION_KEY_LB) === '1') {
       return;
     }
 
@@ -47,52 +49,20 @@
       }
     }
 
-    sessionStorage.setItem('airo-analysis-sidebar-initialized', '1');
-  }
-
-  /**
-   * Expands the AIRO Analysis <details> (native edit form path).
-   */
-  function openAiroDetails() {
-    var selectors = [
-      '#edit-airo-analysis',
-      'details[data-drupal-selector="edit-airo-analysis"]',
-      '.layout-region__content details.accordion__item[id*="airo"]',
-    ];
-    var details = null;
-    for (var i = 0; i < selectors.length; i++) {
-      details = document.querySelector(selectors[i]);
-      if (details) {
-        break;
-      }
-    }
-    if (!details) {
-      return;
-    }
-    details.open = true;
-    details.setAttribute('open', 'open');
-    var summary = details.querySelector('summary');
-    if (summary) {
-      summary.setAttribute('aria-expanded', 'true');
-    }
-  }
-
-  function openSidebarAndAccordion() {
-    openGinSidebar();
-    if (!isLayoutBuilderSidebar()) {
-      openAiroDetails();
+    if (document.body.getAttribute('data-meta-sidebar') === 'open') {
+      sessionStorage.setItem(SESSION_KEY_LB, '1');
     }
   }
 
   Drupal.behaviors.airoAnalysisSidebarOpener = {
     attach: function (context) {
-      if (!isAiroRoute()) {
+      if (!isAiroRoute() || !isLayoutBuilderSidebar()) {
         return;
       }
-      once('airo-analysis-sidebar-opener', 'body', context).forEach(function () {
-        openSidebarAndAccordion();
-        if (!document.querySelector('#edit-airo-panel-slot, #edit-airo-analysis')) {
-          window.setTimeout(openSidebarAndAccordion, 150);
+      once('airo-analysis-sidebar-opener-lb', 'body', context).forEach(function () {
+        openLayoutBuilderSidebar();
+        if (!document.querySelector('#edit-airo-panel-slot')) {
+          window.setTimeout(openLayoutBuilderSidebar, 150);
         }
       });
     },

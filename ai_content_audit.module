@@ -13,7 +13,7 @@ function ai_content_audit_module_implements_alter(array &$implementations, strin
   if (!isset($implementations['ai_content_audit'])) {
     return;
   }
-  if (in_array($hook, ['theme_suggestions_form_alter', 'form_alter'], TRUE)) {
+  if (in_array($hook, ['theme_suggestions_form_alter', 'form_alter', 'form_node_form_alter'], TRUE)) {
     $group = $implementations['ai_content_audit'];
     unset($implementations['ai_content_audit']);
     $implementations['ai_content_audit'] = $group;

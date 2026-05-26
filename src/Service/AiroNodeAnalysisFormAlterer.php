@@ -65,24 +65,10 @@ final class AiroNodeAnalysisFormAlterer {
       return;
     }
 
-    // Reserve margin-right layout hook for the native Edit form (main column), not LB sidebar.
-    $form['#attributes']['class'][] = 'airo-analysis-native-form';
-
-    // Native Edit form: inject the AIRO panel as an accordion item inside the
-    // existing Gin sidebar (#gin_sidebar > .layout-region__content), so the
-    // wrappers and the ginSidebarToggle behave exactly like the Edit tab.
-    if (isset($form['advanced'])) {
-      $form['airo_analysis'] = [
-        '#type' => 'details',
-        '#title' => $this->t('AIRO Analysis'),
-        '#group' => 'advanced',
-        '#accordion_item' => TRUE,
-        '#open' => TRUE,
-        '#attributes' => ['class' => ['accordion__item']],
-        '#weight' => -100,
-        'panel' => $panel,
-      ];
-    }
+    // Sin LB: panel in aside; strip Gin entity-meta duplicate at bottom of page.
+    $form['#attributes']['class'][] = 'airo-analysis-page__edit-form';
+    NodeEditFormAlterer::stripAiroAnalysisTabSidebar($form);
+    $form['#after_build'][] = [NodeEditFormAlterer::class, 'afterBuildStripSidebarPanel'];
   }
 
 }

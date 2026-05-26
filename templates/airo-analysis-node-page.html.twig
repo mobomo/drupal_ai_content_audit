@@ -16,8 +16,13 @@
     {{ node_render }}
   </div>
 
-  <aside class="airo-analysis-page__panel" aria-label="{{ 'AIRO Analysis panel'|t }}">
-    {{ analysis_panel }}
+  {# form.layout-builder-form.glb-form: gin_lb solo estiliza inputs dentro de <form>, no <div>. #}
+  <aside class="airo-analysis-page__panel glb-sidebar" aria-label="{{ 'AIRO Analysis panel'|t }}">
+    <div class="glb-sidebar__content">
+      <form class="glb-form layout-builder-form airo-analysis-panel-host" method="post" action="#" novalidate>
+        {{ analysis_panel }}
+      </form>
+    </div>
   </aside>
 
 </div>
