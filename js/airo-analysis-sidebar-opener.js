@@ -1,8 +1,6 @@
 /**
  * @file
- * Auto-open Gin LB sidebar on `/node/{node}/airo-analysis` when Layout Builder is on.
- *
- * Edit without LB uses the two-column page template; no Gin meta-sidebar toggle.
+ * Auto-open Gin meta-sidebar on `/node/{node}/airo-analysis` (LB and Edit sin LB).
  */
 (function (Drupal, once) {
   'use strict';
@@ -10,6 +8,7 @@
   var STORAGE_DESKTOP = 'Drupal.gin.sidebarExpanded.desktop';
   var STORAGE_MOBILE = 'Drupal.gin.sidebarExpanded.mobile';
   var SESSION_KEY_LB = 'airo-analysis-sidebar-initialized-lb';
+  var SESSION_KEY_EDIT = 'airo-analysis-sidebar-initialized-edit';
 
   function isAiroRoute() {
     return document.body && document.body.classList.contains('airo-analysis-route');
@@ -21,11 +20,17 @@
     );
   }
 
+  function isEditFormPanel() {
+    return !!document.querySelector('.airo-analysis-route .airo-analysis-page--edit-form');
+  }
+
   /**
-   * Opens Gin LB #gin_sidebar once per tab (Layout Builder nodes only).
+   * Opens Gin meta-sidebar once per tab (per layout mode).
+   *
+   * @param {string} sessionKey
    */
-  function openLayoutBuilderSidebar() {
-    if (sessionStorage.getItem(SESSION_KEY_LB) === '1') {
+  function openMetaSidebar(sessionKey) {
+    if (sessionStorage.getItem(sessionKey) === '1') {
       return;
     }
 
@@ -50,19 +55,27 @@
     }
 
     if (document.body.getAttribute('data-meta-sidebar') === 'open') {
-      sessionStorage.setItem(SESSION_KEY_LB, '1');
+      sessionStorage.setItem(sessionKey, '1');
     }
   }
 
   Drupal.behaviors.airoAnalysisSidebarOpener = {
     attach: function (context) {
-      if (!isAiroRoute() || !isLayoutBuilderSidebar()) {
+      if (!isAiroRoute()) {
         return;
       }
-      once('airo-analysis-sidebar-opener-lb', 'body', context).forEach(function () {
-        openLayoutBuilderSidebar();
-        if (!document.querySelector('#edit-airo-panel-slot')) {
-          window.setTimeout(openLayoutBuilderSidebar, 150);
+
+      once('airo-analysis-sidebar-opener', 'body', context).forEach(function () {
+        if (isLayoutBuilderSidebar()) {
+          openMetaSidebar(SESSION_KEY_LB);
+          if (!document.querySelector('#edit-airo-panel-slot')) {
+            window.setTimeout(function () {
+              openMetaSidebar(SESSION_KEY_LB);
+            }, 150);
+          }
+        }
+        else if (isEditFormPanel()) {
+          openMetaSidebar(SESSION_KEY_EDIT);
         }
       });
     },

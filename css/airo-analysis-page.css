@@ -9,15 +9,46 @@
 
 body.airo-analysis-route {
   --airo-sidebar-top-nudge: 10px;
-  --airo-panel-max-width: 374px;
+  --airo-panel-max-width: 373px;
+  /*
+   * Altura mínima del panel = viewport menos barras Gin (respaldo si % no resuelve).
+   * El sidebar ya usa height: calc(100% - …); el panel usa 100% de ese contenedor.
+   */
+  --airo-panel-min-height: calc(
+    100dvh - var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) -
+      var(--gin-toolbar-secondary-height, 0px)
+  );
+}
+
+body.airo-analysis-route.gin--horizontal-toolbar {
+  --airo-panel-min-height: calc(
+    100dvh - var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) -
+      var(--gin-toolbar-secondary-height, 0px) - 53px
+  );
 }
 
 /* ── Shared panel width (LB sidebar + Edit aside) ─────────────────────────── */
 
-.airo-analysis-route #gin_sidebar.glb-sidebar,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+/*
+ * Ancho 373px solo con sidebar abierto. Al cerrar (data-meta-sidebar !== open)
+ * colapsar por completo — LB #gin_sidebar y panel fijo sin LB.
+ */
+body.airo-analysis-route[data-meta-sidebar="open"] #gin_sidebar.glb-sidebar,
+body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
   width: var(--airo-panel-max-width) !important;
   max-width: var(--airo-panel-max-width) !important;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+body.airo-analysis-route:not([data-meta-sidebar="open"]) #gin_sidebar.glb-sidebar,
+body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ── Layout Builder: #gin_sidebar (gin_lb) ─────────────────────────────────── */
@@ -46,8 +77,9 @@ body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .a
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  height: 100%;
   padding: 0;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .airo-analysis-route #gin_sidebar form.layout-builder-form > *:not(#edit-airo-panel-slot) {
@@ -57,12 +89,31 @@ body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .a
 .airo-analysis-route #gin_sidebar #edit-airo-panel-slot,
 .airo-analysis-route #gin_sidebar .airo-analysis-panel--page,
 .airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-panel--page {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   min-height: 0;
   max-height: none;
   border-radius: 0;
   box-shadow: none;
   overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.airo-analysis-route .airo-panel--page-skin {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+/*
+ * Panel accordion en AIRO Analysis: llena el sidebar hasta abajo (azul en landing).
+ * min-height en dvh como respaldo; height 100% cuando el padre ya tiene altura fija.
+ */
+.airo-analysis-route .airo-panel--accordion.airo-panel--page-skin {
+  min-height: 100%;
+  min-height: var(--airo-panel-min-height);
+  height: 100%;
+  max-height: none;
 }
 
 .airo-analysis-route #gin_sidebar form.layout-builder-form,
@@ -71,7 +122,8 @@ body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .a
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  height: 100%;
+  overflow: hidden;
   margin-right: 0;
   max-width: 100%;
 }
@@ -85,7 +137,14 @@ body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .a
 
 .airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main {
   min-width: 0;
+}
+
+body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__main {
   margin-right: var(--airo-panel-max-width);
+}
+
+body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__main {
+  margin-right: 0;
 }
 
 /*
@@ -108,8 +167,7 @@ body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .a
   z-index: 101;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   margin-top: 117px !important;
 }
 
@@ -119,18 +177,27 @@ body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .a
 
 .airo-analysis-panel--page .airo-panel--accordion {
   max-height: none;
+  min-height: 100%;
+  min-height: var(--airo-panel-min-height);
 }
 
 @media (max-width: 960px) {
-  .airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main {
+  body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__main,
+  body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__main {
     margin-right: 0;
   }
 
-  .airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+  body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
     position: static;
     width: 100% !important;
     max-width: none !important;
     height: auto !important;
     margin-top: 0;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+    display: none !important;
   }
 }

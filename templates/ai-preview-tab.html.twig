@@ -12,62 +12,124 @@
   data-query-url="{{ query_url }}"
   {% if use_page_skin %}data-page-skin="1"{% endif %}>
 
-  <div class="airo-preview__query">
-    <label class="airo-preview__query-label" for="airo-preview-input-{{ node_id }}">
-      {% if use_page_skin %}
-        {{ 'Ask an AI about this content'|t }}
-      {% else %}
-        {{ 'Ask a question about this content'|t }}
-      {% endif %}
-    </label>
+  {% if use_page_skin %}
+    {# Screen 1: landing (full blue panel via CSS on parent). #}
+    <div class="airo-panel__screen airo-panel__screen--landing">
+      <div class="airo-preview__landing">
+        <p class="airo-preview__landing-title">{{ 'Ask an AI about this content'|t }}</p>
 
-    {% if use_page_skin %}
-      <input
-        id="airo-preview-input-{{ node_id }}"
-        class="airo-preview__input"
-        type="text"
-        placeholder="{{ 'e.g. What are the key points of this content?'|t }}"
-        autocomplete="off"
-      />
-      {% if model_choices is not empty %}
-        <label class="airo-preview__model-row-label" for="airo-preview-model-{{ node_id }}">
-          {{ 'Select Language Model'|t }}
-        </label>
-        <div class="airo-preview__model-row">
-          <select id="airo-preview-model-{{ node_id }}" class="airo-preview__model-select" name="provider_model">
-            {% for choice in model_choices %}
-              <option value="{{ choice.key }}" {{ choice.key in selected_keys ? 'selected' : '' }}>
-                {{ choice.label }}
-              </option>
-            {% endfor %}
-          </select>
-          <button type="button" class="airo-preview__submit" disabled>
-            {{ 'Ask'|t }}
+        <div class="airo-preview__composer-card">
+          {% if model_choices is not empty %}
+            <div class="airo-preview__model-selector--landing">
+              {% include '@ai_content_audit/airo-preview-model-selector.html.twig' with {
+                model_choices: model_choices,
+                selected_keys: selected_keys,
+                has_permission: has_permission,
+                use_selector_card: true,
+              } only %}
+            </div>
+          {% endif %}
+
+          <div class="airo-preview__composer-field">
+            <label class="visually-hidden" for="airo-preview-input-landing-{{ node_id }}">
+              {{ 'Question about this content'|t }}
+            </label>
+            <textarea
+              id="airo-preview-input-landing-{{ node_id }}"
+              class="airo-preview__input airo-preview__input--landing"
+              data-composer="landing"
+              rows="2"
+              placeholder="{{ 'e.g. What are the key points of this content?'|t }}"
+              autocomplete="off"></textarea>
+            <button type="button"
+              class="airo-preview__submit-arrow"
+              data-composer="landing"
+              disabled
+              aria-label="{{ 'Submit question'|t }}">
+              {% include '@ai_content_audit/airo-preview-submit-arrow-icon.html.twig' %}
+            </button>
+          </div>
+        </div>
+
+        <div class="airo-preview__howto-notice" role="note">
+          {% include '@ai_content_audit/airo-preview-howto-icon.html.twig' with { howto_clip_id: 'airo-preview-howto-clip-landing-' ~ node_id } only %}
+          <span>
+            <strong>{{ 'How to use:'|t }}</strong>
+            {{ 'These responses are generated based on your content analysis. They represent how AI systems might answer questions about your content.'|t }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {# Screen 2: conversation (compact header on parent; white body). #}
+    <div class="airo-panel__screen airo-panel__screen--conversation">
+      <div class="airo-preview__conversation-toolbar-row">
+        {% if has_permission and model_choices|length > 1 %}
+          <div class="airo-preview__model-selector--conversation">
+            {% include '@ai_content_audit/airo-preview-model-selector.html.twig' with {
+              model_choices: model_choices,
+              selected_keys: selected_keys,
+              has_permission: has_permission,
+              use_selector_card: true,
+              show_single: false,
+            } only %}
+          </div>
+        {% else %}
+          <div class="airo-preview__conversation-toolbar-spacer" aria-hidden="true"></div>
+        {% endif %}
+        <details class="airo-preview__howto-details airo-preview__howto-details--conversation">
+          <summary class="airo-preview__howto-trigger" aria-label="{{ 'How to use'|t }}">
+            {% include '@ai_content_audit/airo-preview-howto-icon.html.twig' with { howto_clip_id: 'airo-preview-howto-clip-conv-' ~ node_id } only %}
+          </summary>
+          <div class="airo-preview__howto-popover" role="note">
+            <p class="airo-preview__howto-popover-text">
+              <strong>{{ 'How to use:'|t }}</strong>
+              {{ 'These responses are generated based on your content analysis. They represent how AI systems might answer questions about your content.'|t }}
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <div class="airo-preview__provider-tabs-host"
+        id="airo-preview-provider-tabs-{{ node_id }}"
+        hidden></div>
+
+      <div class="airo-preview__results"
+        id="airo-preview-results-{{ node_id }}"
+        role="region"
+        aria-live="polite"
+        aria-label="{{ 'AI conversation'|t }}"
+        tabindex="-1">
+      </div>
+
+      <div class="airo-panel__composer airo-preview__composer-footer">
+        <div class="airo-preview__composer-field">
+          <label class="visually-hidden" for="airo-preview-input-conversation-{{ node_id }}">
+            {{ 'Follow-up question'|t }}
+          </label>
+          <textarea
+            id="airo-preview-input-conversation-{{ node_id }}"
+            class="airo-preview__input airo-preview__input--conversation"
+            data-composer="conversation"
+            rows="2"
+            placeholder="{{ 'e.g. What are the key points of this content?'|t }}"
+            autocomplete="off"></textarea>
+          <button type="button"
+            class="airo-preview__submit-arrow"
+            data-composer="conversation"
+            disabled
+            aria-label="{{ 'Submit question'|t }}">
+            {% include '@ai_content_audit/airo-preview-submit-arrow-icon.html.twig' %}
           </button>
         </div>
-      {% else %}
-        <div class="airo-preview__model-row">
-          <button type="button" class="airo-preview__submit" disabled>
-            {{ 'Ask'|t }}
-          </button>
-        </div>
-      {% endif %}
-      <div class="airo-preview__reset-row">
-        <span class="airo-preview__reset-line" aria-hidden="true"></span>
-        <button type="button" class="airo-preview__reset">{{ 'Reset'|t }}</button>
-        <span class="airo-preview__reset-line" aria-hidden="true"></span>
       </div>
-      <div class="airo-preview__simulation-notice" role="note">
-        <svg class="airo-preview__simulation-icon" viewBox="0 0 20 20" aria-hidden="true">
-          <rect x="1" y="1" width="18" height="18" rx="3" fill="currentColor" opacity="0.2"/>
-          <text x="10" y="14" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">i</text>
-        </svg>
-        <span>
-          <strong>{{ 'Simulation Mode:'|t }}</strong>
-          {{ 'These responses are generated based on your content analysis. They represent how AI systems might answer questions about your content.'|t }}
-        </span>
-      </div>
-    {% else %}
+    </div>
+
+  {% else %}
+    <div class="airo-preview__query">
+      <label class="airo-preview__query-label" for="airo-preview-input-{{ node_id }}">
+        {{ 'Ask a question about this content'|t }}
+      </label>
       <div class="airo-preview__query-row">
         <input
           id="airo-preview-input-{{ node_id }}"
@@ -80,49 +142,21 @@
           {{ 'Ask'|t }}
         </button>
       </div>
-    {% endif %}
-  </div>
+    </div>
 
-  {% if not use_page_skin and model_choices is not empty %}
-    <div class="airo-preview__model-selector">
-      {% if has_permission and model_choices|length > 1 %}
-        <details class="ai-content-audit-compare airo-preview__model-fieldset">
-          <summary class="airo-preview__model-legend">
-            {{ 'Compare providers'|t }}
-          </summary>
-          <div class="airo-preview__model-options">
-            {% for choice in model_choices %}
-              <label class="airo-preview__model-option">
-                <input
-                  type="checkbox"
-                  class="airo-preview__model-checkbox"
-                  name="provider_model"
-                  value="{{ choice.key }}"
-                  {{ choice.key in selected_keys ? 'checked' : '' }}
-                />
-                <span class="airo-preview__model-option-label">{{ choice.label }}</span>
-              </label>
-            {% endfor %}
-          </div>
-          <p class="airo-preview__model-hint">
-            {{ 'Select one or more to compare answers side by side.'|t }}
-          </p>
-        </details>
-      {% else %}
-        <div class="airo-preview__model-single">
-          <span class="airo-preview__model-single-label">
-            {% if model_choices[0] is defined %}
-              {{ model_choices[0].label }}
-            {% else %}
-              {{ 'AI Assistant'|t }}
-            {% endif %}
-          </span>
-        </div>
-      {% endif %}
+    {% if model_choices is not empty %}
+      <div>
+        {% include '@ai_content_audit/airo-preview-model-selector.html.twig' with {
+          model_choices: model_choices,
+          selected_keys: selected_keys,
+          has_permission: has_permission,
+          use_selector_card: false,
+        } only %}
+      </div>
+    {% endif %}
+
+    <div class="airo-preview__results" id="airo-preview-results-{{ node_id }}">
     </div>
   {% endif %}
-
-  <div class="airo-preview__results" id="airo-preview-results-{{ node_id }}">
-  </div>
 
 </div>
