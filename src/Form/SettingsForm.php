@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Settings form for the AI Content Audit module.
  *
  * Route: /admin/config/ai/content-audit
- * Permission: administer ai content audit
+ * Permission: administer ai content audit.
  */
 final class SettingsForm extends ConfigFormBase {
 
@@ -79,15 +79,15 @@ final class SettingsForm extends ConfigFormBase {
       $form['provider_status'] = [
         '#type'   => 'markup',
         '#markup' => '<div class="messages messages--status">'
-          . $this->t('✓ A chat provider is configured (global default: <strong>@provider</strong> / <strong>@model</strong>). '
+        . $this->t('✓ A chat provider is configured (global default: <strong>@provider</strong> / <strong>@model</strong>). '
               . 'To manage API keys and providers, visit <a href=":url">AI Providers configuration</a>.',
             [
               '@provider' => $default['provider_id'] ?? '—',
               '@model'    => $default['model_id'] ?? '—',
               ':url'      => $providers_url,
             ]
-          )
-          . '</div>',
+        )
+        . '</div>',
         '#weight' => -100,
       ];
     }
@@ -95,12 +95,12 @@ final class SettingsForm extends ConfigFormBase {
       $form['provider_status'] = [
         '#type'   => 'markup',
         '#markup' => '<div class="messages messages--warning">'
-          . $this->t('⚠ No AI chat provider is configured. '
+        . $this->t('⚠ No AI chat provider is configured. '
               . 'Install a provider module (e.g. <em>AI Provider: OpenAI</em> or <em>AI Provider: Anthropic</em>) and '
               . '<a href=":url">configure it here</a> before running assessments.',
             [':url' => $providers_url]
-          )
-          . '</div>',
+        )
+        . '</div>',
         '#weight' => -100,
       ];
     }
@@ -142,10 +142,10 @@ final class SettingsForm extends ConfigFormBase {
       $form['provider_model_fieldset']['default_provider_model'] = [
         '#type'   => 'markup',
         '#markup' => '<p class="messages messages--warning">'
-          . $this->t('No configured AI chat providers found. '
+        . $this->t('No configured AI chat providers found. '
             . 'Please <a href=":url">configure at least one provider</a> first.',
             [':url' => $providers_url])
-          . '</p>',
+        . '</p>',
       ];
     }
 

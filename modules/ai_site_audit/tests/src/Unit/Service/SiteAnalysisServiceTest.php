@@ -52,6 +52,9 @@ class SiteAnalysisServiceTest extends TestCase {
       ->willReturn($config);
   }
 
+  /**
+   *
+   */
   protected function createService(): SiteAnalysisService {
     return new SiteAnalysisService(
       $this->aiProvider,

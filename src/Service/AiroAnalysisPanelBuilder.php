@@ -37,6 +37,9 @@ final class AiroAnalysisPanelBuilder {
     protected ModuleHandlerInterface $moduleHandler,
   ) {}
 
+  /**
+   *
+   */
   public function getAiroLogoUrl(): string {
     $module_path = $this->moduleHandler->getModule('ai_content_audit')->getPath();
     return Url::fromUri('base:' . $module_path . '/images/airo-logo.svg')->toString();

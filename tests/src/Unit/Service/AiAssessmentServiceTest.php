@@ -34,6 +34,9 @@ class AiAssessmentServiceTest extends TestCase {
   protected LoggerChannelFactoryInterface $loggerFactory;
   protected ConfigFactoryInterface $configFactory;
 
+  /**
+   *
+   */
   protected function setUp(): void {
     parent::setUp();
 

@@ -1375,7 +1375,7 @@ class TechnicalAuditService {
    *   article_has_date_modified: bool,
    *   date_published_valid_format: bool,
    *   date_modified_valid_format: bool,
-   * }
+   *   }
    *   Date property findings for the first article-type object found.
    */
   protected function extractSchemaDateProperties(string $html): array {
@@ -1675,7 +1675,7 @@ REC;
     if ($request) {
       return $request->getSchemeAndHttpHost();
     }
-    // Fallback
+    // Fallback.
     return 'http://localhost';
   }
 

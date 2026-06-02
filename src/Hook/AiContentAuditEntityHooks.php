@@ -18,26 +18,41 @@ final class AiContentAuditEntityHooks {
     protected AiContentAuditLifecycle $lifecycle,
   ) {}
 
+  /**
+ *
+ */
   #[Hook('entity_insert')]
   public function entityInsert(EntityInterface $entity): void {
     $this->lifecycle->invalidateListCacheForAssessment($entity);
   }
 
+  /**
+ *
+ */
   #[Hook('entity_update')]
   public function entityUpdate(EntityInterface $entity): void {
     $this->lifecycle->invalidateListCacheForAssessment($entity);
   }
 
+  /**
+ *
+ */
   #[Hook('node_insert')]
   public function nodeInsert(NodeInterface $node): void {
     $this->lifecycle->maybeEnqueueNode($node);
   }
 
+  /**
+ *
+ */
   #[Hook('node_update')]
   public function nodeUpdate(NodeInterface $node): void {
     $this->lifecycle->maybeEnqueueNode($node);
   }
 
+  /**
+ *
+ */
   #[Hook('node_delete')]
   public function nodeDelete(NodeInterface $node): void {
     $this->lifecycle->deleteAssessmentsForDeletedNode($node);

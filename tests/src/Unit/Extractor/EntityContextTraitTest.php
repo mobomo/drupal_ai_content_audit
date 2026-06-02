@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_content_audit\Unit\Extractor;
 
+use Drupal\user\UserInterface;
+use Drupal\Core\Url;
 use Drupal\ai_content_audit\Extractor\EntityContextTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\node\NodeInterface;
-use Drupal\user\UserInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,15 +35,18 @@ class EntityContextTraitTest extends TestCase {
     return new class {
       use EntityContextTrait;
 
-      /** @param \Drupal\node\NodeInterface $node */
+      /** @param \Drupal\node\NodeInterface $node
+       *   */
       public function callBuildContentMetadataBlock(NodeInterface $node): string {
         return $this->buildContentMetadataBlock($node);
       }
 
-      /** @param \Drupal\node\NodeInterface $node */
+      /** @param \Drupal\node\NodeInterface $node
+       *   */
       public function callBuildEntityContextBlock(NodeInterface $node): string {
         return $this->buildEntityContextBlock($node);
       }
+
     };
   }
 
@@ -76,8 +80,10 @@ class EntityContextTraitTest extends TestCase {
    * @param int $nid
    * @param int $created
    * @param int $changed
-   * @param string|null $bundleLabel  Human-readable bundle label (NULL = use bundle as fallback).
-   * @param string|\Exception $urlOrException  URL string or exception to throw from toUrl().
+   * @param string|null $bundleLabel
+   *   Human-readable bundle label (NULL = use bundle as fallback).
+   * @param string|\Exception $urlOrException
+   *   URL string or exception to throw from toUrl().
    *
    * @return \Drupal\node\NodeInterface&\PHPUnit\Framework\MockObject\MockObject
    */
@@ -106,7 +112,7 @@ class EntityContextTraitTest extends TestCase {
     );
 
     // Configure toUrl() behaviour.
-    $urlMock = $this->createMock(\Drupal\Core\Url::class);
+    $urlMock = $this->createMock(Url::class);
     if ($urlOrException instanceof \Exception) {
       $node->method('toUrl')->willThrowException($urlOrException);
     }
@@ -182,7 +188,8 @@ class EntityContextTraitTest extends TestCase {
     $host = $this->createTraitHost();
     $node = $this->buildNodeMock(
       bundle     : 'landing_page',
-      bundleLabel: NULL,  // Forces fallback.
+    // Forces fallback.
+      bundleLabel: NULL,
     );
 
     // Act.
@@ -205,7 +212,7 @@ class EntityContextTraitTest extends TestCase {
     // Arrange.
     $host = $this->createTraitHost();
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Jane Doe');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();
@@ -268,7 +275,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldList->method('referencedEntities')->willReturn([$term1, $term2]);
 
     // Owner mock.
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     // Node mock.
@@ -303,7 +310,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldList->method('isEmpty')->willReturn(FALSE);
     $fieldList->method('count')->willReturn(3);
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();
@@ -336,7 +343,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldList->method('isEmpty')->willReturn(FALSE);
     $fieldList->method('count')->willReturn(1);
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();
@@ -369,7 +376,7 @@ class EntityContextTraitTest extends TestCase {
     $emptyFieldList = $this->createMock(FieldItemListInterface::class);
     $emptyFieldList->method('isEmpty')->willReturn(TRUE);
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();

@@ -253,14 +253,14 @@ class AiroPanelController extends ControllerBase {
       ->range(0, 1)
       ->execute();
 
-    $assessment = !empty($ids) ? $storage->load(reset($ids)) : NULL;
-    $score      = $assessment ? (int) $assessment->get('score')->value : NULL;
+    $assessment     = !empty($ids) ? $storage->load(reset($ids)) : NULL;
+    $score          = $assessment ? (int) $assessment->get('score')->value : NULL;
     $has_assessment = $assessment !== NULL;
 
     // Map score to GIN-aligned color token name and status label.
     if ($score === NULL) {
-      $score_color   = 'danger';
-      $status_label  = $this->t('Not analyzed');
+      $score_color  = 'danger';
+      $status_label = $this->t('Not analyzed');
     }
     elseif ($score >= 70) {
       $score_color  = 'good';
@@ -276,9 +276,9 @@ class AiroPanelController extends ControllerBase {
     }
 
     // SVG donut geometry.
-    $donut_radius         = 26;
-    $donut_circumference  = round(2 * M_PI * $donut_radius, 2);
-    $donut_offset         = $score !== NULL
+    $donut_radius        = 26;
+    $donut_circumference = round(2 * M_PI * $donut_radius, 2);
+    $donut_offset        = $score !== NULL
       ? round($donut_circumference * (1 - $score / 100), 2)
       : $donut_circumference;
 
@@ -398,9 +398,9 @@ class AiroPanelController extends ControllerBase {
       foreach ($raw_checkpoints as $cp) {
         $category = $cp['category'] ?? 'Other';
         $checkpoints_by_category[$category][] = $cp;
-        }
+      }
 
-        // Extract metadata from result_json for the overview metadata row.
+      // Extract metadata from result_json for the overview metadata row.
       $result_json = $assessment->getParsedResult();
       $grade_raw = $result_json['readability']['grade_level'] ?? NULL;
       $readability_grade = $grade_raw !== NULL ? (int) $grade_raw : NULL;
@@ -455,7 +455,7 @@ class AiroPanelController extends ControllerBase {
       '#trend_delta' => $trend_delta,
       '#node_id' => $node->id(),
       '#revision_id' => (int) $node->getRevisionId(),
-      '#assess_url' => \Drupal\Core\Url::fromRoute(
+      '#assess_url' => Url::fromRoute(
         'ai_content_audit.panel.assess',
         ['node' => $node->id()]
       )->toString(),
@@ -502,9 +502,11 @@ class AiroPanelController extends ControllerBase {
           case 'high':
             $high_items[] = $item;
             break;
+
           case 'medium':
             $medium_items[] = $item;
             break;
+
           default:
             $low_items[] = $item;
             break;
@@ -530,7 +532,7 @@ class AiroPanelController extends ControllerBase {
       '#high_count' => count($high_items),
       '#node_id' => $node->id(),
       '#revision_id' => (int) $node->getRevisionId(),
-      '#assess_url' => \Drupal\Core\Url::fromRoute('ai_content_audit.panel.assess', ['node' => $node->id()])->toString(),
+      '#assess_url' => Url::fromRoute('ai_content_audit.panel.assess', ['node' => $node->id()])->toString(),
       '#attached' => [
         'library' => [
           'ai_content_audit/action-items-tab',
@@ -664,14 +666,15 @@ class AiroPanelController extends ControllerBase {
       $central = $this->aiProviderManager->getDefaultProviderForOperationType('content_audit')
         ?? $this->aiProviderManager->getDefaultProviderForOperationType('chat');
       if (!empty($central['provider_id'])) {
-        $key   = $central['provider_id'] . '__' . ($central['model_id'] ?? '');
-        $label = ucwords(str_replace(['-', '_'], ' ', $central['provider_id']));
+        $key        = $central['provider_id'] . '__' . ($central['model_id'] ?? '');
+        $label      = ucwords(str_replace(['-', '_'], ' ', $central['provider_id']));
         $allChoices = [[
           'key'         => $key,
           'label'       => $label,
           'provider_id' => $central['provider_id'],
           'model_id'    => $central['model_id'] ?? '',
-        ]];
+        ],
+        ];
       }
       else {
         $allChoices = [];
@@ -679,9 +682,9 @@ class AiroPanelController extends ControllerBase {
     }
 
     // Load last-used selection from per-user private tempstore.
-    $store      = $this->tempStoreFactory->get('ai_content_audit');
-    $savedKeys  = $store->get('last_provider_models') ?? [];
-    $validKeys  = array_column($allChoices, 'key');
+    $store     = $this->tempStoreFactory->get('ai_content_audit');
+    $savedKeys = $store->get('last_provider_models') ?? [];
+    $validKeys = array_column($allChoices, 'key');
     // Keep only saved keys that still exist in the current choice list.
     $selectedKeys = array_values(
       array_filter($savedKeys, fn($k) => in_array($k, $validKeys, TRUE))
@@ -706,7 +709,7 @@ class AiroPanelController extends ControllerBase {
       '#suggested_prompts' => $suggested_prompts,
       '#node_id'          => $node->id(),
       '#revision_id'      => (int) $node->getRevisionId(),
-      '#query_url'        => \Drupal\Core\Url::fromRoute(
+      '#query_url'        => Url::fromRoute(
         'ai_content_audit.panel.preview_query',
         ['node' => $node->id()]
       )->toString(),
@@ -753,8 +756,8 @@ class AiroPanelController extends ControllerBase {
     }
 
     // Determine which provider+model keys to query.
-    $requestedKeys  = array_filter((array) ($body['provider_models'] ?? []));
-    $hasPermission  = $this->currentUser()->hasPermission('use any ai provider in airo');
+    $requestedKeys = array_filter((array) ($body['provider_models'] ?? []));
+    $hasPermission = $this->currentUser()->hasPermission('use any ai provider in airo');
 
     // Fall back to site default for users without the permission or when no
     // specific providers were requested.
@@ -797,7 +800,7 @@ class AiroPanelController extends ControllerBase {
       if (empty($providerId)) {
         continue;
       }
-      $label    = $labelMap[$key] ?? ucwords(str_replace(['-', '_'], ' ', $providerId));
+      $label     = $labelMap[$key] ?? ucwords(str_replace(['-', '_'], ' ', $providerId));
       $oneResult = $this->queryOneProvider($systemPrompt, $userPrompt, $providerId, $modelId);
 
       $results[] = [

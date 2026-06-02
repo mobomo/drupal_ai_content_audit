@@ -24,18 +24,18 @@ class AiAssessmentController extends ControllerBase {
    * Maps technical-audit check IDs to their display group and sort order.
    */
   private const CHECKS_ORDER_MAP = [
-    'canonical_url'        => ['group' => 'Node Checks',           'order' => 0],
-    'schema_markup'        => ['group' => 'Node Checks',           'order' => 1],
-    'entity_relationships' => ['group' => 'Node Checks',           'order' => 2],
-    'date_meta_tags'       => ['group' => 'Node Checks',           'order' => 3],
+    'canonical_url'        => ['group' => 'Node Checks', 'order' => 0],
+    'schema_markup'        => ['group' => 'Node Checks', 'order' => 1],
+    'entity_relationships' => ['group' => 'Node Checks', 'order' => 2],
+    'date_meta_tags'       => ['group' => 'Node Checks', 'order' => 3],
     'robots_txt'           => ['group' => 'Site-Level AI Signals', 'order' => 10],
     'llms_txt'             => ['group' => 'Site-Level AI Signals', 'order' => 11],
     'sitemap'              => ['group' => 'Site-Level AI Signals', 'order' => 12],
     'https'                => ['group' => 'Site-Level AI Signals', 'order' => 13],
     'language_declaration' => ['group' => 'Site-Level AI Signals', 'order' => 14],
     'content_licensing'    => ['group' => 'Site-Level AI Signals', 'order' => 15],
-    'feed_availability'    => ['group' => 'Infrastructure',        'order' => 20],
-    'json_api'             => ['group' => 'Infrastructure',        'order' => 21],
+    'feed_availability'    => ['group' => 'Infrastructure', 'order' => 20],
+    'json_api'             => ['group' => 'Infrastructure', 'order' => 21],
   ];
 
   /**
@@ -216,7 +216,7 @@ class AiAssessmentController extends ControllerBase {
       match ($priority) {
         'high'   => ($high_items[]   = $item),
         'medium' => ($medium_items[] = $item),
-        default  => ($low_items[]    = $item),
+        default  => ($low_items[] = $item),
       };
     }
     $completed_count = count(
@@ -272,17 +272,17 @@ class AiAssessmentController extends ControllerBase {
       '#technical_total_count' => count($technical_checks),
       '#filesystem_categories' => $fs_categories,
       '#filesystem_summary'   => $fs_summary,
-      '#readability'          => $result_json['readability']          ?? [],
-      '#seo'                  => $result_json['seo']                  ?? [],
+      '#readability'          => $result_json['readability'] ?? [],
+      '#seo'                  => $result_json['seo'] ?? [],
       '#content_completeness' => $result_json['content_completeness'] ?? [],
-      '#tone_consistency'     => $result_json['tone_consistency']     ?? [],
-      '#heading_hierarchy'    => $result_json['heading_hierarchy']    ?? [],
-      '#image_accessibility'  => $result_json['image_accessibility']  ?? [],
-      '#link_analysis'        => $result_json['link_analysis']        ?? [],
-      '#content_freshness'    => $result_json['content_freshness']    ?? [],
-      '#entity_richness'      => $result_json['entity_richness']      ?? [],
-      '#content_patterns'     => $result_json['content_patterns']     ?? [],
-      '#rag_chunk_quality'    => $result_json['rag_chunk_quality']    ?? [],
+      '#tone_consistency'     => $result_json['tone_consistency'] ?? [],
+      '#heading_hierarchy'    => $result_json['heading_hierarchy'] ?? [],
+      '#image_accessibility'  => $result_json['image_accessibility'] ?? [],
+      '#link_analysis'        => $result_json['link_analysis'] ?? [],
+      '#content_freshness'    => $result_json['content_freshness'] ?? [],
+      '#entity_richness'      => $result_json['entity_richness'] ?? [],
+      '#content_patterns'     => $result_json['content_patterns'] ?? [],
+      '#rag_chunk_quality'    => $result_json['rag_chunk_quality'] ?? [],
       '#raw_output'           => $raw_output,
       '#result_json_formatted' => $result_json_formatted,
       '#attached' => [
@@ -328,7 +328,7 @@ class AiAssessmentController extends ControllerBase {
       foreach ($storage->loadMultiple($ids) as $hist) {
         $hist_created = (int) $hist->get('created')->value;
         $hist_score   = (int) ($hist->get('score')->value ?? 0);
-        $history[] = [
+        $history[]    = [
           'id'         => $hist->id(),
           'date'       => $this->dateFormatter->format($hist_created, 'short'),
           'date_full'  => $this->dateFormatter->format($hist_created, 'long'),
@@ -367,14 +367,14 @@ class AiAssessmentController extends ControllerBase {
     try {
       $results = $this->technicalAuditService->runAllChecks($node, FALSE);
       foreach ($results as $result) {
-        $arr        = $result->toArray();
+        $arr          = $result->toArray();
         $all_checks[] = $arr;
         if ($result->status === 'pass') {
           $pass_count++;
         }
         $key = $arr['check'] ?? '';
         if (isset(self::CHECKS_ORDER_MAP[$key])) {
-          $meta  = self::CHECKS_ORDER_MAP[$key];
+          $meta = self::CHECKS_ORDER_MAP[$key];
           $grouped_label[$meta['group']][$meta['order']] = $arr;
         }
         else {

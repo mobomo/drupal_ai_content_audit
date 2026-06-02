@@ -34,6 +34,9 @@ class StructuredDataTemplatesCheck extends FilesystemCheckBase implements Contai
     parent::__construct($configuration, $plugin_id, $plugin_definition, $drupalRoot);
   }
 
+  /**
+   *
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,

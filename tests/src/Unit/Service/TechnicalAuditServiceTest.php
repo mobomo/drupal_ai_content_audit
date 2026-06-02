@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_content_audit\Unit\Service;
 
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
 use Drupal\ai_content_audit\Service\TechnicalAuditService;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -33,7 +34,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Tests cover:
  *   - checkSchemaMarkup()  — schema.org JSON-LD parsing and status determination
  *   - checkCanonicalUrl()  — live canonical tag verification
- *   - checkEntityRelationships() — node and site-level entity context checks
+ *   - checkEntityRelationships() — node and site-level entity context checks.
  *
  * Note: methods that call Url::fromRoute() (node-level schema/canonical checks)
  * require a bootstrapped Drupal container and are therefore tested in Kernel
@@ -89,7 +90,7 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
 
     // Wire a config factory whose get() chain returns NULL without throwing.
-    $config = $this->createMock(\Drupal\Core\Config\ImmutableConfig::class);
+    $config = $this->createMock(ImmutableConfig::class);
     $config->method('get')->willReturn(NULL);
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
     $this->configFactory->method('get')->willReturn($config);
@@ -495,7 +496,7 @@ class TechnicalAuditServiceTest extends TestCase {
    *
    * @param \Drupal\user\UserInterface|null $owner
    * @param array<string, \Drupal\Core\Field\FieldDefinitionInterface> $fieldDefs
-   * @param array<string, \Drupal\Core\Field\FieldItemListInterface>   $fields
+   * @param array<string, \Drupal\Core\Field\FieldItemListInterface> $fields
    */
   private function buildNodeMock(
     ?UserInterface $owner,
@@ -556,7 +557,8 @@ class TechnicalAuditServiceTest extends TestCase {
     // Arrange — real author, but no entity reference fields at all.
     $node = $this->buildNodeMock(
       $this->buildAuthorMock(uid: 3, displayName: 'Alice'),
-      [],  // no field definitions
+    // No field definitions.
+      [],
       [],
     );
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Controller;
 
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
 use Drupal\Core\Access\AccessResult;
@@ -28,7 +30,7 @@ final class AiroNodeAnalysisController extends ControllerBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(\Symfony\Component\DependencyInjection\ContainerInterface $container): static {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('ai_content_audit.airo_analysis_panel_builder'),
       $container->get('ai_content_audit.node_layout_builder_detector'),
@@ -71,7 +73,7 @@ final class AiroNodeAnalysisController extends ControllerBase {
    */
   public function panelRefresh(NodeInterface $node): AjaxResponse {
     if (!$this->access($node, $this->currentUser())->isAllowed()) {
-      throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+      throw new AccessDeniedHttpException();
     }
 
     $build = $this->panelBuilder->build($node, ['variant' => 'page']);

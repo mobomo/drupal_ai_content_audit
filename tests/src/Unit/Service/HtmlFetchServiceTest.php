@@ -79,7 +79,7 @@ class HtmlFetchServiceTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * getBaseUrl() returns scheme + host from the current request.
+   * GetBaseUrl() returns scheme + host from the current request.
    *
    * @covers ::getBaseUrl
    */
@@ -93,7 +93,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * getBaseUrl() falls back to 'http://localhost' when no request is available.
+   * GetBaseUrl() falls back to 'http://localhost' when no request is available.
    *
    * @covers ::getBaseUrl
    */
@@ -108,7 +108,7 @@ class HtmlFetchServiceTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * fetchPageHtml() returns the response body string on HTTP 200.
+   * FetchPageHtml() returns the response body string on HTTP 200.
    *
    * @covers ::fetchPageHtml
    */
@@ -123,7 +123,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() returns NULL when Guzzle throws an exception.
+   * FetchPageHtml() returns NULL when Guzzle throws an exception.
    *
    * @covers ::fetchPageHtml
    */
@@ -139,7 +139,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() returns NULL when a generic exception is thrown.
+   * FetchPageHtml() returns NULL when a generic exception is thrown.
    *
    * @covers ::fetchPageHtml
    */
@@ -155,7 +155,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() uses in-memory cache — two calls for the same URL issue only
+   * FetchPageHtml() uses in-memory cache — two calls for the same URL issue only
    * one HTTP request.
    *
    * @covers ::fetchPageHtml
@@ -179,7 +179,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() caches a NULL result — a failed fetch is not retried.
+   * FetchPageHtml() caches a NULL result — a failed fetch is not retried.
    *
    * @covers ::fetchPageHtml
    */
@@ -220,7 +220,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * clearCache() causes the next fetchPageHtml() call to re-issue a request.
+   * ClearCache() causes the next fetchPageHtml() call to re-issue a request.
    *
    * @covers ::fetchPageHtml
    */

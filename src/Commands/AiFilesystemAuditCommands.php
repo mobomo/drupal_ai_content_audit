@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Commands;
 
+use Symfony\Component\Yaml\Yaml;
 use Drupal\ai_content_audit\Service\FilesystemAuditService;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
@@ -59,12 +60,14 @@ class AiFilesystemAuditCommands extends DrushCommands {
   #[CLI\Usage(name: 'drush aica:filesystem-audit --format=json', description: 'Output results as JSON.')]
   #[CLI\Usage(name: 'drush aica:filesystem-audit --category=security', description: 'Show only security checks.')]
   #[CLI\Usage(name: 'drush aica:filesystem-audit --fail-only', description: 'Show only failing checks (for CI).')]
-  public function filesystemAudit(array $options = [
-    'refresh' => FALSE,
-    'format' => 'table',
-    'category' => NULL,
-    'fail-only' => FALSE,
-  ]): int {
+  public function filesystemAudit(
+    array $options = [
+      'refresh' => FALSE,
+      'format' => 'table',
+      'category' => NULL,
+      'fail-only' => FALSE,
+    ],
+  ): int {
     $forceRefresh = (bool) $options['refresh'];
     $format = $options['format'] ?? 'table';
     $categoryFilter = $options['category'] ?? NULL;
@@ -126,7 +129,7 @@ class AiFilesystemAuditCommands extends DrushCommands {
         break;
 
       case 'yaml':
-        $this->output()->writeln(\Symfony\Component\Yaml\Yaml::dump($rows, 4, 2));
+        $this->output()->writeln(Yaml::dump($rows, 4, 2));
         break;
 
       default:

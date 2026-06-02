@@ -16,7 +16,7 @@ use Drupal\Core\Session\AccountInterface;
  * Permission map:
  *   - 'view ai content assessment'  → editors can read assessments
  *   - 'run ai content assessment'   → editors can trigger assessments
- *   - 'administer ai content audit' → admins have full control
+ *   - 'administer ai content audit' → admins have full control.
  */
 class AiContentAssessmentAccessControlHandler extends EntityAccessControlHandler {
 

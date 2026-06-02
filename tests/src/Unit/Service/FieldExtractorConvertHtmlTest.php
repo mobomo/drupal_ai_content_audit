@@ -294,7 +294,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
   /**
    * Tests that stripHtml() preserves the pre-inserted structural markers.
    *
-   * convertAndStripHtml() inserts [Image: ...] and [Link: ...] markers BEFORE
+   * ConvertAndStripHtml() inserts [Image: ...] and [Link: ...] markers BEFORE
    * calling stripHtml().  stripHtml() must not touch those marker strings since
    * they contain no HTML tags.
    *

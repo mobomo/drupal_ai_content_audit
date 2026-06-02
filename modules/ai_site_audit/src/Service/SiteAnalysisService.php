@@ -73,12 +73,12 @@ class SiteAnalysisService {
       // Resolve provider and model — same priority order as AiAssessmentService:
       // 1. Runtime $options override
       // 2. Centrally configured 'content_audit' default in ai.settings
-      // 3. Centrally configured generic 'chat' default in ai.settings
+      // 3. Centrally configured generic 'chat' default in ai.settings.
       $central = $this->aiProvider->getDefaultProviderForOperationType('content_audit')
         ?? $this->aiProvider->getDefaultProviderForOperationType('chat');
 
       $providerId = $options['provider_id'] ?? $central['provider_id'] ?? NULL;
-      $modelId    = $options['model_id']    ?? $central['model_id']    ?? NULL;
+      $modelId    = $options['model_id'] ?? $central['model_id'] ?? NULL;
 
       if (!$providerId || !$modelId) {
         return ['error' => 'No AI chat provider configured. Please configure a default chat provider at /admin/config/ai/providers.'];

@@ -140,7 +140,7 @@ class AuditCheckManagerTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * runAll() returns an empty array when no checks are registered.
+   * RunAll() returns an empty array when no checks are registered.
    *
    * @covers ::runAll
    */
@@ -153,7 +153,7 @@ class AuditCheckManagerTest extends TestCase {
   }
 
   /**
-   * runAll() skips checks whose applies() returns FALSE.
+   * RunAll() skips checks whose applies() returns FALSE.
    *
    * @covers ::runAll
    */
@@ -174,7 +174,7 @@ class AuditCheckManagerTest extends TestCase {
   }
 
   /**
-   * runAll() records a 'fail' TechnicalAuditResult when a check throws.
+   * RunAll() records a 'fail' TechnicalAuditResult when a check throws.
    *
    * @covers ::runAll
    */
@@ -196,7 +196,7 @@ class AuditCheckManagerTest extends TestCase {
   }
 
   /**
-   * runAll() includes the result returned by a passing check.
+   * RunAll() includes the result returned by a passing check.
    *
    * @covers ::runAll
    */
@@ -225,7 +225,7 @@ class AuditCheckManagerTest extends TestCase {
   }
 
   /**
-   * runAll() passes the NodeInterface through to each check's applies() / run().
+   * RunAll() passes the NodeInterface through to each check's applies() / run().
    *
    * @covers ::runAll
    */

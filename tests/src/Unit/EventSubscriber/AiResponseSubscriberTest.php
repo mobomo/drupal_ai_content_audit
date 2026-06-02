@@ -23,6 +23,9 @@ class AiResponseSubscriberTest extends TestCase {
   protected LoggerChannelFactoryInterface $loggerFactory;
   protected LoggerChannelInterface $logger;
 
+  /**
+   *
+   */
   protected function setUp(): void {
     parent::setUp();
 

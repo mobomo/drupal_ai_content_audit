@@ -33,7 +33,6 @@ class AiContentAssessmentViewsData extends EntityViewsData {
     // All base fields and entity_reference relationships are generated
     // automatically by parent::getViewsData(). Add any custom overrides,
     // computed fields, or non-standard handlers below if needed in the future.
-
     return $data;
   }
 

@@ -11,7 +11,6 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\user\Entity\User;
-use ReflectionProperty;
 
 /**
  * Kernel coverage for AI Content Assessment behaviors.
@@ -88,7 +87,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $this->assertArrayHasKey($withUser->id(), $entities);
     $this->assertArrayHasKey($withoutUser->id(), $entities);
 
-    $reflection = new ReflectionProperty($list_builder, 'runByUsers');
+    $reflection = new \ReflectionProperty($list_builder, 'runByUsers');
     $reflection->setAccessible(TRUE);
     $run_by_users = $reflection->getValue($list_builder);
 
@@ -128,7 +127,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $this->assertSame('technical_seo', $sub_scores[0]['dimension']);
     $this->assertSame(30, $sub_scores[0]['score']);
 
-    // checkpoints round-trip.
+    // Checkpoints round-trip.
     $checkpoints = $reloaded->getCheckpoints();
     $this->assertIsArray($checkpoints);
     $this->assertGreaterThanOrEqual(1, count($checkpoints));
@@ -151,8 +150,8 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
    * Verifies that score_trend_delta is correctly computed across two assessments.
    */
   public function testScoreTrendDeltaComputation(): void {
-    $user  = $this->createUserWithName('Trend User');
-    $node  = $this->createNodeForUser($user, 'Trend node');
+    $user = $this->createUserWithName('Trend User');
+    $node = $this->createNodeForUser($user, 'Trend node');
 
     // First assessment: score 60, no previous → delta NULL.
     $first = $this->createAssessment($node, $user, 60);

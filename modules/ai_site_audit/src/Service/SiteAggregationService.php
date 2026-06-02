@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
  * Tier 1: SQL-based aggregation service for sitewide content audit stats.
  *
  * All queries use the "latest assessment per node" pattern via a subquery:
- *   SELECT target_node, MAX(id) FROM ai_content_assessment GROUP BY target_node
+ *   SELECT target_node, MAX(id) FROM ai_content_assessment GROUP BY target_node.
  *
  * Results are cached with tag 'ai_content_assessment_list' for auto-invalidation
  * when new assessments are created.

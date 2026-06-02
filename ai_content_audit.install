@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\Core\Url;
 
 /**
@@ -63,4 +67,3 @@ function ai_content_audit_requirements(string $phase): array {
 
   return $requirements;
 }
-

@@ -80,7 +80,7 @@ class HttpsCheckTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * run() returns a 'pass' result when the current request is HTTPS.
+   * Run() returns a 'pass' result when the current request is HTTPS.
    *
    * @covers ::run
    */
@@ -93,7 +93,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * run() 'pass' result description mentions HTTPS.
+   * Run() 'pass' result description mentions HTTPS.
    *
    * @covers ::run
    */
@@ -104,7 +104,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * run() result label is derived from the plugin definition.
+   * Run() result label is derived from the plugin definition.
    *
    * @covers ::run
    */
@@ -119,7 +119,7 @@ class HttpsCheckTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * run() returns a 'warning' result (not 'fail') when the request is HTTP.
+   * Run() returns a 'warning' result (not 'fail') when the request is HTTP.
    *
    * The current implementation degrades gracefully to a warning rather than a
    * hard failure so that development environments are not blocked.
@@ -135,7 +135,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * run() 'warning' description mentions HTTPS as a recommendation.
+   * Run() 'warning' description mentions HTTPS as a recommendation.
    *
    * @covers ::run
    */
@@ -146,7 +146,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * run() returns 'warning' when no request is available (CLI / Drush context).
+   * Run() returns 'warning' when no request is available (CLI / Drush context).
    *
    * @covers ::run
    */
@@ -162,7 +162,7 @@ class HttpsCheckTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * run() with a NodeInterface still returns the correct result (site-scoped).
+   * Run() with a NodeInterface still returns the correct result (site-scoped).
    *
    * @covers ::run
    */
@@ -178,7 +178,7 @@ class HttpsCheckTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * applies(NULL) returns TRUE — site-scoped checks always apply.
+   * Applies(NULL) returns TRUE — site-scoped checks always apply.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::applies
    */
@@ -187,7 +187,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * applies($node) returns TRUE — site-scoped checks apply in node contexts too.
+   * Applies($node) returns TRUE — site-scoped checks apply in node contexts too.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::applies
    */
@@ -201,7 +201,7 @@ class HttpsCheckTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * getId() returns the plugin ID from the definition.
+   * GetId() returns the plugin ID from the definition.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::getId
    */
@@ -210,7 +210,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * getLabel() returns the plugin label from the definition.
+   * GetLabel() returns the plugin label from the definition.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::getLabel
    */
@@ -219,7 +219,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * getCategory() returns the plugin category from the definition.
+   * GetCategory() returns the plugin category from the definition.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::getCategory
    */

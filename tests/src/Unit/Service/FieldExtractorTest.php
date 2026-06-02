@@ -23,6 +23,9 @@ class FieldExtractorTest extends TestCase {
   protected FieldExtractor $extractor;
   protected EntityTypeManagerInterface $entityTypeManager;
 
+  /**
+   *
+   */
   protected function setUp(): void {
     parent::setUp();
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
@@ -166,6 +169,9 @@ class FieldExtractorTest extends TestCase {
     // values so we can verify concatenation without touching FieldItemList.
     $extractor = new class([], 'field_text', ['render_mode' => 'text'], $entityTypeManager) extends FieldExtractor {
 
+      /**
+       *
+       */
       protected function extractFieldText(NodeInterface $node, string $field_name, string $field_type): string {
         return match ($field_name) {
           'field_subtitle' => 'The subtitle text',

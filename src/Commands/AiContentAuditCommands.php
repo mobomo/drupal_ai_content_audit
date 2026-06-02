@@ -119,9 +119,9 @@ final class AiContentAuditCommands extends DrushCommands {
     );
 
     // Print the currently configured module-level default.
-    $config        = $this->configFactory->get('ai_content_audit.settings');
-    $def_provider  = $config->get('default_provider') ?: '(global default)';
-    $def_model     = $config->get('default_model') ?: '(global default)';
+    $config       = $this->configFactory->get('ai_content_audit.settings');
+    $def_provider = $config->get('default_provider') ?: '(global default)';
+    $def_model    = $config->get('default_model') ?: '(global default)';
     $this->io()->note(sprintf(
       'Module default → provider: %s | model: %s',
       $def_provider,

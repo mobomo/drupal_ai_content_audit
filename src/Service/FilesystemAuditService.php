@@ -197,7 +197,7 @@ final class FilesystemAuditService {
   /**
    * Checks settings.php file permissions.
    *
-   * ID: fs_settings_permissions
+   * ID: fs_settings_permissions.
    *
    * PASS  — mode is 0400 or 0440 (owner/group read-only, no world bits).
    * WARNING — mode is 0600 or 0640 (owner/group read-write, but not world-readable).
@@ -278,7 +278,7 @@ final class FilesystemAuditService {
   /**
    * Checks that .htaccess exists in the webroot and is non-empty.
    *
-   * ID: fs_htaccess
+   * ID: fs_htaccess.
    *
    * PASS    — file present and non-empty.
    * WARNING — file present but empty.
@@ -345,7 +345,7 @@ final class FilesystemAuditService {
   /**
    * Checks whether a .git/ directory is exposed in the webroot.
    *
-   * ID: fs_git_exposed
+   * ID: fs_git_exposed.
    *
    * PASS — .git/ directory not present in webroot.
    * FAIL — .git/ directory found; source history may be publicly accessible.
@@ -400,7 +400,7 @@ final class FilesystemAuditService {
   /**
    * Scans the webroot for known dangerous development/diagnostic files.
    *
-   * ID: fs_dev_files
+   * ID: fs_dev_files.
    *
    * PASS — none of the known dangerous files found.
    * FAIL — one or more dangerous files were found.
@@ -457,7 +457,7 @@ final class FilesystemAuditService {
   /**
    * Scans the webroot for world-writable directories (up to MAX_SCAN_DEPTH).
    *
-   * ID: fs_world_writable
+   * ID: fs_world_writable.
    *
    * Skips the sites/default/files/ subtree (managed upload directory).
    *
@@ -552,7 +552,7 @@ final class FilesystemAuditService {
   /**
    * Checks for development-environment settings files in sites/default/.
    *
-   * ID: fs_dev_settings
+   * ID: fs_dev_settings.
    *
    * Checks for: settings.local.php, settings.ddev.php, settings.lando.php,
    *             local.services.yml, development.services.yml.
@@ -613,7 +613,7 @@ final class FilesystemAuditService {
   /**
    * Checks that trusted_host_patterns is configured in settings.php.
    *
-   * ID: fs_trusted_hosts
+   * ID: fs_trusted_hosts.
    *
    * PASS — pattern found in settings.php.
    * FAIL — pattern not found.
@@ -670,7 +670,7 @@ final class FilesystemAuditService {
   /**
    * Checks services.yml for Twig debug mode flags.
    *
-   * ID: fs_services_debug
+   * ID: fs_services_debug.
    *
    * PASS    — no debug flags detected.
    * WARNING — debug: true or auto_reload: true found.
@@ -741,7 +741,7 @@ final class FilesystemAuditService {
   /**
    * Verifies that sites/default/files/.htaccess exists and blocks PHP execution.
    *
-   * ID: fs_files_htaccess
+   * ID: fs_files_htaccess.
    *
    * PASS    — file present and contains PHP-blocking directives.
    * WARNING — file present but lacks PHP-blocking directives.
@@ -805,7 +805,7 @@ final class FilesystemAuditService {
   /**
    * Checks whether a private files path is configured and is outside the webroot.
    *
-   * ID: fs_private_files
+   * ID: fs_private_files.
    *
    * INFO — not configured (not a failure; just advisory).
    * PASS — configured, outside webroot, and writable.
@@ -886,7 +886,7 @@ final class FilesystemAuditService {
   /**
    * Scans custom modules for missing README or incomplete .info.yml metadata.
    *
-   * ID: fs_custom_modules
+   * ID: fs_custom_modules.
    *
    * INFO    — all custom modules have proper metadata.
    * WARNING — one or more modules are missing description, package, or README.
@@ -976,7 +976,7 @@ final class FilesystemAuditService {
   /**
    * Finds modules on disk that are not registered with the module handler.
    *
-   * ID: fs_orphaned_modules
+   * ID: fs_orphaned_modules.
    *
    * INFO    — 0 orphaned modules, or 1–5 (advisory note).
    * WARNING — 6 or more orphaned modules.
@@ -1083,7 +1083,7 @@ final class FilesystemAuditService {
   /**
    * Looks for .patch files and PATCHES.txt inside contrib module directories.
    *
-   * ID: fs_contrib_patched
+   * ID: fs_contrib_patched.
    *
    * PASS    — no patch indicators found.
    * WARNING — one or more patch files detected.
@@ -1169,7 +1169,7 @@ final class FilesystemAuditService {
   /**
    * Checks that the public files directory is writable by the web server.
    *
-   * ID: fs_public_writable
+   * ID: fs_public_writable.
    *
    * PASS — directory is writable.
    * FAIL — directory is not writable.
@@ -1212,7 +1212,7 @@ final class FilesystemAuditService {
   /**
    * Checks that the temporary directory is writable.
    *
-   * ID: fs_temp_writable
+   * ID: fs_temp_writable.
    *
    * INFO    — no custom temp dir configured; using system default.
    * PASS    — custom temp dir is writable.
@@ -1269,7 +1269,7 @@ final class FilesystemAuditService {
   /**
    * Scans for large log files in sites/default/files/ and the webroot.
    *
-   * ID: fs_large_logs
+   * ID: fs_large_logs.
    *
    * PASS    — no log files exceed LARGE_FILE_THRESHOLD_BYTES (50 MB).
    * WARNING — one or more log files exceed the threshold.
@@ -1353,7 +1353,7 @@ final class FilesystemAuditService {
   /**
    * Counts aggregated CSS and JS files to detect stale asset build-up.
    *
-   * ID: fs_stale_assets
+   * ID: fs_stale_assets.
    *
    * PASS    — each directory has fewer than 100 files, or directories don't exist.
    * INFO    — total between 100 and 499.
@@ -1426,7 +1426,7 @@ final class FilesystemAuditService {
   /**
    * Checks whether llms.txt exists at the webroot.
    *
-   * ID: fs_llms_txt_disk
+   * ID: fs_llms_txt_disk.
    *
    * PASS — file exists and is non-empty.
    * FAIL — file missing or empty.
@@ -1470,7 +1470,7 @@ final class FilesystemAuditService {
   /**
    * Checks robots.txt presence and customisation.
    *
-   * ID: fs_robots_txt_disk
+   * ID: fs_robots_txt_disk.
    *
    * PASS    — present and contains User-agent: directive.
    * WARNING — present but appears to be unmodified default Drupal robots.txt.
@@ -1539,7 +1539,7 @@ final class FilesystemAuditService {
   /**
    * Looks for structured-data templates and checks for metatag module.
    *
-   * ID: fs_structured_data
+   * ID: fs_structured_data.
    *
    * PASS — one or more *.jsonld / schema.json / structured-data.json files found.
    * INFO — no templates found but metatag module is installed.

@@ -27,6 +27,9 @@ final class AiContentAuditLifecycle {
     protected LoggerInterface $logger,
   ) {}
 
+  /**
+   *
+   */
   public function invalidateListCacheForAssessment(EntityInterface $entity): void {
     if ($entity instanceof AiContentAssessment) {
       $nid = (int) $entity->get('target_node')->target_id;
@@ -36,6 +39,9 @@ final class AiContentAuditLifecycle {
     }
   }
 
+  /**
+   *
+   */
   public function maybeEnqueueNode(NodeInterface $node): void {
     $config = $this->configFactory->get('ai_content_audit.settings');
     if (!$config->get('enable_on_save')) {
@@ -52,6 +58,9 @@ final class AiContentAuditLifecycle {
     ]);
   }
 
+  /**
+   *
+   */
   public function deleteAssessmentsForDeletedNode(NodeInterface $node): void {
     $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
     $ids = $storage->getQuery()
@@ -69,6 +78,9 @@ final class AiContentAuditLifecycle {
     }
   }
 
+  /**
+   *
+   */
   public function enqueueExcessAssessmentsForPurge(): void {
     $max = (int) $this->configFactory->get('ai_content_audit.settings')
       ->get('max_assessments_per_node');

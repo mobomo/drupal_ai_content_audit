@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Extractor;
 
-use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\node\NodeInterface;
 
 /**

@@ -267,7 +267,8 @@ class AnalysisOrchestratorTest extends TestCase {
    */
   public function testShouldReanalyzeExceedsThreshold(): void {
     $this->rollup->method('getCachedRollup')->willReturn(['total_assessed' => 100]);
-    $this->rollup->method('getNewAssessmentCount')->willReturn(15); // 15% > 10%
+    // 15% > 10%
+    $this->rollup->method('getNewAssessmentCount')->willReturn(15);
 
     $orchestrator = $this->createOrchestrator();
     $this->assertTrue($orchestrator->shouldReanalyze());
@@ -278,7 +279,8 @@ class AnalysisOrchestratorTest extends TestCase {
    */
   public function testShouldNotReanalyzeBelowThreshold(): void {
     $this->rollup->method('getCachedRollup')->willReturn(['total_assessed' => 100]);
-    $this->rollup->method('getNewAssessmentCount')->willReturn(5); // 5% < 10%
+    // 5% < 10%
+    $this->rollup->method('getNewAssessmentCount')->willReturn(5);
 
     $orchestrator = $this->createOrchestrator();
     $this->assertFalse($orchestrator->shouldReanalyze());
