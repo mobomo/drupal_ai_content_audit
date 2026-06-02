@@ -31,13 +31,13 @@
 
 .airo-preview__input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--airo-border-base, #d4d4d8);
-  border-radius: var(--airo-radius-xs, 4px);
+  /* padding: 0.5rem 0.75rem; */
+  /* border: 1px solid var(--airo-border-base, #d4d4d8); */
+  /* border-radius: var(--airo-radius-xs, 4px); */
   font-size: 0.875rem;
   color: var(--airo-title, #222330);
   background: var(--airo-bg, #fff);
-  outline: none;
+  font-size: small;
 }
 
 .airo-preview__input:focus-visible {
@@ -59,12 +59,12 @@
   flex-shrink: 0;
 }
 
-/* ── Provider / Model Selector ─────────────────────────────────────────── */
-
-.airo-preview__model-selector {
-  border-top: 1px solid var(--airo-border, #d4d4d8);
-  padding-top: 0.75rem;
-}
+/* ── Provider / Model Selector ───────────────────────────────────────────
+ *
+ * Base styles: accordion sidebar and shared legend/chevron/checkboxes.
+ * Page-skin overlay layout and Figma colors: css/airo-panel-page-skin.css
+ * (.airo-preview--page-skin …).
+ */
 
 .airo-preview__model-fieldset {
   border: 1px solid var(--airo-border, #d4d4d8);
@@ -74,12 +74,48 @@
 }
 
 .airo-preview__model-legend {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--airo-text-light, #545560);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  width: fit-content;
+  max-width: 100%;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--airo-text-light, #1e1e1e);
+  letter-spacing: 0;
   padding: 0 0.25rem;
+  cursor: pointer;
+}
+
+/* Quitar triángulo nativo del <summary> (WebKit + estándar). */
+.airo-preview__model-legend::-webkit-details-marker {
+  display: none;
+}
+
+.airo-preview__model-legend::marker {
+  content: '';
+}
+
+.airo-preview__model-legend-label {
+  font-weight: 700;
+}
+
+/* Chevron: abajo cerrado, arriba abierto (no hereda bold del label). */
+.airo-preview__model-legend::after {
+  content: '';
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  font-weight: 400;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+details.airo-preview__model-fieldset[open] > .airo-preview__model-legend::after {
+  transform: rotate(-135deg);
 }
 
 .airo-preview__model-options {
@@ -87,6 +123,15 @@
   flex-wrap: wrap;
   gap: 0.375rem 0.75rem;
   margin-top: 0.5rem;
+}
+
+/* Inline expand (accordion). Page skin uses absolute overlay instead. */
+.airo-preview:not(.airo-preview--page-skin) details.airo-preview__model-fieldset[open] .airo-preview__model-options {
+  max-height: min(9rem, 32vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .airo-preview__model-option {
@@ -110,12 +155,6 @@
   cursor: pointer;
 }
 
-.airo-preview__model-hint {
-  font-size: 0.75rem;
-  color: var(--airo-text-light, #545560);
-  margin: 0.375rem 0 0;
-}
-
 /* Single-provider read-only label */
 .airo-preview__model-single {
   display: inline-flex;
@@ -129,49 +168,10 @@
   font-weight: 500;
 }
 
-/* Legacy provider-tab classes kept for any existing HTML */
-.airo-preview__providers { display: none; }
-.airo-preview__provider-tab { display: none; }
-
 /* ── Results container ──────────────────────────────────────────────────── */
 
 .airo-preview__results {
   min-height: 120px;
-}
-
-/* N-column grid for side-by-side comparison */
-.airo-preview__results-grid {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 600px) {
-  .airo-preview__results-grid[data-count="2"] {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 600px) {
-  .airo-preview__results-grid[data-count="3"] {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (min-width: 860px) {
-  .airo-preview__results-grid[data-count="3"] {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 600px) {
-  .airo-preview__results-grid[data-count="4"] {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (min-width: 1100px) {
-  .airo-preview__results-grid[data-count="4"] {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 /* Timing badge inside card header */
@@ -181,33 +181,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Pending / loading placeholder card */
-.airo-preview__response-card--pending {
-  border: 1px solid var(--airo-border, #d4d4d8);
-  border-radius: var(--airo-radius-sm, 0.375rem);
-  overflow: hidden;
-  animation: airo-card-pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes airo-card-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
-}
-
-.airo-preview__response-card--pending .airo-preview__response-header {
-  background: var(--airo-bg-wash, #edeff5);
-  border-bottom: 1px solid var(--airo-border, #d4d4d8);
-  padding: 0.625rem 0.75rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.airo-preview__response-card--pending .airo-preview__loading {
-  padding: 1rem;
-}
-
-/* Loading state */
+/* Loading state (accordion compare panels) */
 .airo-preview__loading {
   display: flex;
   flex-direction: column;
@@ -228,13 +202,6 @@
 .airo-preview__loading-text {
   font-size: 0.8125rem;
   color: var(--airo-text-light, #545560);
-}
-
-/* Response card */
-.airo-preview__response-card {
-  border: 1px solid var(--airo-border, #d4d4d8);
-  border-radius: var(--airo-radius-sm, 0.375rem);
-  overflow: hidden;
 }
 
 .airo-preview__response-header {
@@ -288,14 +255,18 @@
   margin: 0.75rem 0 0.375rem 0;
 }
 
-/* Error state */
+/* Error state (preview tab + page skin) */
 .airo-preview__error {
   padding: 0.75rem;
-  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
-  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
-  border-radius: var(--airo-radius-xs, 4px);
-  color: var(--airo-score-danger, #cc3d3d);
+  border-radius: 6px;
+  background: var(--airo-status-danger-bg, #fef2f2);
+  border: 1px solid var(--airo-border-subtle, rgb(185 28 28 / 12%));
+  color: var(--airo-score-danger, #b91c1c);
   font-size: 0.8125rem;
+}
+
+.airo-preview--page-skin .airo-preview__error {
+  border: 0;
 }
 
 /* ── Reduced-motion ──────────────────────────────────────────────────────── */

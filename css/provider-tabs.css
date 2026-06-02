@@ -1,46 +1,9 @@
 /**
  * @file
- * Styling for the AI Content Audit provider-compare section and tabs.
+ * Provider compare results — tab panels (accordion inline nav; page skin uses external nav).
  *
- * Renders a GIN-style horizontal tab bar that harmonises with the Gin admin
- * theme on both light and dark modes.  All colours are expressed as GIN CSS
- * custom properties with sensible fallbacks so the component degrades
- * gracefully when rendered outside of Gin (e.g. Claro).
- *
- * GIN design tokens used:
- *   --gin-color-primary   Active tab colour & bottom-border indicator  (#0550e0)
- *   --gin-bg-layer        Tab base background                          (#fff)
- *   --gin-bg-layer2       Hover / focus background tint                (rgba(0,0,0,0.04))
- *   --gin-border-color    Container border-bottom                      (#d3d4d9)
- *   --gin-color-text      Default tab label colour                     (#222330)
- *   --gin-color-focus     Focus-visible outline colour                 (#26a769)
- *   --gin-spacing-xs      Gap between tab items                        (4px)
- *   --gin-spacing-s       Vertical tab padding                         (8px)
- *   --gin-spacing-m       Horizontal tab padding                       (16px)
- *   --gin-border-radius   Top-corner radius on each tab item           (8px)
+ * Model selector styling lives in ai-preview-tab.css and airo-panel-page-skin.css.
  */
-
-/* ── Details / summary ──────────────────────────────────────────────────────── */
-
-.ai-content-audit-compare {
-  margin-top: 0.75rem;
-}
-
-.ai-content-audit-compare > summary {
-  cursor: pointer;
-  font-weight: 600;
-  list-style: disclosure-closed;
-  padding: 0.25rem 0;
-  user-select: none;
-}
-
-.ai-content-audit-compare[open] > summary {
-  list-style: disclosure-open;
-}
-
-/* Tab bar + button styling handled by gin/tabs via .tabs--primary and .tabs__link. */
-
-/* ── Tab panels ──────────────────────────────────────────────────────────────── */
 
 .ai-content-audit-tab-panel {
   padding: 1rem 0.25rem;
@@ -49,4 +12,3 @@
 .ai-content-audit-tab-panel[hidden] {
   display: none !important;
 }
-

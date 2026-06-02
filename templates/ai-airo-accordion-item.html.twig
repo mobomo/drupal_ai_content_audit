@@ -7,7 +7,10 @@
 {% set active_tab = active_tab|default('preview-tab') %}
 {% set use_page_skin = use_page_skin|default(false) %}
 
-<div class="airo-panel airo-panel--accordion{% if use_page_skin %} airo-panel--page-skin{% endif %}" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+<div class="airo-panel airo-panel--accordion{% if use_page_skin %} airo-panel--page-skin{% endif %}"
+  data-node-id="{{ node_id }}"
+  data-revision-id="{{ revision_id }}"
+  {% if use_page_skin %}data-airo-ui-state="landing"{% endif %}>
 
   {% if use_page_skin %}
     <header class="airo-panel__brand-header">
