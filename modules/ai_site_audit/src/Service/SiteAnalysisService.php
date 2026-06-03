@@ -91,9 +91,6 @@ class SiteAnalysisService {
         new ChatMessage('user', $userMessage),
       ]);
 
-      $siteAuditConfig = $this->configFactory->get('ai_site_audit.settings');
-      $maxTokens = (int) ($siteAuditConfig->get('max_tokens_per_analysis') ?: 100000);
-
       $proxy = $this->aiProvider->createInstance($providerId);
       $response = $proxy->chat($input, $modelId, ['ai_site_audit', 'analyze']);
       $rawOutput = $response->getNormalized()->getText();

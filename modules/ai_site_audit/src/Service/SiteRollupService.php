@@ -145,8 +145,6 @@ class SiteRollupService {
    */
   protected function incrementalRollup(array $existing): array {
     $lastId = (int) $this->state->get('ai_site_audit.last_processed_assessment_id', 0);
-    $config = $this->configFactory->get('ai_site_audit.settings');
-    $batchSize = (int) ($config->get('rollup_batch_size') ?: 500);
 
     $this->logger->info('Starting incremental rollup from assessment ID @id', ['@id' => $lastId]);
 
@@ -257,9 +255,6 @@ class SiteRollupService {
    *   The complete rollup data structure.
    */
   protected function fullRollup(): array {
-    $config = $this->configFactory->get('ai_site_audit.settings');
-    $batchSize = (int) ($config->get('rollup_batch_size') ?: 500);
-
     $this->logger->info('Starting full rollup of all assessments.');
 
     // Build the latest-per-node subquery.
@@ -392,7 +387,6 @@ class SiteRollupService {
     $failingCheckpoints = [];
     foreach ($checkpointAccum as $item => $counts) {
       if ($counts['fail'] > 0 || $counts['warning'] > 0) {
-        $totalChecked = $counts['pass'] + $counts['fail'] + $counts['warning'];
         $failingCheckpoints[] = [
           'item' => $item,
           'category' => $counts['category'],

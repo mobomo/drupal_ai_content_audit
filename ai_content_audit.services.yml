@@ -42,6 +42,7 @@ services:
       - '@logger.channel.ai_content_audit'
       - '@cache.data'
       - '@ai_content_audit.audit_check_manager'
+      - '@datetime.time'
 
   ai_content_audit.audit_check_manager:
     class: Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager

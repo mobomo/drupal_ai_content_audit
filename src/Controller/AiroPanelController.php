@@ -26,6 +26,7 @@ use Drupal\ai_content_audit\Service\FilesystemAuditService;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use Drupal\ai_content_audit\Service\TechnicalAuditService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -42,6 +43,7 @@ class AiroPanelController extends ControllerBase {
     protected PrivateTempStoreFactory $tempStoreFactory,
     protected ProviderModelChoices $providerModelChoices,
     protected ContentExtractorManager $contentExtractorManager,
+    protected RequestStack $requestStack,
   ) {}
 
   /**
@@ -57,6 +59,7 @@ class AiroPanelController extends ControllerBase {
       $container->get('tempstore.private'),
       $container->get('ai_content_audit.provider_model_choices'),
       $container->get('ai_content_audit.extractor_manager'),
+      $container->get('request_stack'),
     );
   }
 
@@ -154,7 +157,7 @@ class AiroPanelController extends ControllerBase {
    */
   public function assessNode(NodeInterface $node): JsonResponse {
     try {
-      $decoded = json_decode(\Drupal::request()->getContent() ?: '{}', TRUE);
+      $decoded = json_decode($this->requestStack->getCurrentRequest()?->getContent() ?: '{}', TRUE);
       $decoded = is_array($decoded) ? $decoded : [];
       $node = $this->resolveNodeRevisionFromRequestBody($node, $decoded);
       // AIRO panel analysis must evaluate rendered page content (LB-aware),
@@ -564,14 +567,14 @@ class AiroPanelController extends ControllerBase {
     $status = $assessment->getActionItemsStatus() ?? [];
 
     // Get the request body.
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
     $body = json_decode($request->getContent(), TRUE);
     $completed = !empty($body['completed']);
 
     if ($completed) {
       $status[$item_id] = [
         'completed' => TRUE,
-        'completed_by' => (int) \Drupal::currentUser()->id(),
+        'completed_by' => (int) $this->currentUser()->id(),
         'completed_at' => date('c'),
       ];
     }
@@ -609,7 +612,7 @@ class AiroPanelController extends ControllerBase {
    */
   public function buildTechnicalAuditTab(NodeInterface $node): array {
     // Check if force refresh was requested.
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
     $forceRefresh = $request->query->get('force_refresh', FALSE);
 
     $results = $this->technicalAuditService->runAllChecks($node, (bool) $forceRefresh);
@@ -748,7 +751,7 @@ class AiroPanelController extends ControllerBase {
    * its error string is embedded in the per-result "error" field.
    */
   public function submitPreviewQuery(NodeInterface $node): JsonResponse {
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
     $body = json_decode($request->getContent(), TRUE);
     $body = is_array($body) ? $body : [];
     $node = $this->resolveNodeRevisionFromRequestBody($node, $body);
@@ -902,7 +905,8 @@ class AiroPanelController extends ControllerBase {
    *   JSON response containing available model choices.
    */
   public function listAvailableModels(): JsonResponse {
-    $opType  = \Drupal::request()->query->get('op_type', 'chat');
+    $request = $this->requestStack->getCurrentRequest();
+    $opType = $request?->query->get('op_type', 'chat');
     $choices = $this->providerModelChoices->forOperationType((string) $opType);
 
     // Model list is session/user-specific dynamic data — never cache.
@@ -1080,6 +1084,7 @@ class AiroPanelController extends ControllerBase {
    */
   private function simpleMarkdownToHtml(string $text): string {
     // Escape HTML entities first to prevent XSS.
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
     // Headers (must run before bold to avoid double-processing).

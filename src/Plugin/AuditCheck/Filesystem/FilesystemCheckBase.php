@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Plugin\AuditCheck\Filesystem;
 
 use Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Abstract base class for all filesystem-based AuditCheck plugins.
@@ -15,7 +17,7 @@ use Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase;
  * - LARGE_FILE_THRESHOLD_BYTES constant (50 MB).
  * - safePath() path-traversal guard for filesystem checks.
  */
-abstract class FilesystemCheckBase extends AuditCheckBase {
+abstract class FilesystemCheckBase extends AuditCheckBase implements ContainerFactoryPluginInterface {
 
   /**
    * Maximum recursion depth for directory scans.
@@ -46,6 +48,23 @@ abstract class FilesystemCheckBase extends AuditCheckBase {
     protected readonly string $drupalRoot,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      (string) $container->getParameter('app.root'),
+    );
   }
 
   /**

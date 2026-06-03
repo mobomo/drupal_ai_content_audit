@@ -32,7 +32,6 @@ class HttpsCheckTest extends TestCase {
   // ---------------------------------------------------------------------------
   // Helper
   // ---------------------------------------------------------------------------
-
   /**
    * Plugin definition array that mirrors the #[AuditCheck] attribute values.
    *

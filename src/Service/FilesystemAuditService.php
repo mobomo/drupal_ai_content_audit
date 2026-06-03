@@ -6,6 +6,7 @@ namespace Drupal\ai_content_audit\Service;
 
 use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Psr\Log\LoggerInterface;
 
@@ -24,6 +25,7 @@ final class FilesystemAuditService {
     private readonly LoggerInterface $logger,
     private readonly CacheBackendInterface $cacheData,
     private readonly AuditCheckManager $auditCheckManager,
+    private readonly TimeInterface $time,
   ) {}
 
   /**
@@ -83,7 +85,7 @@ final class FilesystemAuditService {
     $this->cacheData->set(
       self::CACHE_ID,
       $results,
-      \Drupal::time()->getRequestTime() + self::CACHE_TTL,
+      $this->time->getRequestTime() + self::CACHE_TTL,
     );
 
     return $results;
