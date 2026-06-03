@@ -209,7 +209,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $this->assertNull($reloaded->getScoreTrendDelta(), 'score_trend_delta must be NULL when not set.');
   }
 
-  // ── Helper Methods ─────────────────────────────────────────────
+  /* ── Helper Methods ───────────────────────────────────────────── */
 
   /**
    * Builds a complete v2 mock response array.

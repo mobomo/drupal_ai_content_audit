@@ -22,9 +22,11 @@ use PHPUnit\Framework\TestCase;
  */
 class AuditCheckBaseTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helper: anonymous concrete subclass factory
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helper: anonymous concrete subclass factory
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Creates an anonymous AuditCheckBase subclass for the given scope.
@@ -85,9 +87,11 @@ class AuditCheckBaseTest extends TestCase {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // getId() / getLabel() / getCategory()
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * getId() / getLabel() / getCategory()
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * GetId() returns the 'id' value from the plugin definition.
@@ -134,9 +138,11 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertSame('Technical', $this->makeCheck(category: 'Technical')->getCategory());
   }
 
-  // ---------------------------------------------------------------------------
-  // applies()
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * applies()
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Applies(NULL) returns TRUE for a 'site'-scoped check.
@@ -178,9 +184,11 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertTrue($this->makeCheck(scope: 'site')->applies($node));
   }
 
-  // ---------------------------------------------------------------------------
-  // pass() / fail() / warning() result factory helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * pass() / fail() / warning() result factory helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Pass() returns TechnicalAuditResult with status pass and correct fields.

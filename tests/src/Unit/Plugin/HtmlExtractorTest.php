@@ -98,9 +98,11 @@ class HtmlExtractorTest extends TestCase {
     return $this->convertMethod->invoke($extractor ?? $this->extractor, $html);
   }
 
-  // ---------------------------------------------------------------------------
-  // Heading conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Heading conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that h1–h6 elements are converted to markdown-style markers.
@@ -128,9 +130,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('###### H6: Level Six', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Image alt-text conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Image alt-text conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that img elements become [Image: alt text] markers.
@@ -165,9 +169,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('[Image: no alt text]', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Link classification
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Link classification
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that path-relative links are classified as internal.
@@ -260,9 +266,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('external:', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Table conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Table conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that table elements are converted to [Table]...[/Table] format.
@@ -310,9 +318,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('Inner', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // List conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * List conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that ul/li elements are converted to bullet markers.
@@ -351,9 +361,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('3. Step three', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Navigation chrome stripping
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Navigation chrome stripping
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Nav is stripped while header/footer content is retained for LB markup.
@@ -416,9 +428,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringNotContainsString('Screen reader only', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Edge cases
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Edge cases
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that an empty string input returns an empty string.

@@ -29,9 +29,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class HttpsCheckTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helper
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helper
+   * ---------------------------------------------------------------------------
+   */
   /**
    * Plugin definition array that mirrors the #[AuditCheck] attribute values.
    *
@@ -76,9 +78,11 @@ class HttpsCheckTest extends TestCase {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // run() — HTTPS context
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * run() — HTTPS context
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Run() returns a 'pass' result when the current request is HTTPS.
@@ -115,9 +119,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('HTTPS', $result->label);
   }
 
-  // ---------------------------------------------------------------------------
-  // run() — HTTP context
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * run() — HTTP context
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Run() returns a 'warning' result (not 'fail') when the request is HTTP.
@@ -158,9 +164,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('warning', $result->status);
   }
 
-  // ---------------------------------------------------------------------------
-  // run() called with a node argument
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * run() called with a node argument
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Run() with a NodeInterface still returns the correct result (site-scoped).
@@ -174,9 +182,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('pass', $result->status);
   }
 
-  // ---------------------------------------------------------------------------
-  // applies() — inherited from AuditCheckBase (scope: 'site')
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * applies() — inherited from AuditCheckBase (scope: 'site')
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Applies(NULL) returns TRUE — site-scoped checks always apply.
@@ -197,9 +207,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertTrue($this->buildCheck()->applies($node));
   }
 
-  // ---------------------------------------------------------------------------
-  // Plugin metadata helpers (inherited from AuditCheckBase)
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Plugin metadata helpers (inherited from AuditCheckBase)
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * GetId() returns the plugin ID from the definition.

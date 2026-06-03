@@ -21,9 +21,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class HtmlFetchServiceTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Builds a mock HTTP response whose body is the given string.
@@ -75,9 +77,11 @@ class HtmlFetchServiceTest extends TestCase {
     return new class($message) extends \RuntimeException implements GuzzleException {};
   }
 
-  // ---------------------------------------------------------------------------
-  // getBaseUrl() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * getBaseUrl() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * GetBaseUrl() returns scheme + host from the current request.
@@ -104,9 +108,11 @@ class HtmlFetchServiceTest extends TestCase {
     $this->assertSame('http://localhost', $service->getBaseUrl());
   }
 
-  // ---------------------------------------------------------------------------
-  // fetchPageHtml() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * fetchPageHtml() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * FetchPageHtml() returns the response body string on HTTP 200.

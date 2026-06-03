@@ -769,9 +769,11 @@ class TechnicalAuditService {
     return $this->checkEntityRelationshipsForNode($node);
   }
 
-  // ---------------------------------------------------------------------------
-  // Sprint 2 checks — feeds, language, JSON:API, licensing, date meta tags
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Sprint 2 checks — feeds, language, JSON:API, licensing, date meta tags
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Checks for RSS/Atom/JSON feed availability for LLM content discovery.
@@ -1284,9 +1286,11 @@ class TechnicalAuditService {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — HTTP fetching
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — HTTP fetching
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Fetches page HTML with in-memory caching to avoid redundant HTTP requests.
@@ -1322,9 +1326,11 @@ class TechnicalAuditService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — schema markup parsing
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — schema markup parsing
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Extracts all @type values from JSON-LD script blocks in HTML.
@@ -1513,9 +1519,11 @@ or add manual markup via a custom theme or module using hook_page_attachments().
 REC;
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — entity relationship checks
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — entity relationship checks
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Performs entity relationship checks for a specific node.
@@ -1675,9 +1683,11 @@ REC;
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — URL, content generation, caching
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — URL, content generation, caching
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Gets the site base URL.

@@ -96,9 +96,11 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->configFactory->method('get')->willReturn($config);
   }
 
-  // ---------------------------------------------------------------------------
-  // Service factory helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Service factory helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Builds a TechnicalAuditService with the shared test dependencies.
@@ -149,9 +151,11 @@ class TechnicalAuditServiceTest extends TestCase {
     return new class($message) extends \RuntimeException implements GuzzleException {};
   }
 
-  // ---------------------------------------------------------------------------
-  // checkSchemaMarkup() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkSchemaMarkup() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that ≥3 distinct desired schema types result in a 'pass' status.
@@ -316,9 +320,11 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->assertSame(1, $result->details['total_scripts']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkCanonicalUrl() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkCanonicalUrl() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that a matching canonical tag produces 'pass' status.
@@ -475,9 +481,11 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->assertTrue($result->details['canonical_found']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkEntityRelationships() — node-level tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkEntityRelationships() — node-level tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Builds a UserInterface mock representing a real (non-anonymous) author.
@@ -681,9 +689,11 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->assertSame(0, $result->details['entity_ref_count']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkEntityRelationships() — site-level (no node) tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkEntityRelationships() — site-level (no node) tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that taxonomy enabled with vocabularies results in 'pass'.
@@ -769,9 +779,11 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->assertStringContainsString('Taxonomy module is not installed', $result->description);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkLlmsTxt() — Sprint 1 enhanced content structure validation
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkLlmsTxt() — Sprint 1 enhanced content structure validation
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests a well-formed llms.txt file passes structure validation.
@@ -933,9 +945,11 @@ class TechnicalAuditServiceTest extends TestCase {
     $this->assertTrue($result->details['has_companion_file']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkSitemap() — Sprint 1 enhanced quality attributes
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkSitemap() — Sprint 1 enhanced quality attributes
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that a sitemap where all URLs have <lastmod> shows 100% coverage.
@@ -1041,9 +1055,11 @@ XML;
     $this->assertEqualsWithDelta(33.3, $result->details['priority_coverage_pct'], 0.1);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkSchemaMarkup() — Sprint 1 date properties
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkSchemaMarkup() — Sprint 1 date properties
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that Article with datePublished and dateModified populates details.
@@ -1094,9 +1110,11 @@ XML;
     $this->assertFalse($result->details['article_has_date_modified']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkFeedAvailability() — Sprint 2 new check
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkFeedAvailability() — Sprint 2 new check
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that a responsive /rss.xml probe produces a 'pass' result.
@@ -1173,9 +1191,11 @@ XML;
     $this->assertGreaterThanOrEqual(1, $result->details['feed_count']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkLanguageDeclaration() — Sprint 2 new check
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkLanguageDeclaration() — Sprint 2 new check
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that <html lang="en"> produces a 'pass' result.
@@ -1235,9 +1255,11 @@ XML;
     $this->assertGreaterThanOrEqual(1, $result->details['hreflang_count']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkJsonApi() — Sprint 2 new check
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkJsonApi() — Sprint 2 new check
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that an installed JSON:API module with accessible endpoint passes.
@@ -1279,9 +1301,11 @@ XML;
     $this->assertFalse($result->details['module_installed']);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkContentLicensing() — Sprint 2 new check
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkContentLicensing() — Sprint 2 new check
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that a <link rel="license"> tag produces a 'pass' result.
@@ -1343,9 +1367,11 @@ XML;
     $this->assertSame('pass', $result->status);
   }
 
-  // ---------------------------------------------------------------------------
-  // checkDateMetaTags() — Sprint 2 new check
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * checkDateMetaTags() — Sprint 2 new check
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that both OG date meta tags present and valid produce a 'pass'.

@@ -146,9 +146,11 @@ class EntityContextTraitTest extends TestCase {
     return $node;
   }
 
-  // ---------------------------------------------------------------------------
-  // buildContentMetadataBlock() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * buildContentMetadataBlock() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that the metadata block includes title, content type, dates, and URL.
@@ -221,9 +223,11 @@ class EntityContextTraitTest extends TestCase {
     $this->assertStringContainsString('Content Type: landing_page', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // buildEntityContextBlock() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * buildEntityContextBlock() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that a named author is present in the entity context block.

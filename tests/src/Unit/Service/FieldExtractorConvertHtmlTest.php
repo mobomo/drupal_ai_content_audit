@@ -56,9 +56,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->stripMethod->setAccessible(TRUE);
   }
 
-  // ---------------------------------------------------------------------------
-  // Heading conversion tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Heading conversion tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that h1–h6 tags are converted to markdown-style heading markers.
@@ -103,9 +105,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringNotContainsString('<strong>', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Image alt-text extraction tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Image alt-text extraction tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that an img with a non-empty alt attribute becomes [Image: alt].
@@ -156,9 +160,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringContainsString('[Image: no alt text]', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Link extraction tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Link extraction tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that anchor tags become [Link: text (href)] markers.
@@ -209,9 +215,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringContainsString('[Link: Contact (/contact)]', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Remaining-tag stripping and whitespace normalisation tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Remaining-tag stripping and whitespace normalisation tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that non-converted HTML tags (div, span, p, etc.) are stripped.
@@ -271,9 +279,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringContainsString('<details>', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // stripHtml() helper tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * stripHtml() helper tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that stripHtml() removes all HTML tags and collapses whitespace.

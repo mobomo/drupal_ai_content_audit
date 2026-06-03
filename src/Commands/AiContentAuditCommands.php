@@ -183,7 +183,7 @@ final class AiContentAuditCommands extends DrushCommands {
     $this->io()->success('ai_content_audit reinstalled successfully.');
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
+  /* ── Private helpers ──────────────────────────────────────────────────────── */
 
   /**
    * Deletes all ai_content_assessment entities in batches.
