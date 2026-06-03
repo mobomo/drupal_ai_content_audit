@@ -294,7 +294,7 @@ class TechnicalAuditService {
       }
 
       // --- Determine status ---
-      // pass = H1 + blockquote + ≥1 H2 + ≥1 link; warning = file exists but issues.
+      // pass = H1 + blockquote + ≥1 H2 + ≥1 link; warning = issues remain.
       $hasH1 = ($h1Count === 1);
       if ($hasH1 && $hasBlockquote && $h2SectionCount >= 1 && $linkCount >= 1) {
         $status = 'pass';
@@ -513,6 +513,7 @@ class TechnicalAuditService {
    *   Optional node for per-page canonical verification.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkCanonicalUrl(?NodeInterface $node = NULL): TechnicalAuditResult {
     // Phase 1: Check module availability (baseline check).
@@ -549,7 +550,7 @@ class TechnicalAuditService {
         $this->logger->warning('Technical audit: canonical URL live check failed: could not fetch @url.', ['@url' => $expectedUrl]);
       }
       else {
-        // Parse <link rel="canonical" href="..."> — handle both attribute orders.
+        // Parse canonical link tag — handle both attribute orders.
         if (preg_match(
           '/<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\'][^>]*\/?>/i',
           $html,
@@ -618,7 +619,7 @@ class TechnicalAuditService {
    *
    * Also extracts article date properties (datePublished / dateModified) from
    * any Article, NewsArticle, or BlogPosting objects in the JSON-LD payload.
-   * These date fields are included in details but do NOT affect pass/fail status.
+   * These date fields are included in details but do not affect pass/fail.
    *
    * Uses fetchPageHtml() to avoid redundant HTTP requests when the same URL
    * is also inspected by checkCanonicalUrl() in the same audit run.
@@ -627,6 +628,7 @@ class TechnicalAuditService {
    *   Optional node to check. Falls back to the site homepage when NULL.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkSchemaMarkup(?NodeInterface $node = NULL): TechnicalAuditResult {
     // Resolve the URL to inspect.
@@ -688,14 +690,14 @@ class TechnicalAuditService {
     $hasOrganization = !empty(array_intersect($foundTypes, ['Organization', 'LocalBusiness']));
     $hasWebPage = !empty(array_intersect($foundTypes, $webPageTypes));
 
-    // For site-level checks, also note whether schema_metatag module is present.
+    // For site-level checks, note whether schema_metatag module is present.
     $metatagSchemaInstalled = $this->moduleHandler->moduleExists('schema_metatag')
       || $this->moduleHandler->moduleExists('metatag_schema');
 
     // Extract article date properties (does not affect pass/fail status).
     $dateProperties = $this->extractSchemaDateProperties($html);
 
-    // Determine status: ≥3 distinct desired types = pass, 1-2 = warning, 0 = fail.
+    // Determine status: ≥3 desired types = pass, 1-2 = warning, 0 = fail.
     $desiredFound = array_intersect($foundTypes, static::DESIRED_SCHEMA_TYPES);
     $desiredCount = count($desiredFound);
 
@@ -757,6 +759,7 @@ class TechnicalAuditService {
    *   Optional node to inspect. Falls back to a site-level check when NULL.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkEntityRelationships(?NodeInterface $node = NULL): TechnicalAuditResult {
     if ($node === NULL) {
@@ -766,9 +769,11 @@ class TechnicalAuditService {
     return $this->checkEntityRelationshipsForNode($node);
   }
 
-  // ---------------------------------------------------------------------------
-  // Sprint 2 checks — feeds, language, JSON:API, licensing, date meta tags
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Sprint 2 checks — feeds, language, JSON:API, licensing, date meta tags
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Checks for RSS/Atom/JSON feed availability for LLM content discovery.
@@ -777,6 +782,7 @@ class TechnicalAuditService {
    * for <link rel="alternate"> feed declarations.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkFeedAvailability(): TechnicalAuditResult {
     $probePaths = ['/rss.xml', '/feed', '/node/feed', '/feed.json'];
@@ -890,6 +896,7 @@ class TechnicalAuditService {
    * plus any <link rel="alternate" hreflang="..."> tags.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkLanguageDeclaration(): TechnicalAuditResult {
     $homepageUrl = $this->getBaseUrl() . '/';
@@ -980,6 +987,7 @@ class TechnicalAuditService {
    * LLM RAG (retrieval-augmented generation) pipelines.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkJsonApi(): TechnicalAuditResult {
     $moduleInstalled = $this->moduleHandler->moduleExists('jsonapi');
@@ -992,7 +1000,7 @@ class TechnicalAuditService {
           'timeout' => 5,
           'http_errors' => FALSE,
         ]);
-        // Accept 200 or 415 (Unsupported Media Type — still means endpoint exists).
+        // Accept 200 or 415 — endpoint exists despite Unsupported Media Type.
         $endpointAccessible = in_array($response->getStatusCode(), [200, 415], TRUE);
       }
       catch (\Exception $e) {
@@ -1034,6 +1042,7 @@ class TechnicalAuditService {
    * properties, and emerging AI-specific robots meta directives.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkContentLicensing(): TechnicalAuditResult {
     $homepageUrl = $this->getBaseUrl() . '/';
@@ -1163,6 +1172,7 @@ class TechnicalAuditService {
    *   The node to check. Falls back to the homepage when NULL.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   public function checkDateMetaTags(?NodeInterface $node = NULL): TechnicalAuditResult {
     // Resolve URL (node canonical or homepage).
@@ -1276,9 +1286,11 @@ class TechnicalAuditService {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — HTTP fetching
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — HTTP fetching
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Fetches page HTML with in-memory caching to avoid redundant HTTP requests.
@@ -1314,9 +1326,11 @@ class TechnicalAuditService {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — schema markup parsing
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — schema markup parsing
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Extracts all @type values from JSON-LD script blocks in HTML.
@@ -1474,6 +1488,7 @@ class TechnicalAuditService {
    *   The HTML source.
    *
    * @return int
+   *   The number of JSON-LD script elements found.
    */
   protected function countJsonLdScripts(string $html): int {
     preg_match_all(
@@ -1488,6 +1503,7 @@ class TechnicalAuditService {
    * Generates a recommended Schema.org implementation summary.
    *
    * @return string
+   *   Recommended Schema.org implementation guidance.
    */
   protected function generateSchemaRecommendation(): string {
     return <<<REC
@@ -1503,9 +1519,11 @@ or add manual markup via a custom theme or module using hook_page_attachments().
 REC;
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — entity relationship checks
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — entity relationship checks
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Performs entity relationship checks for a specific node.
@@ -1514,6 +1532,7 @@ REC;
    *   The node to inspect.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   protected function checkEntityRelationshipsForNode(NodeInterface $node): TechnicalAuditResult {
     $owner = $node->getOwner();
@@ -1617,6 +1636,7 @@ REC;
    * configured, giving a baseline signal for relationship infrastructure.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   protected function checkEntityRelationshipsSiteLevel(): TechnicalAuditResult {
     $taxonomyEnabled = $this->moduleHandler->moduleExists('taxonomy');
@@ -1663,9 +1683,11 @@ REC;
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Protected helpers — URL, content generation, caching
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Protected helpers — URL, content generation, caching
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Gets the site base URL.
@@ -1742,6 +1764,7 @@ TXT;
    * Gets cached audit results if still valid.
    *
    * @return array<string, \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult>|null
+   *   Cached check results keyed by check ID, or NULL if none.
    */
   protected function getCachedResults(): ?array {
     $cached = $this->cacheData->get('ai_content_audit:technical_audit');
@@ -1770,6 +1793,7 @@ TXT;
    * Caches audit results using Cache API.
    *
    * @param array<string, \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult> $results
+   *   Check results to store in the cache backend.
    */
   protected function cacheResults(array $results): void {
     $serialized = array_map(fn(TechnicalAuditResult $r) => $r->toArray(), $results);

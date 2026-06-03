@@ -16,7 +16,7 @@ use Drupal\views\EntityViewsData;
  *    raw_output, created, sub_scores, checkpoints, action_items,
  *    action_items_status, score_trend_delta, provider_id, model_id.
  *  - Relationship handlers for entity_reference fields target_node (→ node)
- *    and run_by (→ user), derived automatically from their target_type settings.
+ *   and run_by (→ user), derived from their target_type settings.
  *
  * No manual field or relationship definitions are needed here; the parent
  * class inspects the base field definitions and the DefaultTableMapping to

@@ -2,18 +2,14 @@
 
 /**
  * @file
- */
-
-use Drupal\Core\Url;
-
-/**
- * @file
  * Install, update, and uninstall functions for AI Content Audit module.
  *
  * NOTE: No hook_schema() is needed. SqlContentEntityStorage automatically
  * creates and manages the ai_content_assessment table based on the entity's
  * baseFieldDefinitions() when the module is installed.
  */
+
+use Drupal\Core\Url;
 
 /**
  * Implements hook_uninstall().
@@ -48,9 +44,7 @@ function ai_content_audit_requirements(string $phase): array {
         'title' => t('AI Content Audit — Chat provider'),
         'value' => t('Not configured'),
         'description' => t(
-          'AI Content Audit requires an AI module chat provider to be installed and configured. '
-          . 'Install a provider module (e.g. <em>AI Provider: OpenAI</em>) and configure it at '
-          . '<a href=":url">:url</a>.',
+          'AI Content Audit requires an AI module chat provider to be installed and configured. Install a provider module (e.g. <em>AI Provider: OpenAI</em>) and configure it at <a href=":url">:url</a>.',
           [':url' => Url::fromRoute('ai.admin_providers')->toString()]
         ),
         'severity' => REQUIREMENT_WARNING,

@@ -6,13 +6,11 @@ namespace Drupal\ai_content_audit\Plugin\AuditCheck\Filesystem;
 
 use Drupal\ai_content_audit\Attribute\AuditCheck;
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks services.yml or default.services.yml for Twig debug: true and auto_reload: true flags.
+ * Checks services YAML for Twig debug and auto_reload flags.
  */
 #[AuditCheck(
   id: 'fs_services_debug',
@@ -21,28 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   scope: 'site',
   category: 'Security',
 )]
-class ServicesYmlDebugModeCheck extends FilesystemCheckBase implements ContainerFactoryPluginInterface {
-
-  public function __construct(
-    array $configuration,
-    string $plugin_id,
-    mixed $plugin_definition,
-    string $drupalRoot,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $drupalRoot);
-  }
-
-  /**
-   *
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->getParameter('app.root'),
-    );
-  }
+class ServicesYmlDebugModeCheck extends FilesystemCheckBase {
 
   /**
    * {@inheritdoc}

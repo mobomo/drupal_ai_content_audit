@@ -6,10 +6,8 @@ namespace Drupal\ai_content_audit\Plugin\AuditCheck\Filesystem;
 
 use Drupal\ai_content_audit\Attribute\AuditCheck;
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Counts CSS and JS aggregation files; warns when total exceeds 500.
@@ -21,28 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   scope: 'site',
   category: 'Filesystem Health',
 )]
-class StaleAggregatedAssetsCheck extends FilesystemCheckBase implements ContainerFactoryPluginInterface {
-
-  public function __construct(
-    array $configuration,
-    string $plugin_id,
-    mixed $plugin_definition,
-    string $drupalRoot,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $drupalRoot);
-  }
-
-  /**
-   *
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->getParameter('app.root'),
-    );
-  }
+class StaleAggregatedAssetsCheck extends FilesystemCheckBase {
 
   /**
    * {@inheritdoc}
@@ -53,16 +30,16 @@ class StaleAggregatedAssetsCheck extends FilesystemCheckBase implements Containe
 
     $cssDir = $this->safePath('sites/default/files/css');
     if ($cssDir !== NULL && is_dir($cssDir)) {
-      foreach (new \FilesystemIterator($cssDir, \FilesystemIterator::SKIP_DOTS) as $f) {
-        $cssCount++;
-      }
+      $cssCount = iterator_count(
+        new \FilesystemIterator($cssDir, \FilesystemIterator::SKIP_DOTS)
+      );
     }
 
     $jsDir = $this->safePath('sites/default/files/js');
     if ($jsDir !== NULL && is_dir($jsDir)) {
-      foreach (new \FilesystemIterator($jsDir, \FilesystemIterator::SKIP_DOTS) as $f) {
-        $jsCount++;
-      }
+      $jsCount = iterator_count(
+        new \FilesystemIterator($jsDir, \FilesystemIterator::SKIP_DOTS)
+      );
     }
 
     $total = $cssCount + $jsCount;

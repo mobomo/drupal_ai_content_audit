@@ -6,13 +6,11 @@ namespace Drupal\ai_content_audit\Plugin\AuditCheck\Filesystem;
 
 use Drupal\ai_content_audit\Attribute\AuditCheck;
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks robots.txt exists and determines if it is the default Drupal version or customised.
+ * Checks robots.txt exists and whether it is default Drupal or customised.
  */
 #[AuditCheck(
   id: 'fs_robots_txt_disk',
@@ -21,28 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   scope: 'site',
   category: 'AI Signals',
 )]
-class RobotsTxtOnDiskCheck extends FilesystemCheckBase implements ContainerFactoryPluginInterface {
-
-  public function __construct(
-    array $configuration,
-    string $plugin_id,
-    mixed $plugin_definition,
-    string $drupalRoot,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $drupalRoot);
-  }
-
-  /**
-   *
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->getParameter('app.root'),
-    );
-  }
+class RobotsTxtOnDiskCheck extends FilesystemCheckBase {
 
   /**
    * {@inheritdoc}

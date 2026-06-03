@@ -295,9 +295,11 @@ class AiAssessmentController extends ControllerBase {
     ];
   }
 
-  // ---------------------------------------------------------------------------
-  // Private helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Private helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Builds the score-history array for all assessments of the given node.
@@ -356,7 +358,7 @@ class AiAssessmentController extends ControllerBase {
    *   The target node.
    *
    * @return array
-   *   Three-element array: [flat checks array, grouped checks array, pass count].
+   *   Three-element array: [flat checks, grouped checks, pass count].
    */
   private function buildTechnicalAudit(NodeInterface $node): array {
     $all_checks    = [];

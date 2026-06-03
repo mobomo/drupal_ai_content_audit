@@ -78,9 +78,9 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
    *       from synchronous request paths.
    *
    * @throws \Drupal\Core\Queue\RequeueException
-   *   When the assessment fails transiently (AI provider unavailable, rate limit).
+   *   When assessment fails transiently (provider unavailable, rate limit).
    * @throws \Drupal\Core\Queue\SuspendQueueException
-   *   When the entire queue should be halted (quota exhausted, catastrophic failure).
+   *   When the queue should halt (quota exhausted, catastrophic failure).
    */
   public function processItem(mixed $data): void {
     $logger = $this->loggerFactory->get('ai_content_audit');
@@ -100,8 +100,8 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
     /** @var \Drupal\node\NodeInterface|null $node */
     $node = $this->entityTypeManager->getStorage('node')->load($nid);
 
-    // Bulk queue uses the default revision by design (published nodes). For
-    // per-revision assessment (e.g. drafts), use loadRevision() when enqueueing.
+    // Bulk queue uses default revision (published nodes). For drafts, use
+    // loadRevision() when enqueueing per-revision assessment.
     if (!$node instanceof NodeInterface) {
       // Node was deleted — discard permanently.
       $logger->warning('Queue item for nid @nid skipped: node not found.', [
@@ -181,7 +181,7 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
       );
     }
     catch (\Exception $e) {
-      // Permanent failure — log and discard (returning normally deletes the item).
+      // Permanent failure — log and discard (normal return deletes item).
       $logger->error(
         'Permanent failure processing AI assessment for nid @nid: @msg',
         ['@nid' => $nid, '@msg' => $e->getMessage()]

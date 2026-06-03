@@ -19,7 +19,13 @@ final class ScoreMetaBuilder {
   }
 
   /**
-   * @return array{color: string, color_hex: string, label: \Drupal\Core\StringTranslation\TranslatableMarkup}
+   * Builds score tier metadata for display.
+   *
+   * @param int $score
+   *   Assessment score from 0 to 100.
+   *
+   * @return array
+   *   Keys: color, color_hex, label.
    */
   public function build(int $score): array {
     return match (TRUE) {

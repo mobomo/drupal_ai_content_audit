@@ -61,7 +61,7 @@ final class AiroEntityFormController extends HtmlEntityFormController implements
       return $form_build;
     }
 
-    // Sin LB: la pestaña no usa layout Gin de dos columnas; panel en aside (como diseño original).
+    // Sin LB: pestaña sin layout Gin de dos columnas; panel en aside.
     $panel = $this->panelBuilder->build($node, ['variant' => 'page']);
 
     $build = [

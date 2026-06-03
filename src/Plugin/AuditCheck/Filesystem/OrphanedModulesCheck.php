@@ -13,7 +13,7 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Scans contrib and custom module directories for .info.yml files not recognised by ModuleHandler.
+ * Scans contrib/custom modules for .info.yml files unknown to ModuleHandler.
  */
 #[AuditCheck(
   id: 'fs_orphaned_modules',
@@ -35,7 +35,7 @@ class OrphanedModulesCheck extends FilesystemCheckBase implements ContainerFacto
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

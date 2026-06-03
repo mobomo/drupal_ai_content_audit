@@ -59,6 +59,7 @@ class HtmlExtractorTest extends TestCase {
    *   Host name returned by the mock request (e.g. 'example.com').
    *
    * @return \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor
+   *   Extractor wired with the given request host.
    */
   private function buildExtractor(string $host): HtmlExtractor {
     $request = $this->createMock(Request::class);
@@ -86,18 +87,22 @@ class HtmlExtractorTest extends TestCase {
    * Convenience wrapper that invokes convertHtmlToStructuredText().
    *
    * @param string $html
+   *   HTML input.
    * @param \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor|null $extractor
    *   Optional extractor override (for host-specific tests).
    *
    * @return string
+   *   Structured plain text output.
    */
   private function convert(string $html, ?HtmlExtractor $extractor = NULL): string {
     return $this->convertMethod->invoke($extractor ?? $this->extractor, $html);
   }
 
-  // ---------------------------------------------------------------------------
-  // Heading conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Heading conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that h1–h6 elements are converted to markdown-style markers.
@@ -125,9 +130,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('###### H6: Level Six', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Image alt-text conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Image alt-text conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that img elements become [Image: alt text] markers.
@@ -162,9 +169,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('[Image: no alt text]', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Link classification
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Link classification
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that path-relative links are classified as internal.
@@ -231,7 +240,7 @@ class HtmlExtractorTest extends TestCase {
   }
 
   /**
-   * Tests that when no request is available (CLI), all non-path links are external.
+   * Without a request (CLI), all non-path links are treated as external.
    *
    * @covers ::convertHtmlToStructuredText
    */
@@ -257,9 +266,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('external:', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Table conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Table conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that table elements are converted to [Table]...[/Table] format.
@@ -307,9 +318,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('Inner', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // List conversion
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * List conversion
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that ul/li elements are converted to bullet markers.
@@ -348,12 +361,14 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringContainsString('3. Step three', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Navigation chrome stripping
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Navigation chrome stripping
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * Tests that nav is stripped while header/footer content is retained for LB/article markup.
+   * Nav is stripped while header/footer content is retained for LB markup.
    *
    * @covers ::convertHtmlToStructuredText
    */
@@ -367,7 +382,7 @@ class HtmlExtractorTest extends TestCase {
     // Act.
     $result = $this->convert($html);
 
-    // Assert — nav removed; main + header + footer text kept (Layout Builder often uses these).
+    // Assert — nav removed; main, header, and footer text kept.
     $this->assertStringContainsString('Body content here.', $result);
     $this->assertStringContainsString('Site Logo', $result);
     $this->assertStringContainsString('Copyright 2024', $result);
@@ -413,9 +428,11 @@ class HtmlExtractorTest extends TestCase {
     $this->assertStringNotContainsString('Screen reader only', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Edge cases
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Edge cases
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that an empty string input returns an empty string.

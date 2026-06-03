@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Verifies robots.txt is present, has a Sitemap directive, and blocks major AI bots.
+ * Verifies robots.txt, Sitemap directive, and blocks major AI bots.
  */
 #[AuditCheck(
   id: 'robots_txt',
@@ -40,7 +40,7 @@ class RobotsTxtCheck extends AuditCheckBase implements ContainerFactoryPluginInt
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

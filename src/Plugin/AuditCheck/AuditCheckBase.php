@@ -74,6 +74,7 @@ abstract class AuditCheckBase extends PluginBase implements AuditCheckInterface 
    *   Additional key-value details to surface in the report.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   protected function pass(
     string $description,
@@ -105,6 +106,7 @@ abstract class AuditCheckBase extends PluginBase implements AuditCheckInterface 
    *   Additional key-value details to surface in the report.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   protected function fail(
     string $description,
@@ -136,6 +138,7 @@ abstract class AuditCheckBase extends PluginBase implements AuditCheckInterface 
    *   Additional key-value details to surface in the report.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   protected function warning(
     string $description,
@@ -167,6 +170,7 @@ abstract class AuditCheckBase extends PluginBase implements AuditCheckInterface 
    *   Additional key-value details to surface in the report.
    *
    * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult
+   *   The audit check result.
    */
   protected function info(
     string $description,

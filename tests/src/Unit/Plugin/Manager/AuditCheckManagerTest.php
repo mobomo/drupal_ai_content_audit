@@ -27,9 +27,11 @@ use PHPUnit\Framework\TestCase;
  */
 class AuditCheckManagerTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Builds a partial AuditCheckManager mock with controlled definitions.
@@ -40,6 +42,7 @@ class AuditCheckManagerTest extends TestCase {
    *   Plugin definitions keyed by plugin ID (returned by getDefinitions()).
    *
    * @return \Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager&\PHPUnit\Framework\MockObject\MockObject
+   *   Partial manager mock.
    */
   private function buildManager(array $disabled = [], array $definitions = []): AuditCheckManager {
     // Config double: 'disabled_checks' returns the provided array.
@@ -68,9 +71,11 @@ class AuditCheckManagerTest extends TestCase {
     return $manager;
   }
 
-  // ---------------------------------------------------------------------------
-  // getEnabledCheckIds() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * getEnabledCheckIds() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * All check IDs are returned when disabled_checks is empty.
@@ -135,9 +140,11 @@ class AuditCheckManagerTest extends TestCase {
     $this->assertNotContains('llms_txt', $ids);
   }
 
-  // ---------------------------------------------------------------------------
-  // runAll() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * runAll() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * RunAll() returns an empty array when no checks are registered.
@@ -225,7 +232,7 @@ class AuditCheckManagerTest extends TestCase {
   }
 
   /**
-   * RunAll() passes the NodeInterface through to each check's applies() / run().
+   * RunAll() passes NodeInterface through to each check's applies()/run().
    *
    * @covers ::runAll
    */

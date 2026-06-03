@@ -71,7 +71,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
   }
 
   /**
-   * Ensures list builder prefetches users and renders cells without N+1 queries.
+   * Ensures list builder prefetches users without N+1 queries.
    */
   public function testListBuilderPrefetchesRunByUsersAndRendersFallbacks(): void {
     $user = $this->createUserWithName('List Builder Runner');
@@ -147,7 +147,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
   }
 
   /**
-   * Verifies that score_trend_delta is correctly computed across two assessments.
+   * Verifies score_trend_delta across two assessments.
    */
   public function testScoreTrendDeltaComputation(): void {
     $user = $this->createUserWithName('Trend User');
@@ -189,8 +189,9 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
   }
 
   /**
-   * Verifies that v1 responses (missing v2 keys) can still be saved with NULL
-   * v2 fields and that no exception is thrown.
+   * Verifies v1 responses can be saved with NULL v2 fields.
+   *
+   * Missing v2 keys must not throw when persisting an assessment.
    */
   public function testV1ResponseFallbackStoresNullV2Fields(): void {
     $user = $this->createUserWithName('V1 Fallback User');
@@ -208,7 +209,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $this->assertNull($reloaded->getScoreTrendDelta(), 'score_trend_delta must be NULL when not set.');
   }
 
-  // ── Helper Methods ──────────────────────────────────────────────────────────
+  /* ── Helper Methods ───────────────────────────────────────────── */
 
   /**
    * Builds a complete v2 mock response array.

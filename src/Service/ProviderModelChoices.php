@@ -73,7 +73,8 @@ class ProviderModelChoices {
    * @return array<string, string>
    *   Flat options array, e.g.:
    *   ['openai__gpt-4o' => 'OpenAI - GPT-4o',
-   *    'anthropic__claude-3-5-sonnet-20241022' => 'Anthropic - Claude 3.5 Sonnet'].
+   *    'anthropic__claude-3-5-sonnet-20241022' =>
+   *      'Anthropic - Claude 3.5 Sonnet'].
    */
   public function getSelectOptions(string $op_type = 'chat'): array {
     try {
@@ -118,7 +119,8 @@ class ProviderModelChoices {
    * Parses a composite provider__model key into its components.
    *
    * @param string $key
-   *   A key of the form '<provider_id>__<model_id>', e.g. 'openai__gpt-4o-mini'.
+   *   A key of the form '<provider_id>__<model_id>',
+   *   e.g. 'openai__gpt-4o-mini'.
    *
    * @return array
    *   A two-element array: [$provider_id, $model_id].  Either element may be

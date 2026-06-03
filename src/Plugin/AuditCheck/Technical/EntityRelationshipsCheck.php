@@ -16,7 +16,9 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks that nodes have a real author, taxonomy terms, and entity references. At site level checks taxonomy is configured.
+ * Checks nodes have author, taxonomy, and entity references.
+ *
+ * At site level, verifies taxonomy is configured.
  */
 #[AuditCheck(
   id: 'entity_relationships',
@@ -39,7 +41,7 @@ class EntityRelationshipsCheck extends AuditCheckBase implements ContainerFactor
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

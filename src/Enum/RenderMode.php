@@ -11,26 +11,20 @@ namespace Drupal\ai_content_audit\Enum;
  */
 enum RenderMode: string {
 
-  /**
-   * Plain text from configured fields.
-   */
-  case TEXT = 'text';
+  // Plain text from configured fields.
+  case Text = 'text';
 
-  /**
-   * Structured text from rendered HTML (see HtmlExtractor).
-   */
-  case HTML = 'html';
+  // Structured text from rendered HTML (see HtmlExtractor).
+  case Html = 'html';
 
-  /**
-   * Full-page screenshot; intended for asynchronous queue processing only.
-   */
-  case SCREENSHOT = 'screenshot';
+  // Full-page screenshot; intended for asynchronous queue processing only.
+  case Screenshot = 'screenshot';
 
   /**
    * Returns the default render mode.
    */
   public static function default(): self {
-    return self::TEXT;
+    return self::Text;
   }
 
 }

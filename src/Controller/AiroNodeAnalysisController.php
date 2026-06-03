@@ -13,6 +13,7 @@ use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 
@@ -25,6 +26,7 @@ final class AiroNodeAnalysisController extends ControllerBase {
     protected AiroAnalysisPanelBuilder $panelBuilder,
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
     protected AccessManagerInterface $accessManager,
+    protected RendererInterface $renderer,
   ) {}
 
   /**
@@ -35,6 +37,7 @@ final class AiroNodeAnalysisController extends ControllerBase {
       $container->get('ai_content_audit.airo_analysis_panel_builder'),
       $container->get('ai_content_audit.node_layout_builder_detector'),
       $container->get('access_manager'),
+      $container->get('renderer'),
     );
   }
 
@@ -80,7 +83,7 @@ final class AiroNodeAnalysisController extends ControllerBase {
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand(
       '.airo-analysis-panel--page',
-      \Drupal::service('renderer')->renderRoot($build),
+      $this->renderer->renderRoot($build),
     ));
     return $response;
   }

@@ -28,7 +28,7 @@ final class AiContentAuditLifecycle {
   ) {}
 
   /**
-   *
+   * Invalidates assessment list cache tags when an assessment entity changes.
    */
   public function invalidateListCacheForAssessment(EntityInterface $entity): void {
     if ($entity instanceof AiContentAssessment) {
@@ -40,7 +40,7 @@ final class AiContentAuditLifecycle {
   }
 
   /**
-   *
+   * Enqueues a node for assessment when on-save automation is enabled.
    */
   public function maybeEnqueueNode(NodeInterface $node): void {
     $config = $this->configFactory->get('ai_content_audit.settings');
@@ -59,7 +59,7 @@ final class AiContentAuditLifecycle {
   }
 
   /**
-   *
+   * Deletes assessment entities when a node is removed.
    */
   public function deleteAssessmentsForDeletedNode(NodeInterface $node): void {
     $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
@@ -79,7 +79,7 @@ final class AiContentAuditLifecycle {
   }
 
   /**
-   *
+   * Enqueues excess assessments for purge according to retention settings.
    */
   public function enqueueExcessAssessmentsForPurge(): void {
     $max = (int) $this->configFactory->get('ai_content_audit.settings')

@@ -16,7 +16,8 @@ use Psr\Log\LoggerInterface;
  * Tier 3: AI-powered interpretation of sitewide statistics.
  *
  * Sends pre-computed statistics (not content) to an LLM for strategic analysis.
- * Cost is constant ~$0.02 regardless of site size because only statistics are sent.
+ * Cost is constant ~$0.02 regardless of site size because only
+ * statistics are sent.
  */
 class SiteAnalysisService {
 
@@ -50,6 +51,8 @@ class SiteAnalysisService {
    *   The rollup statistics from SiteRollupService.
    * @param array $technicalAudit
    *   Results from TechnicalAuditService::runAllChecks().
+   * @param array $filesystemAudit
+   *   Results from FilesystemAuditService::runAllChecks().
    * @param array $options
    *   Optional overrides: provider_id, model_id, max_tokens.
    *
@@ -70,7 +73,7 @@ class SiteAnalysisService {
     $userMessage = $this->buildUserMessage($statistics, $technicalAudit, $filesystemAudit);
 
     try {
-      // Resolve provider and model — same priority order as AiAssessmentService:
+      // Resolve provider and model — same priority as AiAssessmentService:
       // 1. Runtime $options override
       // 2. Centrally configured 'content_audit' default in ai.settings
       // 3. Centrally configured generic 'chat' default in ai.settings.
@@ -88,9 +91,6 @@ class SiteAnalysisService {
         new ChatMessage('system', $systemMessage),
         new ChatMessage('user', $userMessage),
       ]);
-
-      $siteAuditConfig = $this->configFactory->get('ai_site_audit.settings');
-      $maxTokens = (int) ($siteAuditConfig->get('max_tokens_per_analysis') ?: 100000);
 
       $proxy = $this->aiProvider->createInstance($providerId);
       $response = $proxy->chat($input, $modelId, ['ai_site_audit', 'analyze']);
@@ -187,7 +187,8 @@ class SiteAnalysisService {
    * Get the current budget status for display.
    *
    * @return array
-   *   Array with keys: calls_today, max_calls, tokens_budget, calls_remaining, budget_exhausted.
+   *   Array with keys: calls_today, max_calls, tokens_budget,
+   *   calls_remaining, budget_exhausted.
    */
   public function getBudgetStatus(): array {
     $config = $this->configFactory->get('ai_site_audit.settings');

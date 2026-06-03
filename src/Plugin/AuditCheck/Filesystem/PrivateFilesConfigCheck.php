@@ -35,7 +35,7 @@ class PrivateFilesConfigCheck extends FilesystemCheckBase implements ContainerFa
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

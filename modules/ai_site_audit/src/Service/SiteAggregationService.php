@@ -13,9 +13,11 @@ use Psr\Log\LoggerInterface;
  * Tier 1: SQL-based aggregation service for sitewide content audit stats.
  *
  * All queries use the "latest assessment per node" pattern via a subquery:
- *   SELECT target_node, MAX(id) FROM ai_content_assessment GROUP BY target_node.
+ *   SELECT target_node, MAX(id) FROM ai_content_assessment
+ *   GROUP BY target_node.
  *
- * Results are cached with tag 'ai_content_assessment_list' for auto-invalidation
+ * Results are cached with tag 'ai_content_assessment_list' for
+ * auto-invalidation
  * when new assessments are created.
  */
 class SiteAggregationService {
@@ -59,7 +61,7 @@ class SiteAggregationService {
 
       $result = $query->execute()->fetchAssoc();
 
-      // Compute median separately (SQL doesn't have a portable MEDIAN function).
+      // Compute median separately (SQL lacks a portable MEDIAN function).
       $median = $this->computeMedianScore();
 
       return [
@@ -109,7 +111,8 @@ class SiteAggregationService {
    * Get per-content-type breakdown of assessment scores.
    *
    * @return array
-   *   Array of arrays with keys: type, label, count, avg_score, min_score, max_score.
+   *   Array of arrays with keys: type, label, count, avg_score,
+   *   min_score, max_score.
    */
   public function getContentTypeBreakdown(): array {
     return $this->getCachedOrCompute('ai_site_audit:content_type_breakdown', function () {
@@ -149,7 +152,8 @@ class SiteAggregationService {
    * Get coverage statistics comparing assessed vs total published nodes.
    *
    * @return array
-   *   Array with keys: total_published, total_assessed, coverage_pct, unassessed_count.
+   *   Array with keys: total_published, total_assessed,
+   *   coverage_pct, unassessed_count.
    */
   public function getCoverageStats(): array {
     return $this->getCachedOrCompute('ai_site_audit:coverage_stats', function () {

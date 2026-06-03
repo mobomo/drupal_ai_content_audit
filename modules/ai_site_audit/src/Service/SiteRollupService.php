@@ -145,8 +145,6 @@ class SiteRollupService {
    */
   protected function incrementalRollup(array $existing): array {
     $lastId = (int) $this->state->get('ai_site_audit.last_processed_assessment_id', 0);
-    $config = $this->configFactory->get('ai_site_audit.settings');
-    $batchSize = (int) ($config->get('rollup_batch_size') ?: 500);
 
     $this->logger->info('Starting incremental rollup from assessment ID @id', ['@id' => $lastId]);
 
@@ -182,7 +180,12 @@ class SiteRollupService {
           foreach ($subScores as $sub) {
             $dim = $sub['dimension'] ?? 'unknown';
             if (!isset($newSubScores[$dim])) {
-              $newSubScores[$dim] = ['total' => 0, 'count' => 0, 'max_possible' => $sub['max_score'] ?? 0, 'label' => $sub['label'] ?? $dim];
+              $newSubScores[$dim] = [
+                'total' => 0,
+                'count' => 0,
+                'max_possible' => $sub['max_score'] ?? 0,
+                'label' => $sub['label'] ?? $dim,
+              ];
             }
             $newSubScores[$dim]['total'] += (float) ($sub['score'] ?? 0);
             $newSubScores[$dim]['count']++;
@@ -198,7 +201,13 @@ class SiteRollupService {
             $item = $cp['item'] ?? 'unknown';
             $status = $cp['status'] ?? 'unknown';
             if (!isset($newCheckpoints[$item])) {
-              $newCheckpoints[$item] = ['pass' => 0, 'fail' => 0, 'warning' => 0, 'category' => $cp['category'] ?? '', 'priority' => $cp['priority'] ?? 'medium'];
+              $newCheckpoints[$item] = [
+                'pass' => 0,
+                'fail' => 0,
+                'warning' => 0,
+                'category' => $cp['category'] ?? '',
+                'priority' => $cp['priority'] ?? 'medium',
+              ];
             }
             if (isset($newCheckpoints[$item][$status])) {
               $newCheckpoints[$item][$status]++;
@@ -246,9 +255,6 @@ class SiteRollupService {
    *   The complete rollup data structure.
    */
   protected function fullRollup(): array {
-    $config = $this->configFactory->get('ai_site_audit.settings');
-    $batchSize = (int) ($config->get('rollup_batch_size') ?: 500);
-
     $this->logger->info('Starting full rollup of all assessments.');
 
     // Build the latest-per-node subquery.
@@ -381,7 +387,6 @@ class SiteRollupService {
     $failingCheckpoints = [];
     foreach ($checkpointAccum as $item => $counts) {
       if ($counts['fail'] > 0 || $counts['warning'] > 0) {
-        $totalChecked = $counts['pass'] + $counts['fail'] + $counts['warning'];
         $failingCheckpoints[] = [
           'item' => $item,
           'category' => $counts['category'],
@@ -447,8 +452,8 @@ class SiteRollupService {
   protected function mergeRollup(array $existing, array $newSubScores, array $newCheckpoints, array $newActionItems, array $newScores, int $newCount): array {
     $rollup = $existing;
 
-    // Update total assessed — note: incremental may include re-assessments of same node,
-    // so this is approximate until next full rollup.
+    // Update total assessed — incremental may re-assess the same node,
+    // so this is approximate until the next full rollup.
     $rollup['total_assessed'] = ($existing['total_assessed'] ?? 0) + $newCount;
 
     // Update average score.

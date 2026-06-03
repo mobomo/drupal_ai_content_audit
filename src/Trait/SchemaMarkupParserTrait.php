@@ -148,7 +148,7 @@ trait SchemaMarkupParserTrait {
   /**
    * Collects @type value(s) from a single decoded JSON-LD item.
    *
-   * @param mixed $item
+   * @param mixed $data
    *   Decoded JSON-LD item. Expected to be an associative array; non-arrays
    *   are silently skipped.
    * @param string[] $types

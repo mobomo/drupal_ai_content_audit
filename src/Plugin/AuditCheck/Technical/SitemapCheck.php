@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks sitemap.xml exists, contains URLs, has lastmod coverage, and handles sitemap index.
+ * Checks sitemap.xml exists with URLs, lastmod coverage, and index support.
  */
 #[AuditCheck(
   id: 'sitemap',
@@ -40,7 +40,7 @@ class SitemapCheck extends AuditCheckBase implements ContainerFactoryPluginInter
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

@@ -22,15 +22,38 @@ use PHPUnit\Framework\TestCase;
  */
 class AiAssessmentQueueWorkerTest extends TestCase {
 
+  /**
+   * The queue worker under test.
+   */
   protected AiAssessmentQueueWorker $worker;
+
+  /**
+   * Assessment service mock.
+   */
   protected AiAssessmentService $assessmentService;
+
+  /**
+   * Entity type manager mock.
+   */
   protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * Node storage mock.
+   */
   protected EntityStorageInterface $nodeStorage;
+
+  /**
+   * Logger factory mock.
+   */
   protected LoggerChannelFactoryInterface $loggerFactory;
+
+  /**
+   * Logger channel mock.
+   */
   protected LoggerChannelInterface $logger;
 
   /**
-   *
+   * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
@@ -64,7 +87,7 @@ class AiAssessmentQueueWorkerTest extends TestCase {
   }
 
   /**
-   * Tests that processItem completes without exception on a successful assessment.
+   * Tests that processItem completes without exception on success.
    *
    * @covers ::processItem
    */

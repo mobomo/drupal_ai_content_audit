@@ -29,14 +29,15 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class HttpsCheckTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helper
-  // ---------------------------------------------------------------------------
-
+  /*
+   * ---------------------------------------------------------------------------
+   * Helper
+   * ---------------------------------------------------------------------------
+   */
   /**
    * Plugin definition array that mirrors the #[AuditCheck] attribute values.
    *
-   * TranslatableMarkup is replaced with plain strings for unit-test simplicity —
+   * TranslatableMarkup replaced with plain strings for unit-test simplicity.
    * AuditCheckBase::getLabel() casts the value to string regardless.
    *
    * @var array<string, mixed>
@@ -50,13 +51,15 @@ class HttpsCheckTest extends TestCase {
   ];
 
   /**
-   * Builds an HttpsCheck plugin instance whose RequestStack reports the given
-   * security state.
+   * Builds an HttpsCheck instance with a mock RequestStack.
    *
    * @param bool $isSecure
    *   Whether the mock request should report HTTPS (TRUE) or HTTP (FALSE).
    * @param bool $noRequest
    *   When TRUE, RequestStack::getCurrentRequest() returns NULL (CLI context).
+   *
+   * @return \Drupal\ai_content_audit\Plugin\AuditCheck\Technical\HttpsCheck
+   *   Plugin instance under test.
    */
   private function buildCheck(bool $isSecure = TRUE, bool $noRequest = FALSE): HttpsCheck {
     $request = $this->createMock(Request::class);
@@ -75,9 +78,11 @@ class HttpsCheckTest extends TestCase {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // run() — HTTPS context
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * run() — HTTPS context
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Run() returns a 'pass' result when the current request is HTTPS.
@@ -114,9 +119,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('HTTPS', $result->label);
   }
 
-  // ---------------------------------------------------------------------------
-  // run() — HTTP context
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * run() — HTTP context
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Run() returns a 'warning' result (not 'fail') when the request is HTTP.
@@ -157,9 +164,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('warning', $result->status);
   }
 
-  // ---------------------------------------------------------------------------
-  // run() called with a node argument
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * run() called with a node argument
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Run() with a NodeInterface still returns the correct result (site-scoped).
@@ -173,9 +182,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('pass', $result->status);
   }
 
-  // ---------------------------------------------------------------------------
-  // applies() — inherited from AuditCheckBase (scope: 'site')
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * applies() — inherited from AuditCheckBase (scope: 'site')
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Applies(NULL) returns TRUE — site-scoped checks always apply.
@@ -187,7 +198,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * Applies($node) returns TRUE — site-scoped checks apply in node contexts too.
+   * Applies($node) returns TRUE for site-scoped checks in node context.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::applies
    */
@@ -196,9 +207,11 @@ class HttpsCheckTest extends TestCase {
     $this->assertTrue($this->buildCheck()->applies($node));
   }
 
-  // ---------------------------------------------------------------------------
-  // Plugin metadata helpers (inherited from AuditCheckBase)
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Plugin metadata helpers (inherited from AuditCheckBase)
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * GetId() returns the plugin ID from the definition.

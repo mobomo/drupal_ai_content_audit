@@ -15,7 +15,8 @@ use Psr\Log\LoggerInterface;
  * Orchestrates the multi-tier sitewide analysis pipeline.
  *
  * Coordinates: Tier 1 SQL → Tier 2 PHP Rollup → Tier 3 AI Interpretation.
- * Manages the analysis state lifecycle: idle → aggregating → rolling_up → ai_interpreting → complete.
+ * Manages the analysis state lifecycle:
+ * idle → aggregating → rolling_up → ai_interpreting → complete.
  */
 class AnalysisOrchestrator {
 

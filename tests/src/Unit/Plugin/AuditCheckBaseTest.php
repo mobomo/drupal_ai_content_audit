@@ -22,17 +22,18 @@ use PHPUnit\Framework\TestCase;
  */
 class AuditCheckBaseTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helper: anonymous concrete subclass factory
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helper: anonymous concrete subclass factory
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * Creates a concrete anonymous subclass of AuditCheckBase for the given scope.
+   * Creates an anonymous AuditCheckBase subclass for the given scope.
    *
    * The returned object is wired with a minimal plugin definition so that
    * getId(), getLabel(), getCategory(), and applies() work as expected.
-   * The public callPass / callFail / callWarning wrappers let tests exercise the
-   * protected result-factory methods.
+   * Public callPass/callFail/callWarning wrappers exercise protected helpers.
    *
    * @param string $scope
    *   Plugin scope — 'site' or 'node'.
@@ -70,14 +71,14 @@ class AuditCheckBaseTest extends TestCase {
       }
 
       /**
-       *
+       * Exposes fail() for unit tests.
        */
       public function callFail(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->fail($desc, $current, $recommended, $details);
       }
 
       /**
-       *
+       * Exposes warning() for unit tests.
        */
       public function callWarning(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->warning($desc, $current, $recommended, $details);
@@ -86,9 +87,11 @@ class AuditCheckBaseTest extends TestCase {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // getId() / getLabel() / getCategory()
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * getId() / getLabel() / getCategory()
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * GetId() returns the 'id' value from the plugin definition.
@@ -135,9 +138,11 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertSame('Technical', $this->makeCheck(category: 'Technical')->getCategory());
   }
 
-  // ---------------------------------------------------------------------------
-  // applies()
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * applies()
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Applies(NULL) returns TRUE for a 'site'-scoped check.
@@ -179,12 +184,14 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertTrue($this->makeCheck(scope: 'site')->applies($node));
   }
 
-  // ---------------------------------------------------------------------------
-  // pass() / fail() / warning() result factory helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * pass() / fail() / warning() result factory helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * Pass() returns a TechnicalAuditResult with status 'pass' and correct fields.
+   * Pass() returns TechnicalAuditResult with status pass and correct fields.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::pass
    */

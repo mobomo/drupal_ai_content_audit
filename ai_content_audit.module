@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Procedural hooks for this module live in Drupal\ai_content_audit\Hook\* (Drupal 11).
+ * Procedural hooks live in Drupal\ai_content_audit\Hook\* (Drupal 11).
  */
 
 /**
