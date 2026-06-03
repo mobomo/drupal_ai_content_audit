@@ -118,6 +118,7 @@ final class AiroAnalysisPanelBuilder {
    * Tab panes keyed by tab ID (for accordion / embedded panel themes).
    *
    * @return array<string, array>
+   *   Tab pane render arrays keyed by tab ID.
    */
   public function buildTabPanes(NodeInterface $node, bool $pageSkin = FALSE): array {
     $preview = $this->airoPanelController->buildPreviewTab($node, $pageSkin);
@@ -139,6 +140,7 @@ final class AiroAnalysisPanelBuilder {
    * Assess and full-report URLs for the node.
    *
    * @return array{assess_url: string, full_report_url: string|null}
+   *   URLs for running an assessment and viewing the full report.
    */
   public function buildActionUrls(NodeInterface $node): array {
     $nodeId = (int) $node->id();

@@ -40,6 +40,7 @@ class AuditCheckManagerTest extends TestCase {
    *   Plugin definitions keyed by plugin ID (returned by getDefinitions()).
    *
    * @return \Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager&\PHPUnit\Framework\MockObject\MockObject
+   *   Partial manager mock.
    */
   private function buildManager(array $disabled = [], array $definitions = []): AuditCheckManager {
     // Config double: 'disabled_checks' returns the provided array.

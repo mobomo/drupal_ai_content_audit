@@ -50,6 +50,8 @@ class SiteAnalysisService {
    *   The rollup statistics from SiteRollupService.
    * @param array $technicalAudit
    *   Results from TechnicalAuditService::runAllChecks().
+   * @param array $filesystemAudit
+   *   Results from FilesystemAuditService::runAllChecks().
    * @param array $options
    *   Optional overrides: provider_id, model_id, max_tokens.
    *

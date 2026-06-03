@@ -69,6 +69,7 @@ class HtmlFetchServiceTest extends TestCase {
    *   Exception message.
    *
    * @return \GuzzleHttp\Exception\GuzzleException
+   *   Throwable implementing GuzzleException.
    */
   private function buildGuzzleException(string $message = 'Network failure'): GuzzleException {
     return new class($message) extends \RuntimeException implements GuzzleException {};
@@ -155,8 +156,9 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * FetchPageHtml() uses in-memory cache — two calls for the same URL issue only
-   * one HTTP request.
+   * Verifies fetchPageHtml() caches results per URL.
+   *
+   * Two calls for the same URL should issue only one HTTP request.
    *
    * @covers ::fetchPageHtml
    */

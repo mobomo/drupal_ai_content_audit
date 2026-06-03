@@ -50,13 +50,15 @@ class HttpsCheckTest extends TestCase {
   ];
 
   /**
-   * Builds an HttpsCheck plugin instance whose RequestStack reports the given
-   * security state.
+   * Builds an HttpsCheck instance with a mock RequestStack.
    *
    * @param bool $isSecure
    *   Whether the mock request should report HTTPS (TRUE) or HTTP (FALSE).
    * @param bool $noRequest
    *   When TRUE, RequestStack::getCurrentRequest() returns NULL (CLI context).
+   *
+   * @return \Drupal\ai_content_audit\Plugin\AuditCheck\Technical\HttpsCheck
+   *   Plugin instance under test.
    */
   private function buildCheck(bool $isSecure = TRUE, bool $noRequest = FALSE): HttpsCheck {
     $request = $this->createMock(Request::class);

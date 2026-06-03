@@ -130,8 +130,11 @@ final class AiContentAuditCommands extends DrushCommands {
   }
 
   /**
-   * @deprecated The site-wide audit pipeline has been removed. Command retained
-   *   only to provide a helpful runtime error if invoked on older tooling.
+   * Fails fast when the removed site-wide audit command is invoked.
+   *
+   * @deprecated in ai_content_audit:1.x and is removed from ai_content_audit:2.0.0. Use ai_site_audit instead.
+   *
+   * @see \Drupal\ai_site_audit\Commands\AiSiteAuditCommands
    */
   #[Command(name: 'ai_content_audit:site-audit', aliases: ['acsa'])]
   #[Help(description: 'This command has been removed. Use `drush ai_content_audit:assess --all` for bulk node assessment.')]

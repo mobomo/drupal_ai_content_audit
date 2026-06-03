@@ -32,17 +32,31 @@ class EntityContextTraitTest extends TestCase {
    *   callBuildEntityContextBlock() public wrappers.
    */
   private function createTraitHost(): object {
-    return new class {
+    return new class() {
       use EntityContextTrait;
 
-      /** @param \Drupal\node\NodeInterface $node
-       *   */
+      /**
+       * Proxies buildContentMetadataBlock().
+       *
+       * @param \Drupal\node\NodeInterface $node
+       *   The node under test.
+       *
+       * @return string
+       *   Metadata block text.
+       */
       public function callBuildContentMetadataBlock(NodeInterface $node): string {
         return $this->buildContentMetadataBlock($node);
       }
 
-      /** @param \Drupal\node\NodeInterface $node
-       *   */
+      /**
+       * Proxies buildEntityContextBlock().
+       *
+       * @param \Drupal\node\NodeInterface $node
+       *   The node under test.
+       *
+       * @return string
+       *   Entity context block text.
+       */
       public function callBuildEntityContextBlock(NodeInterface $node): string {
         return $this->buildEntityContextBlock($node);
       }
@@ -51,13 +65,15 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Creates a stdClass representing the node's "type" field item with an optional
-   * bundle entity stub, so that `$node->type->entity` works in tests.
+   * Creates a stdClass type field stub for tests.
+   *
+   * Supports optional bundle entity label via `$node->type->entity`.
    *
    * @param string|null $label
    *   Label returned by the bundle entity, or NULL to simulate no bundle entity.
    *
    * @return \stdClass
+   *   Object mimicking a type field item list.
    */
   private function makeTypeProp(?string $label): \stdClass {
     $typeProp = new \stdClass();
@@ -76,16 +92,22 @@ class EntityContextTraitTest extends TestCase {
    * Builds a basic NodeInterface mock with configurable type, bundle, dates, id.
    *
    * @param string $label
+   *   Node title.
    * @param string $bundle
+   *   Node bundle machine name.
    * @param int $nid
+   *   Node ID.
    * @param int $created
+   *   Created timestamp.
    * @param int $changed
+   *   Changed timestamp.
    * @param string|null $bundleLabel
    *   Human-readable bundle label (NULL = use bundle as fallback).
    * @param string|\Exception $urlOrException
    *   URL string or exception to throw from toUrl().
    *
    * @return \Drupal\node\NodeInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Configured node mock.
    */
   private function buildNodeMock(
     string $label = 'Test Title',
@@ -248,8 +270,9 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Tests that taxonomy term names are included for entity_reference fields
-   * whose target_type is taxonomy_term.
+   * Tests taxonomy term names in entity_reference fields.
+   *
+   * Covers fields whose target_type is taxonomy_term.
    *
    * @covers ::buildEntityContextBlock
    */

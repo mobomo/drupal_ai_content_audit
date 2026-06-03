@@ -189,8 +189,9 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
   }
 
   /**
-   * Verifies that v1 responses (missing v2 keys) can still be saved with NULL
-   * v2 fields and that no exception is thrown.
+   * Verifies v1 responses can be saved with NULL v2 fields.
+   *
+   * Missing v2 keys must not throw when persisting an assessment.
    */
   public function testV1ResponseFallbackStoresNullV2Fields(): void {
     $user = $this->createUserWithName('V1 Fallback User');

@@ -214,8 +214,13 @@ class AiroPanelController extends ControllerBase {
    * clients send the form entity revision ID so drafts and Layout Builder
    * overrides match what the editor sees.
    *
+   * @param \Drupal\node\NodeInterface $route_node
+   *   Node provided by the route parameter.
    * @param array<string, mixed> $decoded
    *   Decoded JSON request body.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The revision to assess, or the route node when no revision is specified.
    */
   private function resolveNodeRevisionFromRequestBody(NodeInterface $route_node, array $decoded): NodeInterface {
     if (empty($decoded['revision_id'])) {
@@ -237,9 +242,7 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * G5: Re-renders the inline score widget for a given node and returns a
-   * Drupal AJAX ReplaceCommand so the browser can swap only the widget card
-   * without a full page reload.
+   * Re-renders the inline score widget and returns a Drupal AJAX command.
    *
    * The selector targets `.airo-widget[data-node-id="N"]` so multiple widgets
    * on the same page (e.g. multiple tabs) are handled correctly.
@@ -842,6 +845,7 @@ class AiroPanelController extends ControllerBase {
    * 'error' key so one failing provider never aborts the whole comparison run.
    *
    * @return array{html: string|null, duration_ms: int, error: string|null}
+   *   Normalised provider response payload.
    */
   private function queryOneProvider(
     string $systemPrompt,
@@ -889,11 +893,13 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Returns a JSON list of all configured provider+model choices for the given
-   * AI operation type.  Used by the AIRO panel JS to refresh the selector
-   * (Phase 2 lazy-fetch stub — currently not called from the UI).
+   * Returns configured provider and model choices as JSON.
    *
+   * Used by the AIRO panel JS to refresh the selector (Phase 2 lazy-fetch stub).
    * Query parameter: op_type (default: 'chat').
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON response containing available model choices.
    */
   public function listAvailableModels(): JsonResponse {
     $opType  = \Drupal::request()->query->get('op_type', 'chat');

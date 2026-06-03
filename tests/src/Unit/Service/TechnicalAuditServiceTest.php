@@ -125,6 +125,7 @@ class TechnicalAuditServiceTest extends TestCase {
    *   HTTP status code (default 200).
    *
    * @return \Psr\Http\Message\ResponseInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Mock HTTP response.
    */
   private function buildHttpResponse(string $html, int $statusCode = 200): ResponseInterface {
     $body = $this->createMock(StreamInterface::class);
@@ -482,7 +483,12 @@ class TechnicalAuditServiceTest extends TestCase {
    * Builds a UserInterface mock representing a real (non-anonymous) author.
    *
    * @param int $uid
+   *   User ID.
    * @param string $displayName
+   *   Display name returned by getDisplayName().
+   *
+   * @return \Drupal\user\UserInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Mock author user.
    */
   private function buildAuthorMock(int $uid = 5, string $displayName = 'Jane Doe'): UserInterface {
     $owner = $this->createMock(UserInterface::class);
@@ -495,8 +501,14 @@ class TechnicalAuditServiceTest extends TestCase {
    * Builds a NodeInterface mock with the specified owner and field definitions.
    *
    * @param \Drupal\user\UserInterface|null $owner
+   *   Node owner, or NULL for anonymous.
    * @param array<string, \Drupal\Core\Field\FieldDefinitionInterface> $fieldDefs
+   *   Field definitions keyed by field name.
    * @param array<string, \Drupal\Core\Field\FieldItemListInterface> $fields
+   *   Field item lists keyed by field name.
+   *
+   * @return \Drupal\node\NodeInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Configured node mock.
    */
   private function buildNodeMock(
     ?UserInterface $owner,

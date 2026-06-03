@@ -2,14 +2,10 @@
 
 /**
  * @file
+ * Primary module hooks for AI Site Audit module.
  */
 
 declare(strict_types=1);
-
-/**
- * @file
- * Primary module hooks for AI Site Audit module.
- */
 
 /**
  * Implements hook_theme().

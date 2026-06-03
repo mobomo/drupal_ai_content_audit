@@ -50,6 +50,7 @@ final class LayoutBuilderPreviewSource {
    * Returns layout sections for the node revision (same semantics as core trait).
    *
    * @return \Drupal\layout_builder\Section[]
+   *   Layout sections for the node view mode.
    */
   public function getSectionsForNode(NodeInterface $node, string $view_mode = 'full'): array {
     return $this->getEntitySections($node, $view_mode);

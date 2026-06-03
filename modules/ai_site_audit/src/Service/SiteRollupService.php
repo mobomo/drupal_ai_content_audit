@@ -182,7 +182,12 @@ class SiteRollupService {
           foreach ($subScores as $sub) {
             $dim = $sub['dimension'] ?? 'unknown';
             if (!isset($newSubScores[$dim])) {
-              $newSubScores[$dim] = ['total' => 0, 'count' => 0, 'max_possible' => $sub['max_score'] ?? 0, 'label' => $sub['label'] ?? $dim];
+              $newSubScores[$dim] = [
+                'total' => 0,
+                'count' => 0,
+                'max_possible' => $sub['max_score'] ?? 0,
+                'label' => $sub['label'] ?? $dim,
+              ];
             }
             $newSubScores[$dim]['total'] += (float) ($sub['score'] ?? 0);
             $newSubScores[$dim]['count']++;
@@ -198,7 +203,13 @@ class SiteRollupService {
             $item = $cp['item'] ?? 'unknown';
             $status = $cp['status'] ?? 'unknown';
             if (!isset($newCheckpoints[$item])) {
-              $newCheckpoints[$item] = ['pass' => 0, 'fail' => 0, 'warning' => 0, 'category' => $cp['category'] ?? '', 'priority' => $cp['priority'] ?? 'medium'];
+              $newCheckpoints[$item] = [
+                'pass' => 0,
+                'fail' => 0,
+                'warning' => 0,
+                'category' => $cp['category'] ?? '',
+                'priority' => $cp['priority'] ?? 'medium',
+              ];
             }
             if (isset($newCheckpoints[$item][$status])) {
               $newCheckpoints[$item][$status]++;

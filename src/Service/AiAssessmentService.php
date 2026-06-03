@@ -170,7 +170,7 @@ JSON;
    *   - 'render_mode' (string):
    *     How to extract content for assessment. RenderMode enum values:
    *     'text' (default), 'html', 'screenshot'.
-   *     @see \Drupal\ai_content_audit\Enum\RenderMode.
+   *     See \Drupal\ai_content_audit\Enum\RenderMode.
    *
    * @return array
    *   Array with keys: 'raw_output', 'parsed', 'success', 'error'.
@@ -377,7 +377,7 @@ JSON;
    * @param \Drupal\node\NodeInterface $node
    *   The node to look up.
    *
-   * @return AiContentAssessment|null
+   * @return \Drupal\ai_content_audit\Entity\AiContentAssessment|null
    *   The latest assessment entity, or NULL.
    */
   protected function getLatestAssessmentForNode(NodeInterface $node): ?AiContentAssessment {
@@ -393,7 +393,7 @@ JSON;
       return NULL;
     }
 
-    /** @var AiContentAssessment $entity */
+    /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment $entity */
     $entity = $storage->load(reset($ids));
     return $entity;
   }
