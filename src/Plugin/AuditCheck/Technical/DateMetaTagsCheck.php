@@ -38,7 +38,7 @@ class DateMetaTagsCheck extends AuditCheckBase implements ContainerFactoryPlugin
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

@@ -35,7 +35,7 @@ class PublicFilesWritableCheck extends FilesystemCheckBase implements ContainerF
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

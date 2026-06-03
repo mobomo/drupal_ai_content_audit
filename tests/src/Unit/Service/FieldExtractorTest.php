@@ -20,11 +20,18 @@ use PHPUnit\Framework\TestCase;
  */
 class FieldExtractorTest extends TestCase {
 
+  /**
+   * The extractor under test.
+   */
   protected FieldExtractor $extractor;
+
+  /**
+   * Entity type manager mock.
+   */
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   *
+   * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
@@ -170,7 +177,7 @@ class FieldExtractorTest extends TestCase {
     $extractor = new class([], 'field_text', ['render_mode' => 'text'], $entityTypeManager) extends FieldExtractor {
 
       /**
-       *
+       * Returns predictable field text for concatenation tests.
        */
       protected function extractFieldText(NodeInterface $node, string $field_name, string $field_type): string {
         return match ($field_name) {

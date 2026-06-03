@@ -70,14 +70,14 @@ class AuditCheckBaseTest extends TestCase {
       }
 
       /**
-       *
+       * Exposes fail() for unit tests.
        */
       public function callFail(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->fail($desc, $current, $recommended, $details);
       }
 
       /**
-       *
+       * Exposes warning() for unit tests.
        */
       public function callWarning(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->warning($desc, $current, $recommended, $details);

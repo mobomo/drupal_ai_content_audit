@@ -51,7 +51,7 @@ class ContentExtractorManager extends DefaultPluginManager {
    * Returns an instantiated extractor for the given render mode.
    *
    * @param string $mode
-   *   A RenderMode enum value string. Defaults to RenderMode::TEXT.
+   *   A RenderMode enum value string. Defaults to RenderMode::Text.
    *
    * @return \Drupal\ai_content_audit\Extractor\ContentExtractorInterface
    *   The matching extractor plugin instance.

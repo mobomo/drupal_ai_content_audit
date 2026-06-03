@@ -38,7 +38,7 @@ final class AiroAnalysisPanelBuilder {
   ) {}
 
   /**
-   *
+   * Returns the URL for the AIRO logo asset.
    */
   public function getAiroLogoUrl(): string {
     $module_path = $this->moduleHandler->getModule('ai_content_audit')->getPath();

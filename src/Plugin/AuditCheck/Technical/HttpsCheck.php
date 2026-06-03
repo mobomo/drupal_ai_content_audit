@@ -35,7 +35,7 @@ class HttpsCheck extends AuditCheckBase implements ContainerFactoryPluginInterfa
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

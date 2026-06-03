@@ -160,7 +160,7 @@ class AiroPanelController extends ControllerBase {
       // AIRO panel analysis must evaluate rendered page content (LB-aware),
       // not plain text field extraction.
       $result = $this->assessmentService->assessNode($node, [
-        'render_mode' => RenderMode::HTML->value,
+        'render_mode' => RenderMode::Html->value,
       ]);
 
       if (!$result['success']) {
@@ -916,7 +916,7 @@ class AiroPanelController extends ControllerBase {
   private function extractRenderedNodeContextForPreview(NodeInterface $node): string {
     try {
       return $this->contentExtractorManager
-        ->getExtractorForMode(RenderMode::HTML->value)
+        ->getExtractorForMode(RenderMode::Html->value)
         ->extract($node);
     }
     catch (\Throwable $e) {

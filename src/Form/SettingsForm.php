@@ -79,14 +79,11 @@ final class SettingsForm extends ConfigFormBase {
       $form['provider_status'] = [
         '#type'   => 'markup',
         '#markup' => '<div class="messages messages--status">'
-        . $this->t('✓ A chat provider is configured (global default: <strong>@provider</strong> / <strong>@model</strong>). '
-              . 'To manage API keys and providers, visit <a href=":url">AI Providers configuration</a>.',
-            [
-              '@provider' => $default['provider_id'] ?? '—',
-              '@model'    => $default['model_id'] ?? '—',
-              ':url'      => $providers_url,
-            ]
-        )
+        . $this->t('✓ A chat provider is configured (global default: <strong>@provider</strong> / <strong>@model</strong>). To manage API keys and providers, visit <a href=":url">AI Providers configuration</a>.', [
+          '@provider' => $default['provider_id'] ?? '—',
+          '@model'    => $default['model_id'] ?? '—',
+          ':url'      => $providers_url,
+        ])
         . '</div>',
         '#weight' => -100,
       ];
@@ -95,11 +92,9 @@ final class SettingsForm extends ConfigFormBase {
       $form['provider_status'] = [
         '#type'   => 'markup',
         '#markup' => '<div class="messages messages--warning">'
-        . $this->t('⚠ No AI chat provider is configured. '
-              . 'Install a provider module (e.g. <em>AI Provider: OpenAI</em> or <em>AI Provider: Anthropic</em>) and '
-              . '<a href=":url">configure it here</a> before running assessments.',
-            [':url' => $providers_url]
-        )
+        . $this->t('⚠ No AI chat provider is configured. Install a provider module (e.g. <em>AI Provider: OpenAI</em> or <em>AI Provider: Anthropic</em>) and <a href=":url">configure it here</a> before running assessments.', [
+          ':url' => $providers_url,
+        ])
         . '</div>',
         '#weight' => -100,
       ];
@@ -130,21 +125,18 @@ final class SettingsForm extends ConfigFormBase {
         '#title'         => $this->t('Provider / model'),
         '#options'       => $select_options,
         '#default_value' => $saved_key,
-        '#description'   => $this->t(
-          'Select the AI provider and model to use for content audits. '
-          . 'Choose "Use global AI default" to defer to the site-wide setting configured at '
-          . '<a href=":url">AI Providers</a>.',
-          [':url' => $providers_url]
-        ),
+        '#description'   => $this->t('Select the AI provider and model to use for content audits. Choose "Use global AI default" to defer to the site-wide setting configured at <a href=":url">AI Providers</a>.', [
+          ':url' => $providers_url,
+        ]),
       ];
     }
     else {
       $form['provider_model_fieldset']['default_provider_model'] = [
         '#type'   => 'markup',
         '#markup' => '<p class="messages messages--warning">'
-        . $this->t('No configured AI chat providers found. '
-            . 'Please <a href=":url">configure at least one provider</a> first.',
-            [':url' => $providers_url])
+        . $this->t('No configured AI chat providers found. Please <a href=":url">configure at least one provider</a> first.', [
+          ':url' => $providers_url,
+        ])
         . '</p>',
       ];
     }

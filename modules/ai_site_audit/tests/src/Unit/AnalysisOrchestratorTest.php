@@ -26,13 +26,44 @@ use Psr\Log\LoggerInterface;
  */
 class AnalysisOrchestratorTest extends TestCase {
 
+  /**
+   * Site aggregation service mock.
+   */
   protected SiteAggregationService $aggregation;
+
+  /**
+   * Site rollup service mock.
+   */
   protected SiteRollupService $rollup;
+
+  /**
+   * Site analysis service mock.
+   */
   protected SiteAnalysisService $analysis;
+
+  /**
+   * Technical audit service mock.
+   */
   protected TechnicalAuditService $technicalAudit;
+
+  /**
+   * State service mock.
+   */
   protected StateInterface $state;
+
+  /**
+   * Queue factory mock.
+   */
   protected QueueFactory $queueFactory;
+
+  /**
+   * Config factory mock.
+   */
   protected ConfigFactoryInterface $configFactory;
+
+  /**
+   * Logger mock.
+   */
   protected LoggerInterface $logger;
 
   /**

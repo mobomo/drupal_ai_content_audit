@@ -33,7 +33,7 @@ class ContribPatchIndicatorsCheck extends FilesystemCheckBase implements Contain
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

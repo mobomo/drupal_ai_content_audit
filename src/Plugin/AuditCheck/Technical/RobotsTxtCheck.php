@@ -40,7 +40,7 @@ class RobotsTxtCheck extends AuditCheckBase implements ContainerFactoryPluginInt
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(

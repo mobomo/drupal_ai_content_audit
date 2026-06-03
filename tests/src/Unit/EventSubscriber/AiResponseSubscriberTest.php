@@ -19,12 +19,23 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class AiResponseSubscriberTest extends TestCase {
 
+  /**
+   * The subscriber under test.
+   */
   protected AiResponseSubscriber $subscriber;
+
+  /**
+   * Logger factory mock.
+   */
   protected LoggerChannelFactoryInterface $loggerFactory;
+
+  /**
+   * Logger channel mock.
+   */
   protected LoggerChannelInterface $logger;
 
   /**
-   *
+   * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
