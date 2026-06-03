@@ -13,7 +13,7 @@ use Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase;
  * - $drupalRoot property (absolute path to the Drupal webroot).
  * - MAX_SCAN_DEPTH constant for recursive iterator depth caps.
  * - LARGE_FILE_THRESHOLD_BYTES constant (50 MB).
- * - safePath() path-traversal guard (mirrors FilesystemAuditService::safePath()).
+ * - safePath() path-traversal guard for filesystem checks.
  */
 abstract class FilesystemCheckBase extends AuditCheckBase {
 
