@@ -1,0 +1,11 @@
+{% set howto_clip_id = howto_clip_id|default('airo-preview-howto-clip') %}
+<svg class="airo-preview__howto-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+  <g clip-path="url(#{{ howto_clip_id }})">
+    <path d="M10 13.3334V10.0001M10 6.66675H10.0084M18.3334 10.0001C18.3334 14.6025 14.6024 18.3334 10 18.3334C5.39765 18.3334 1.66669 14.6025 1.66669 10.0001C1.66669 5.39771 5.39765 1.66675 10 1.66675C14.6024 1.66675 18.3334 5.39771 18.3334 10.0001Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <defs>
+    <clipPath id="{{ howto_clip_id }}">
+      <rect width="20" height="20" fill="white"/>
+    </clipPath>
+  </defs>
+</svg>
