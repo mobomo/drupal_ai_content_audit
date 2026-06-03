@@ -1,0 +1,52 @@
+{#
+/**
+ * @file
+ * AI Preview — model selector (multi checkboxes or single label).
+ *
+ * Variables:
+ * - model_choices: array of { key, label }
+ * - selected_keys: array of checked provider keys
+ * - has_permission: bool, multi-select allowed
+ * - use_selector_card: wrap details in .airo-preview__model-selector-card (page skin overlay)
+ * - show_single: when false, render nothing if only one model (conversation toolbar)
+ */
+#}
+{% set show_single = show_single|default(true) %}
+
+{% if has_permission and model_choices|length > 1 %}
+  {% if use_selector_card|default(false) %}
+    <div class="airo-preview__model-selector-card">
+  {% endif %}
+  <details class="airo-preview__model-fieldset">
+    <summary class="airo-preview__model-legend">
+      <span class="airo-preview__model-legend-label">{{ 'Multiple models'|t }}</span>
+    </summary>
+    <div class="airo-preview__model-options">
+      {% for choice in model_choices %}
+        <label class="airo-preview__model-option">
+          <input
+            type="checkbox"
+            class="airo-preview__model-checkbox"
+            name="provider_model"
+            value="{{ choice.key }}"
+            {{ choice.key in selected_keys ? 'checked' : '' }}
+          />
+          <span class="airo-preview__model-option-label">{{ choice.label }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </details>
+  {% if use_selector_card|default(false) %}
+    </div>
+  {% endif %}
+{% elseif show_single %}
+  <div class="airo-preview__model-single">
+    <span class="airo-preview__model-single-label">
+      {% if model_choices[0] is defined %}
+        {{ model_choices[0].label }}
+      {% else %}
+        {{ 'AI Assistant'|t }}
+      {% endif %}
+    </span>
+  </div>
+{% endif %}
