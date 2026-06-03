@@ -23,6 +23,7 @@ function ai_site_audit_theme(): array {
         'rollup' => NULL,
         'ai_insights' => NULL,
         'technical_audit' => NULL,
+        'filesystem_audit' => NULL,
         'analysis_state' => NULL,
         'config' => NULL,
       ],

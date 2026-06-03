@@ -13,6 +13,7 @@
  *   - rollup: Tier 2 rollup data (may be null)
  *   - ai_insights: AI interpretation data (may be null)
  *   - technical_audit: Technical audit results
+ *   - filesystem_audit: Filesystem audit results
  *   - analysis_state: Current analysis pipeline state
  *   - config: Dashboard configuration flags
  */
@@ -184,6 +185,14 @@
     <div class="ai-site-dashboard__section">
       <h3 class="ai-site-dashboard__section-title">Technical Audit</h3>
       {% include 'ai-site-audit-technical-summary.html.twig' with { 'results': technical_audit } only %}
+    </div>
+  {% endif %}
+
+  {# File System audit summary #}
+  {% if filesystem_audit is not empty %}
+    <div class="ai-site-dashboard__section">
+      <h3 class="ai-site-dashboard__section-title">File system Audit</h3>
+      {% include 'ai-site-audit-technical-summary.html.twig' with { 'results': filesystem_audit } only %}
     </div>
   {% endif %}
 
