@@ -13,7 +13,7 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Scans contrib and custom module directories for .info.yml files not recognised by ModuleHandler.
+ * Scans contrib/custom modules for .info.yml files unknown to ModuleHandler.
  */
 #[AuditCheck(
   id: 'fs_orphaned_modules',

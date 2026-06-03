@@ -141,7 +141,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
   }
 
   /**
-   * Tests that an img with no alt attribute at all becomes [Image: no alt text].
+   * Tests that img with no alt attribute becomes [Image: no alt text].
    *
    * @covers ::convertAndStripHtml
    */
@@ -267,7 +267,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     // Assert — entities decoded, tags stripped.
     $this->assertStringContainsString('£10', $result);
     $this->assertStringContainsString('& more', $result);
-    // The literal "<details>" string from &lt;details&gt; should not become a tag.
+    // Literal "<details>" from &lt;details&gt; must not become a tag.
     $this->assertStringContainsString('<details>', $result);
   }
 

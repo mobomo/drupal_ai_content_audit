@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Checks each custom module .info.yml has description, package, and a README file.
+ * Checks custom module .info.yml files for description, package, and README.
  */
 #[AuditCheck(
   id: 'fs_custom_modules',

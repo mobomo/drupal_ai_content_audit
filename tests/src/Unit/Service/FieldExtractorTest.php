@@ -96,7 +96,7 @@ class FieldExtractorTest extends TestCase {
   }
 
   /**
-   * Tests that a node with only unsupported field types produces only its title.
+   * Tests a node with only unsupported field types yields only its title.
    *
    * When every field on a node is of a non-extractable type (e.g. 'integer')
    * the output should consist solely of the "Title: …" line — the unsupported
@@ -122,19 +122,18 @@ class FieldExtractorTest extends TestCase {
     // The result must start with the title and contain nothing else.
     $this->assertStringContainsString('Title: My Node', $result);
     $this->assertStringNotContainsString('Page Count', $result);
-    // Trim ensures we don't count leading/trailing whitespace as "extra" content.
+    // Trim ignores leading/trailing whitespace as "extra" content.
     $this->assertEquals('Title: My Node', trim($result));
   }
 
   /**
-   * Tests that extractForNode concatenates values from multiple text fields.
+   * Tests that extractForNode concatenates multiple text field values.
    *
    * Two string-type fields should both appear in the output, separated by the
    * double-newline delimiter used by extractForNode().
    *
-   * To avoid the complexity of mocking Drupal's FieldItemList iterator, we
-   * create an anonymous subclass that overrides the protected extractFieldText()
-   * so we can assert the concatenation logic in isolation.
+   * To avoid mocking FieldItemList iterators, an anonymous subclass
+   * overrides extractFieldText() so concatenation logic is tested in isolation.
    *
    * @covers ::extractForNode
    */

@@ -13,7 +13,7 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Scans custom themes for .jsonld or schema.json files and checks the metatag module.
+ * Scans custom themes for schema JSON files and checks the metatag module.
  */
 #[AuditCheck(
   id: 'fs_structured_data',

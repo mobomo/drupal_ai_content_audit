@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Checks robots.txt exists and determines if it is the default Drupal version or customised.
+ * Checks robots.txt exists and whether it is default Drupal or customised.
  */
 #[AuditCheck(
   id: 'fs_robots_txt_disk',

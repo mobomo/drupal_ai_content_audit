@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Checks services.yml or default.services.yml for Twig debug: true and auto_reload: true flags.
+ * Checks services YAML for Twig debug and auto_reload flags.
  */
 #[AuditCheck(
   id: 'fs_services_debug',

@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Verifies robots.txt is present, has a Sitemap directive, and blocks major AI bots.
+ * Verifies robots.txt, Sitemap directive, and blocks major AI bots.
  */
 #[AuditCheck(
   id: 'robots_txt',

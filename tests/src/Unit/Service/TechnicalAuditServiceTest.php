@@ -32,9 +32,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Unit tests for TechnicalAuditService new check methods.
  *
  * Tests cover:
- *   - checkSchemaMarkup()  — schema.org JSON-LD parsing and status determination
- *   - checkCanonicalUrl()  — live canonical tag verification
- *   - checkEntityRelationships() — node and site-level entity context checks.
+ *   - checkSchemaMarkup() — schema.org JSON-LD parsing and status
+ *   - checkCanonicalUrl() — live canonical tag verification
+ *   - checkEntityRelationships() — node and site entity context checks.
  *
  * Note: methods that call Url::fromRoute() (node-level schema/canonical checks)
  * require a bootstrapped Drupal container and are therefore tested in Kernel
@@ -270,7 +270,7 @@ class TechnicalAuditServiceTest extends TestCase {
   }
 
   /**
-   * Tests that an HTTP failure during schema check returns 'warning', not crash.
+   * HTTP failure during schema check returns warning, not a crash.
    *
    * @covers ::checkSchemaMarkup
    */
@@ -310,7 +310,7 @@ class TechnicalAuditServiceTest extends TestCase {
     // Act.
     $result = $this->buildService()->checkSchemaMarkup(NULL);
 
-    // Assert — 1 script found but 0 desired types → fail with "JSON-LD scripts found" message.
+    // Assert — 0 desired types with scripts found → fail message.
     $this->assertSame('fail', $result->status);
     $this->assertStringContainsString('JSON-LD scripts found but no recognised', $result->description);
     $this->assertSame(1, $result->details['total_scripts']);
@@ -427,7 +427,7 @@ class TechnicalAuditServiceTest extends TestCase {
   }
 
   /**
-   * Tests that an HTTP failure for canonical check falls back to metatag presence.
+   * HTTP failure for canonical check falls back to metatag presence.
    *
    * @covers ::checkCanonicalUrl
    */
@@ -990,7 +990,7 @@ XML;
   }
 
   /**
-   * Tests that a sitemap with no <lastmod> elements shows 0% coverage with warning.
+   * Sitemap with no lastmod elements shows 0% coverage with warning.
    *
    * @covers ::checkSitemap
    */
@@ -1104,7 +1104,7 @@ XML;
    * @covers ::checkFeedAvailability
    */
   public function testCheckFeedAvailabilityWithRss(): void {
-    // HEAD /rss.xml → 200; all other HEAD probes → 404; GET homepage → plain HTML.
+    // HEAD /rss.xml → 200; other HEAD probes → 404; GET homepage → HTML.
     $this->httpClient
       ->method('request')
       ->willReturnCallback(function (string $method, string $url): ResponseInterface {

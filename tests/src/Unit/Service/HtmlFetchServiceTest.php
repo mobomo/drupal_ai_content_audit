@@ -46,7 +46,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * Builds an HtmlFetchService wired with the given client and optional request.
+   * Builds HtmlFetchService with the given client and optional request.
    *
    * @param \GuzzleHttp\ClientInterface $httpClient
    *   Guzzle client mock.
@@ -166,7 +166,7 @@ class HtmlFetchServiceTest extends TestCase {
     $html       = '<html><body>Cached page</body></html>';
     $httpClient = $this->createMock(ClientInterface::class);
 
-    // Expect exactly one HTTP request even though fetchPageHtml() is called twice.
+    // Expect one HTTP request even when fetchPageHtml() is called twice.
     $httpClient->expects($this->once())
       ->method('request')
       ->willReturn($this->buildResponse($html));

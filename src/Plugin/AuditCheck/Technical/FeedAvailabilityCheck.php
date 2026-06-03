@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Probes RSS/Atom/JSON Feed endpoints and checks homepage HTML for alternate link tags.
+ * Probes RSS/Atom/JSON feeds and homepage alternate link tags.
  */
 #[AuditCheck(
   id: 'feed_availability',

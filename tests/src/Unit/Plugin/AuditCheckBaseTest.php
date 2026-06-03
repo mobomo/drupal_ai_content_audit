@@ -27,12 +27,11 @@ class AuditCheckBaseTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * Creates a concrete anonymous subclass of AuditCheckBase for the given scope.
+   * Creates an anonymous AuditCheckBase subclass for the given scope.
    *
    * The returned object is wired with a minimal plugin definition so that
    * getId(), getLabel(), getCategory(), and applies() work as expected.
-   * The public callPass / callFail / callWarning wrappers let tests exercise the
-   * protected result-factory methods.
+   * Public callPass/callFail/callWarning wrappers exercise protected helpers.
    *
    * @param string $scope
    *   Plugin scope — 'site' or 'node'.
@@ -184,7 +183,7 @@ class AuditCheckBaseTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * Pass() returns a TechnicalAuditResult with status 'pass' and correct fields.
+   * Pass() returns TechnicalAuditResult with status pass and correct fields.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::pass
    */

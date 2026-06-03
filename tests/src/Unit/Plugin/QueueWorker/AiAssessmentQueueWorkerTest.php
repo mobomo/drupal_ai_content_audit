@@ -87,7 +87,7 @@ class AiAssessmentQueueWorkerTest extends TestCase {
   }
 
   /**
-   * Tests that processItem completes without exception on a successful assessment.
+   * Tests that processItem completes without exception on success.
    *
    * @covers ::processItem
    */

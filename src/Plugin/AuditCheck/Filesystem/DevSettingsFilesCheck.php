@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Checks for local/dev settings files like settings.local.php or settings.ddev.php in sites/default/.
+ * Checks for local/dev settings files in sites/default/.
  */
 #[AuditCheck(
   id: 'fs_dev_settings',

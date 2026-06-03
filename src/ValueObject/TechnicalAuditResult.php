@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\ValueObject;
 
 /**
- * Immutable value object containing the result of a single technical audit check.
+ * Immutable result of a single technical audit check.
  */
 final class TechnicalAuditResult {
 

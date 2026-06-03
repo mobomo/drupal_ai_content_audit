@@ -35,7 +35,7 @@ class HttpsCheckTest extends TestCase {
   /**
    * Plugin definition array that mirrors the #[AuditCheck] attribute values.
    *
-   * TranslatableMarkup is replaced with plain strings for unit-test simplicity —
+   * TranslatableMarkup replaced with plain strings for unit-test simplicity.
    * AuditCheckBase::getLabel() casts the value to string regardless.
    *
    * @var array<string, mixed>
@@ -188,7 +188,7 @@ class HttpsCheckTest extends TestCase {
   }
 
   /**
-   * Applies($node) returns TRUE — site-scoped checks apply in node contexts too.
+   * Applies($node) returns TRUE for site-scoped checks in node context.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::applies
    */

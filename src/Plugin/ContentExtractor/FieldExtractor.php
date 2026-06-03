@@ -232,7 +232,7 @@ class FieldExtractor extends PluginBase implements ContentExtractorInterface, Co
   }
 
   /**
-   * Normalises headings, images, and links to plain-text markers, then strips tags.
+   * Normalises headings, images, and links to markers, then strips tags.
    *
    * @param string $html
    *   HTML from a rich text field.

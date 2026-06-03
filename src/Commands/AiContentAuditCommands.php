@@ -35,7 +35,7 @@ final class AiContentAuditCommands extends DrushCommands {
   }
 
   /**
-   * Assess a single node synchronously or enqueue all nodes for bulk assessment.
+   * Assess one node synchronously or enqueue all nodes for bulk assessment.
    */
   #[Command(name: 'ai_content_audit:assess', aliases: ['aca'])]
   #[Help(description: 'Run AI content assessment on one node (sync) or enqueue all eligible nodes (async queue).')]
@@ -231,7 +231,7 @@ final class AiContentAuditCommands extends DrushCommands {
    * Runs an AI assessment on a single node synchronously.
    *
    * @param int $nid
-   *   Node ID to assess (loads the default revision; use the UI for draft revisions).
+   *   Node ID to assess (default revision; use the UI for drafts).
    * @param array $ai_options
    *   Optional AI overrides passed to AiAssessmentService::assessNode().
    *   Supported keys: 'provider_id', 'model_id'.

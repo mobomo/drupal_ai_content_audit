@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks that the homepage declares a specific lang attribute and lists hreflang alternates.
+ * Checks homepage lang attribute and hreflang alternates.
  */
 #[AuditCheck(
   id: 'language_declaration',

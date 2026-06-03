@@ -69,7 +69,7 @@ class JsonApiCheck extends AuditCheckBase implements ContainerFactoryPluginInter
           'timeout' => 5,
           'http_errors' => FALSE,
         ]);
-        // Accept 200 or 415 (Unsupported Media Type — still means endpoint exists).
+        // Accept 200 or 415 — endpoint exists despite Unsupported Media Type.
         $endpointAccessible = in_array($response->getStatusCode(), [200, 415], TRUE);
       }
       catch (\Exception $e) {

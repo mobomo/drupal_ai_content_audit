@@ -330,7 +330,7 @@ class AiroPanelController extends ControllerBase {
 
     $html = (string) $this->renderer->renderRoot($widget_build);
 
-    // Target only the widget for this specific node — keeps sibling widgets intact.
+    // Target only this node's widget — keeps sibling widgets intact.
     $selector = '.airo-widget[data-node-id="' . $node->id() . '"]';
 
     $response = new AjaxResponse();
@@ -739,7 +739,7 @@ class AiroPanelController extends ControllerBase {
    *   {
    *     "question": "...",
    *     "provider_models": ["openai__gpt-4o-mini", ...],
-   *     "revision_id": <optional int — same nid, specific revision for drafts/LB>
+   *     "revision_id": <optional int — specific revision for drafts/LB>
    *   }
    *
    * Response JSON:
@@ -778,7 +778,7 @@ class AiroPanelController extends ControllerBase {
       }
     }
 
-    // Build the shared prompts once — same rendered node text for every provider.
+    // Build shared prompts once — same rendered node text for all providers.
     $nodeContent  = $this->extractRenderedNodeContextForPreview($node);
     $nodeContent  = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
     $systemPrompt = 'You are simulating how an AI system would answer questions about web content. '
@@ -797,7 +797,7 @@ class AiroPanelController extends ControllerBase {
       'key'
     );
 
-    // Query each provider+model sequentially (Phase 1 — sequential, all-at-once).
+    // Query each provider+model sequentially (Phase 1).
     $results     = [];
     $successKeys = [];
 
@@ -898,7 +898,7 @@ class AiroPanelController extends ControllerBase {
   /**
    * Returns configured provider and model choices as JSON.
    *
-   * Used by the AIRO panel JS to refresh the selector (Phase 2 lazy-fetch stub).
+   * Used by AIRO panel JS to refresh the model selector.
    * Query parameter: op_type (default: 'chat').
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
@@ -918,7 +918,7 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Builds page context for AI Preview using the HTML render extractor (LB-aware).
+   * Builds AI Preview page context via the HTML extractor (LB-aware).
    *
    * Falls back to title + body plain text if the HTML extractor is unavailable
    * or throws.

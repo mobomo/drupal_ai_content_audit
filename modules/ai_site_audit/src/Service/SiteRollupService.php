@@ -452,8 +452,8 @@ class SiteRollupService {
   protected function mergeRollup(array $existing, array $newSubScores, array $newCheckpoints, array $newActionItems, array $newScores, int $newCount): array {
     $rollup = $existing;
 
-    // Update total assessed — note: incremental may include re-assessments of same node,
-    // so this is approximate until next full rollup.
+    // Update total assessed — incremental may re-assess the same node,
+    // so this is approximate until the next full rollup.
     $rollup['total_assessed'] = ($existing['total_assessed'] ?? 0) + $newCount;
 
     // Update average score.

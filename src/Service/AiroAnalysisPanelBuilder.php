@@ -20,7 +20,7 @@ final class AiroAnalysisPanelBuilder {
   use StringTranslationTrait;
 
   /**
-   * Node-scoped technical checks shown in the overlay (matches score tab filter).
+   * Node-scoped technical checks in the overlay (score tab filter).
    */
   private const NODE_TECHNICAL_CHECKS = [
     'canonical_url',
@@ -60,7 +60,7 @@ final class AiroAnalysisPanelBuilder {
   public function build(NodeInterface $node, array $options = []): array {
     $options += ['variant' => 'page'];
 
-    // Page tab: same accordion workspace as the node edit sidebar (no debug lists).
+    // Page tab: same accordion workspace as the node edit sidebar.
     if ($options['variant'] === 'page') {
       $build = [
         '#type' => 'container',

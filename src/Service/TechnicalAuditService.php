@@ -294,7 +294,7 @@ class TechnicalAuditService {
       }
 
       // --- Determine status ---
-      // pass = H1 + blockquote + ≥1 H2 + ≥1 link; warning = file exists but issues.
+      // pass = H1 + blockquote + ≥1 H2 + ≥1 link; warning = issues remain.
       $hasH1 = ($h1Count === 1);
       if ($hasH1 && $hasBlockquote && $h2SectionCount >= 1 && $linkCount >= 1) {
         $status = 'pass';
@@ -550,7 +550,7 @@ class TechnicalAuditService {
         $this->logger->warning('Technical audit: canonical URL live check failed: could not fetch @url.', ['@url' => $expectedUrl]);
       }
       else {
-        // Parse <link rel="canonical" href="..."> — handle both attribute orders.
+        // Parse canonical link tag — handle both attribute orders.
         if (preg_match(
           '/<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\'][^>]*\/?>/i',
           $html,
@@ -619,7 +619,7 @@ class TechnicalAuditService {
    *
    * Also extracts article date properties (datePublished / dateModified) from
    * any Article, NewsArticle, or BlogPosting objects in the JSON-LD payload.
-   * These date fields are included in details but do NOT affect pass/fail status.
+   * These date fields are included in details but do not affect pass/fail.
    *
    * Uses fetchPageHtml() to avoid redundant HTTP requests when the same URL
    * is also inspected by checkCanonicalUrl() in the same audit run.
@@ -690,14 +690,14 @@ class TechnicalAuditService {
     $hasOrganization = !empty(array_intersect($foundTypes, ['Organization', 'LocalBusiness']));
     $hasWebPage = !empty(array_intersect($foundTypes, $webPageTypes));
 
-    // For site-level checks, also note whether schema_metatag module is present.
+    // For site-level checks, note whether schema_metatag module is present.
     $metatagSchemaInstalled = $this->moduleHandler->moduleExists('schema_metatag')
       || $this->moduleHandler->moduleExists('metatag_schema');
 
     // Extract article date properties (does not affect pass/fail status).
     $dateProperties = $this->extractSchemaDateProperties($html);
 
-    // Determine status: ≥3 distinct desired types = pass, 1-2 = warning, 0 = fail.
+    // Determine status: ≥3 desired types = pass, 1-2 = warning, 0 = fail.
     $desiredFound = array_intersect($foundTypes, static::DESIRED_SCHEMA_TYPES);
     $desiredCount = count($desiredFound);
 
@@ -998,7 +998,7 @@ class TechnicalAuditService {
           'timeout' => 5,
           'http_errors' => FALSE,
         ]);
-        // Accept 200 or 415 (Unsupported Media Type — still means endpoint exists).
+        // Accept 200 or 415 — endpoint exists despite Unsupported Media Type.
         $endpointAccessible = in_array($response->getStatusCode(), [200, 415], TRUE);
       }
       catch (\Exception $e) {

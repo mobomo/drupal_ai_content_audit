@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks for schema.org structured data with at least 3 of 11 desired @type values.
+ * Checks schema.org structured data covers at least 3 of 11 @type values.
  */
 #[AuditCheck(
   id: 'schema_markup',
@@ -133,14 +133,14 @@ class SchemaMarkupCheck extends AuditCheckBase implements ContainerFactoryPlugin
     $hasOrganization = !empty(array_intersect($foundTypes, ['Organization', 'LocalBusiness']));
     $hasWebPage = !empty(array_intersect($foundTypes, $webPageTypes));
 
-    // For site-level checks, also note whether schema_metatag module is present.
+    // For site-level checks, note whether schema_metatag module is present.
     $metatagSchemaInstalled = $this->moduleHandler->moduleExists('schema_metatag')
       || $this->moduleHandler->moduleExists('metatag_schema');
 
     // Extract article date properties (does not affect pass/fail status).
     $dateProperties = $this->extractSchemaDateProperties($html);
 
-    // Determine status: ≥3 distinct desired types = pass, 1-2 = warning, 0 = fail.
+    // Determine status: ≥3 desired types = pass, 1-2 = warning, 0 = fail.
     $desiredFound = array_intersect($foundTypes, static::DESIRED_SCHEMA_TYPES);
     $desiredCount = count($desiredFound);
 

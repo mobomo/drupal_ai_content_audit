@@ -226,7 +226,7 @@ class AuditCheckManagerTest extends TestCase {
   }
 
   /**
-   * RunAll() passes the NodeInterface through to each check's applies() / run().
+   * RunAll() passes NodeInterface through to each check's applies()/run().
    *
    * @covers ::runAll
    */

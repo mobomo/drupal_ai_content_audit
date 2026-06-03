@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Scans for 11 dangerous files such as phpinfo.php, adminer.php, .env in the webroot.
+ * Scans for dangerous dev files such as phpinfo.php and .env in webroot.
  */
 #[AuditCheck(
   id: 'fs_dev_files',

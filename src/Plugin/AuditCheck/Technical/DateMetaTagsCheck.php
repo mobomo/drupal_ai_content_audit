@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks for article:published_time and article:modified_time Open Graph meta tags in ISO 8601 format.
+ * Checks Open Graph article date meta tags in ISO 8601 format.
  */
 #[AuditCheck(
   id: 'date_meta_tags',

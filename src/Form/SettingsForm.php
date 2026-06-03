@@ -210,7 +210,7 @@ final class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    // array_filter removes unchecked checkboxes (Drupal returns 0 for unchecked).
+    // array_filter removes unchecked checkboxes (Drupal uses 0 when unchecked).
     $node_types = array_keys(array_filter($form_state->getValue('node_types')));
 
     // Split the composite 'provider__model' key into separate config values.

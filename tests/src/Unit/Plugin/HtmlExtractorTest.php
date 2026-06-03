@@ -234,7 +234,7 @@ class HtmlExtractorTest extends TestCase {
   }
 
   /**
-   * Tests that when no request is available (CLI), all non-path links are external.
+   * Without a request (CLI), all non-path links are treated as external.
    *
    * @covers ::convertHtmlToStructuredText
    */
@@ -356,7 +356,7 @@ class HtmlExtractorTest extends TestCase {
   // ---------------------------------------------------------------------------
 
   /**
-   * Tests that nav is stripped while header/footer content is retained for LB/article markup.
+   * Nav is stripped while header/footer content is retained for LB markup.
    *
    * @covers ::convertHtmlToStructuredText
    */
@@ -370,7 +370,7 @@ class HtmlExtractorTest extends TestCase {
     // Act.
     $result = $this->convert($html);
 
-    // Assert — nav removed; main + header + footer text kept (Layout Builder often uses these).
+    // Assert — nav removed; main, header, and footer text kept.
     $this->assertStringContainsString('Body content here.', $result);
     $this->assertStringContainsString('Site Logo', $result);
     $this->assertStringContainsString('Copyright 2024', $result);

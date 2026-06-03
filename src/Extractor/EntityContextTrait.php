@@ -7,7 +7,7 @@ namespace Drupal\ai_content_audit\Extractor;
 use Drupal\node\NodeInterface;
 
 /**
- * Helpers to prepend metadata and append lightweight entity context to extracts.
+ * Helpers to prepend metadata and append entity context to extracts.
  */
 trait EntityContextTrait {
 
@@ -44,7 +44,7 @@ trait EntityContextTrait {
   }
 
   /**
-   * Builds the "--- Entity Context ---" block (author, taxonomy, reference counts).
+   * Builds the "--- Entity Context ---" block (author, taxonomy, refs).
    *
    * @param \Drupal\node\NodeInterface $node
    *   The node.

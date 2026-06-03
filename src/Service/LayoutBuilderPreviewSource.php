@@ -47,7 +47,7 @@ final class LayoutBuilderPreviewSource {
   }
 
   /**
-   * Returns layout sections for the node revision (same semantics as core trait).
+   * Returns layout sections for the node revision (core trait semantics).
    *
    * @return \Drupal\layout_builder\Section[]
    *   Layout sections for the node view mode.
@@ -100,7 +100,7 @@ final class LayoutBuilderPreviewSource {
   }
 
   /**
-   * Plain text from inline_block components (fallback when PHP render is empty).
+   * Plain text from inline_block components when PHP render is empty.
    *
    * Loads block_content revisions from the layout; useful in CLI where access
    * checks can skip unpublished inline blocks during render.

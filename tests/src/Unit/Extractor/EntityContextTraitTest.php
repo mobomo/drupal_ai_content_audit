@@ -70,7 +70,7 @@ class EntityContextTraitTest extends TestCase {
    * Supports optional bundle entity label via `$node->type->entity`.
    *
    * @param string|null $label
-   *   Label returned by the bundle entity, or NULL to simulate no bundle entity.
+   *   Label from the bundle entity, or NULL when no bundle entity exists.
    *
    * @return \stdClass
    *   Object mimicking a type field item list.
@@ -89,7 +89,7 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Builds a basic NodeInterface mock with configurable type, bundle, dates, id.
+   * Builds a NodeInterface mock with type, bundle, dates, and id.
    *
    * @param string $label
    *   Node title.
@@ -316,7 +316,7 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Tests that non-taxonomy, non-user entity references show "Related X: N items".
+   * Non-taxonomy entity references show "Related X: N items".
    *
    * @covers ::buildEntityContextBlock
    */

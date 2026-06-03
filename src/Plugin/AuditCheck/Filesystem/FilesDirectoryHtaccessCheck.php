@@ -10,7 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Checks sites/default/files/.htaccess exists and blocks PHP execution and direct access.
+ * Checks sites/default/files/.htaccess blocks PHP execution and direct access.
  */
 #[AuditCheck(
   id: 'fs_files_htaccess',

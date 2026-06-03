@@ -39,7 +39,7 @@ abstract class FilesystemCheckBase extends AuditCheckBase implements ContainerFa
    * @param mixed $plugin_definition
    *   Plugin definition from the attribute.
    * @param string $drupalRoot
-   *   Absolute path to the Drupal webroot (from the 'app.root' container parameter).
+   *   Absolute path to the Drupal webroot (from 'app.root' parameter).
    */
   public function __construct(
     array $configuration,
@@ -74,7 +74,8 @@ abstract class FilesystemCheckBase extends AuditCheckBase implements ContainerFa
    * Returns NULL if the path escapes the root or does not exist.
    *
    * @param string $relative
-   *   A path relative to the Drupal webroot (e.g. 'sites/default/settings.php').
+   *   A path relative to the Drupal webroot
+   *   (e.g. 'sites/default/settings.php').
    *
    * @return string|null
    *   Absolute resolved path, or NULL if invalid / outside root.
