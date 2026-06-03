@@ -10,7 +10,7 @@
 
 // Load Drupal core's composer autoloader (provides Drupal\Core\*, GuzzleHttp,
 // Symfony\Component\HttpFoundation, PSR interfaces, etc.).
-// Path: tests/ → ai_content_audit/ → custom/ → modules/ → web/autoload.php
+// Path: tests/ → ai_content_audit/ → custom/ → modules/ → web/autoload.php.
 $loader = require_once __DIR__ . '/../../../../autoload.php';
 
 // Register this module's src/ directory under Drupal\ai_content_audit\.

@@ -26,13 +26,44 @@ use Psr\Log\LoggerInterface;
  */
 class AnalysisOrchestratorTest extends TestCase {
 
+  /**
+   * Site aggregation service mock.
+   */
   protected SiteAggregationService $aggregation;
+
+  /**
+   * Site rollup service mock.
+   */
   protected SiteRollupService $rollup;
+
+  /**
+   * Site analysis service mock.
+   */
   protected SiteAnalysisService $analysis;
+
+  /**
+   * Technical audit service mock.
+   */
   protected TechnicalAuditService $technicalAudit;
+
+  /**
+   * State service mock.
+   */
   protected StateInterface $state;
+
+  /**
+   * Queue factory mock.
+   */
   protected QueueFactory $queueFactory;
+
+  /**
+   * Config factory mock.
+   */
   protected ConfigFactoryInterface $configFactory;
+
+  /**
+   * Logger mock.
+   */
   protected LoggerInterface $logger;
 
   /**
@@ -267,7 +298,8 @@ class AnalysisOrchestratorTest extends TestCase {
    */
   public function testShouldReanalyzeExceedsThreshold(): void {
     $this->rollup->method('getCachedRollup')->willReturn(['total_assessed' => 100]);
-    $this->rollup->method('getNewAssessmentCount')->willReturn(15); // 15% > 10%
+    // 15% > 10%
+    $this->rollup->method('getNewAssessmentCount')->willReturn(15);
 
     $orchestrator = $this->createOrchestrator();
     $this->assertTrue($orchestrator->shouldReanalyze());
@@ -278,7 +310,8 @@ class AnalysisOrchestratorTest extends TestCase {
    */
   public function testShouldNotReanalyzeBelowThreshold(): void {
     $this->rollup->method('getCachedRollup')->willReturn(['total_assessed' => 100]);
-    $this->rollup->method('getNewAssessmentCount')->willReturn(5); // 5% < 10%
+    // 5% < 10%
+    $this->rollup->method('getNewAssessmentCount')->willReturn(5);
 
     $orchestrator = $this->createOrchestrator();
     $this->assertFalse($orchestrator->shouldReanalyze());

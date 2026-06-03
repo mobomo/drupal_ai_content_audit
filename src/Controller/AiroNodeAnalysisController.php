@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Controller;
 
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
 use Drupal\Core\Access\AccessResult;
@@ -11,6 +13,7 @@ use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
 
@@ -23,16 +26,18 @@ final class AiroNodeAnalysisController extends ControllerBase {
     protected AiroAnalysisPanelBuilder $panelBuilder,
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
     protected AccessManagerInterface $accessManager,
+    protected RendererInterface $renderer,
   ) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function create(\Symfony\Component\DependencyInjection\ContainerInterface $container): static {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('ai_content_audit.airo_analysis_panel_builder'),
       $container->get('ai_content_audit.node_layout_builder_detector'),
       $container->get('access_manager'),
+      $container->get('renderer'),
     );
   }
 
@@ -71,14 +76,14 @@ final class AiroNodeAnalysisController extends ControllerBase {
    */
   public function panelRefresh(NodeInterface $node): AjaxResponse {
     if (!$this->access($node, $this->currentUser())->isAllowed()) {
-      throw new \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException();
+      throw new AccessDeniedHttpException();
     }
 
     $build = $this->panelBuilder->build($node, ['variant' => 'page']);
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand(
       '.airo-analysis-panel--page',
-      \Drupal::service('renderer')->renderRoot($build),
+      $this->renderer->renderRoot($build),
     ));
     return $response;
   }

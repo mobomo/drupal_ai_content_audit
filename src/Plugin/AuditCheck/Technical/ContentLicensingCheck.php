@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks for license links, JSON-LD license properties, and noai/noimageai robots directives.
+ * Checks license links, JSON-LD license fields, and noai robots directives.
  */
 #[AuditCheck(
   id: 'content_licensing',
@@ -36,6 +36,9 @@ class ContentLicensingCheck extends AuditCheckBase implements ContainerFactoryPl
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,

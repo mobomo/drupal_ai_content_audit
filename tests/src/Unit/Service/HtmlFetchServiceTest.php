@@ -21,9 +21,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class HtmlFetchServiceTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Builds a mock HTTP response whose body is the given string.
@@ -46,7 +48,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * Builds an HtmlFetchService wired with the given client and optional request.
+   * Builds HtmlFetchService with the given client and optional request.
    *
    * @param \GuzzleHttp\ClientInterface $httpClient
    *   Guzzle client mock.
@@ -69,17 +71,20 @@ class HtmlFetchServiceTest extends TestCase {
    *   Exception message.
    *
    * @return \GuzzleHttp\Exception\GuzzleException
+   *   Throwable implementing GuzzleException.
    */
   private function buildGuzzleException(string $message = 'Network failure'): GuzzleException {
     return new class($message) extends \RuntimeException implements GuzzleException {};
   }
 
-  // ---------------------------------------------------------------------------
-  // getBaseUrl() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * getBaseUrl() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * getBaseUrl() returns scheme + host from the current request.
+   * GetBaseUrl() returns scheme + host from the current request.
    *
    * @covers ::getBaseUrl
    */
@@ -93,7 +98,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * getBaseUrl() falls back to 'http://localhost' when no request is available.
+   * GetBaseUrl() falls back to 'http://localhost' when no request is available.
    *
    * @covers ::getBaseUrl
    */
@@ -103,12 +108,14 @@ class HtmlFetchServiceTest extends TestCase {
     $this->assertSame('http://localhost', $service->getBaseUrl());
   }
 
-  // ---------------------------------------------------------------------------
-  // fetchPageHtml() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * fetchPageHtml() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * fetchPageHtml() returns the response body string on HTTP 200.
+   * FetchPageHtml() returns the response body string on HTTP 200.
    *
    * @covers ::fetchPageHtml
    */
@@ -123,7 +130,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() returns NULL when Guzzle throws an exception.
+   * FetchPageHtml() returns NULL when Guzzle throws an exception.
    *
    * @covers ::fetchPageHtml
    */
@@ -139,7 +146,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() returns NULL when a generic exception is thrown.
+   * FetchPageHtml() returns NULL when a generic exception is thrown.
    *
    * @covers ::fetchPageHtml
    */
@@ -155,8 +162,9 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() uses in-memory cache — two calls for the same URL issue only
-   * one HTTP request.
+   * Verifies fetchPageHtml() caches results per URL.
+   *
+   * Two calls for the same URL should issue only one HTTP request.
    *
    * @covers ::fetchPageHtml
    */
@@ -164,7 +172,7 @@ class HtmlFetchServiceTest extends TestCase {
     $html       = '<html><body>Cached page</body></html>';
     $httpClient = $this->createMock(ClientInterface::class);
 
-    // Expect exactly one HTTP request even though fetchPageHtml() is called twice.
+    // Expect one HTTP request even when fetchPageHtml() is called twice.
     $httpClient->expects($this->once())
       ->method('request')
       ->willReturn($this->buildResponse($html));
@@ -179,7 +187,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * fetchPageHtml() caches a NULL result — a failed fetch is not retried.
+   * FetchPageHtml() caches a NULL result — a failed fetch is not retried.
    *
    * @covers ::fetchPageHtml
    */
@@ -220,7 +228,7 @@ class HtmlFetchServiceTest extends TestCase {
   }
 
   /**
-   * clearCache() causes the next fetchPageHtml() call to re-issue a request.
+   * ClearCache() causes the next fetchPageHtml() call to re-issue a request.
    *
    * @covers ::fetchPageHtml
    */

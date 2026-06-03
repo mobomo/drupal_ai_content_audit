@@ -20,6 +20,16 @@
       <div class="ai-site-dashboard__tech-content">
         <strong>{{ result.label|default(result.check|default('Check')) }}</strong>
         <p>{{ result.description|default('') }}</p>
+        {% if result.status != 'pass' and result.details.files_found is not empty %}
+          <details>
+              <summary>{{ 'Files found'|t }}</summary>
+              <ul>
+                  {% for item in result.details.files_found %}
+                      <li>{{ item }}</li>
+                  {% endfor %}
+              </ul>
+          </details>
+        {% endif %}
       </div>
     </div>
   {% endfor %}

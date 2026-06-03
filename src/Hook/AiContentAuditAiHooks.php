@@ -11,6 +11,9 @@ use Drupal\Core\Hook\Attribute\Hook;
  */
 final class AiContentAuditAiHooks {
 
+  /**
+   * Implements hook_ai_operation_types_alter().
+   */
   #[Hook('ai_operation_types_alter')]
   public function aiOperationTypesAlter(array &$operation_types): void {
     $operation_types['content_audit'] = [

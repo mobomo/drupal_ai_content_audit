@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Extractor;
 
-use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\node\NodeInterface;
 
 /**
@@ -47,7 +46,7 @@ interface ContentExtractorInterface {
   /**
    * Returns the canonical render mode string this extractor handles.
    *
-   * Must match a RenderMode enum value (e.g., RenderMode::TEXT->value).
+   * Must match a RenderMode enum value (e.g., RenderMode::Text->value).
    *
    * @return string
    *   The render mode string.

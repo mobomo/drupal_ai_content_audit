@@ -109,7 +109,7 @@ class AiContentAssessmentListBuilder extends EntityListBuilder {
     return [
       'node'    => $node_cell,
       'score'   => $score_value !== NULL ? $score_value . '/100' : $this->t('n/a'),
-      'provider'=> $entity->get('provider_id')->value ?? '—',
+      'provider' => $entity->get('provider_id')->value ?? '—',
       'model'   => $entity->get('model_id')->value ?? '—',
       'run_by'  => $run_by_cell,
       'created' => $this->dateFormatter->format(

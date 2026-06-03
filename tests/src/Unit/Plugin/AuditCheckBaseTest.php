@@ -22,17 +22,18 @@ use PHPUnit\Framework\TestCase;
  */
 class AuditCheckBaseTest extends TestCase {
 
-  // ---------------------------------------------------------------------------
-  // Helper: anonymous concrete subclass factory
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Helper: anonymous concrete subclass factory
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * Creates a concrete anonymous subclass of AuditCheckBase for the given scope.
+   * Creates an anonymous AuditCheckBase subclass for the given scope.
    *
    * The returned object is wired with a minimal plugin definition so that
    * getId(), getLabel(), getCategory(), and applies() work as expected.
-   * The public callPass / callFail / callWarning wrappers let tests exercise the
-   * protected result-factory methods.
+   * Public callPass/callFail/callWarning wrappers exercise protected helpers.
    *
    * @param string $scope
    *   Plugin scope — 'site' or 'node'.
@@ -44,9 +45,9 @@ class AuditCheckBaseTest extends TestCase {
    *   Plugin category.
    */
   private function makeCheck(
-    string $scope    = 'site',
-    string $id       = 'test_check',
-    string $label    = 'Test Check',
+    string $scope = 'site',
+    string $id = 'test_check',
+    string $label = 'Test Check',
     string $category = 'General',
   ): AuditCheckBase {
     return new class(
@@ -62,15 +63,23 @@ class AuditCheckBaseTest extends TestCase {
         return $this->pass('run() called', 'current', 'recommended');
       }
 
-      // Thin wrappers that promote the protected factory methods to public.
+      /**
+       * Thin wrappers that promote the protected factory methods to public.
+       */
       public function callPass(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->pass($desc, $current, $recommended, $details);
       }
 
+      /**
+       * Exposes fail() for unit tests.
+       */
       public function callFail(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->fail($desc, $current, $recommended, $details);
       }
 
+      /**
+       * Exposes warning() for unit tests.
+       */
       public function callWarning(string $desc, ?string $current = NULL, ?string $recommended = NULL, array $details = []): TechnicalAuditResult {
         return $this->warning($desc, $current, $recommended, $details);
       }
@@ -78,12 +87,14 @@ class AuditCheckBaseTest extends TestCase {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // getId() / getLabel() / getCategory()
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * getId() / getLabel() / getCategory()
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * getId() returns the 'id' value from the plugin definition.
+   * GetId() returns the 'id' value from the plugin definition.
    *
    * @covers ::getId
    */
@@ -92,7 +103,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * getId() reflects a different ID when one is provided.
+   * GetId() reflects a different ID when one is provided.
    *
    * @covers ::getId
    */
@@ -101,7 +112,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * getLabel() returns the 'label' value from the plugin definition.
+   * GetLabel() returns the 'label' value from the plugin definition.
    *
    * @covers ::getLabel
    */
@@ -110,7 +121,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * getCategory() returns the 'category' value from the plugin definition.
+   * GetCategory() returns the 'category' value from the plugin definition.
    *
    * @covers ::getCategory
    */
@@ -119,7 +130,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * getCategory() returns a category other than 'General' when specified.
+   * GetCategory() returns a category other than 'General' when specified.
    *
    * @covers ::getCategory
    */
@@ -127,12 +138,14 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertSame('Technical', $this->makeCheck(category: 'Technical')->getCategory());
   }
 
-  // ---------------------------------------------------------------------------
-  // applies()
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * applies()
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * applies(NULL) returns TRUE for a 'site'-scoped check.
+   * Applies(NULL) returns TRUE for a 'site'-scoped check.
    *
    * @covers ::applies
    */
@@ -141,7 +154,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * applies(NULL) returns FALSE for a 'node'-scoped check (no node provided).
+   * Applies(NULL) returns FALSE for a 'node'-scoped check (no node provided).
    *
    * @covers ::applies
    */
@@ -150,7 +163,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * applies($node) returns TRUE for a 'node'-scoped check when a node is given.
+   * Applies($node) returns TRUE for a 'node'-scoped check when a node is given.
    *
    * @covers ::applies
    */
@@ -160,7 +173,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * applies($node) returns TRUE for a 'site'-scoped check when a node is given.
+   * Applies($node) returns TRUE for a 'site'-scoped check when a node is given.
    *
    * Site-scoped checks apply in both node and non-node contexts.
    *
@@ -171,12 +184,14 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertTrue($this->makeCheck(scope: 'site')->applies($node));
   }
 
-  // ---------------------------------------------------------------------------
-  // pass() / fail() / warning() result factory helpers
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * pass() / fail() / warning() result factory helpers
+   * ---------------------------------------------------------------------------
+   */
 
   /**
-   * pass() returns a TechnicalAuditResult with status 'pass' and correct fields.
+   * Pass() returns TechnicalAuditResult with status pass and correct fields.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::pass
    */
@@ -200,7 +215,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * pass() with no optional arguments still produces a valid result.
+   * Pass() with no optional arguments still produces a valid result.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::pass
    */
@@ -214,7 +229,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * fail() returns a TechnicalAuditResult with status 'fail'.
+   * Fail() returns a TechnicalAuditResult with status 'fail'.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::fail
    */
@@ -233,7 +248,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * warning() returns a TechnicalAuditResult with status 'warning'.
+   * Warning() returns a TechnicalAuditResult with status 'warning'.
    *
    * @covers \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase::warning
    */
@@ -251,7 +266,7 @@ class AuditCheckBaseTest extends TestCase {
   }
 
   /**
-   * run() on the anonymous concrete subclass returns a TechnicalAuditResult.
+   * Run() on the anonymous concrete subclass returns a TechnicalAuditResult.
    *
    * Validates end-to-end that the concrete run() implementation can use the
    * pass() helper correctly.

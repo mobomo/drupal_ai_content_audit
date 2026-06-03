@@ -90,7 +90,7 @@ final class LayoutBuilderPreviewSourceKernelTest extends KernelTestBase {
   }
 
   /**
-   * Ensures LB sections resolve and render expected block output for a revision.
+   * Ensures LB sections resolve and render block output for a revision.
    */
   public function testBuildSectionsRenderArrayIsNonEmptyWithOverride(): void {
     $user = User::create(['name' => 'lb_kernel_user']);

@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * @file
  * Primary module hooks for AI Site Audit module.
  */
+
+declare(strict_types=1);
 
 /**
  * Implements hook_theme().
@@ -23,6 +23,7 @@ function ai_site_audit_theme(): array {
         'rollup' => NULL,
         'ai_insights' => NULL,
         'technical_audit' => NULL,
+        'filesystem_audit' => NULL,
         'analysis_state' => NULL,
         'config' => NULL,
       ],

@@ -19,10 +19,24 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class AiResponseSubscriberTest extends TestCase {
 
+  /**
+   * The subscriber under test.
+   */
   protected AiResponseSubscriber $subscriber;
+
+  /**
+   * Logger factory mock.
+   */
   protected LoggerChannelFactoryInterface $loggerFactory;
+
+  /**
+   * Logger channel mock.
+   */
   protected LoggerChannelInterface $logger;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -68,7 +82,7 @@ class AiResponseSubscriberTest extends TestCase {
   }
 
   /**
-   * Tests that onPostGenerateResponse logs when the event carries the module tag.
+   * Tests onPostGenerateResponse logs when the event carries the module tag.
    *
    * When 'ai_content_audit' appears in the event tags the subscriber must call
    * LoggerChannelInterface::debug() exactly once.
@@ -97,7 +111,7 @@ class AiResponseSubscriberTest extends TestCase {
   }
 
   /**
-   * Tests that onPostGenerateResponse does nothing when the module tag is absent.
+   * Tests onPostGenerateResponse ignores events without the module tag.
    *
    * If 'ai_content_audit' is not in the event tags, the subscriber must return
    * early without calling the logger.

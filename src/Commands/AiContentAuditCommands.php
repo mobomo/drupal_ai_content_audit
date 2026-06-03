@@ -35,7 +35,7 @@ final class AiContentAuditCommands extends DrushCommands {
   }
 
   /**
-   * Assess a single node synchronously or enqueue all nodes for bulk assessment.
+   * Assess one node synchronously or enqueue all nodes for bulk assessment.
    */
   #[Command(name: 'ai_content_audit:assess', aliases: ['aca'])]
   #[Help(description: 'Run AI content assessment on one node (sync) or enqueue all eligible nodes (async queue).')]
@@ -119,9 +119,9 @@ final class AiContentAuditCommands extends DrushCommands {
     );
 
     // Print the currently configured module-level default.
-    $config        = $this->configFactory->get('ai_content_audit.settings');
-    $def_provider  = $config->get('default_provider') ?: '(global default)';
-    $def_model     = $config->get('default_model') ?: '(global default)';
+    $config       = $this->configFactory->get('ai_content_audit.settings');
+    $def_provider = $config->get('default_provider') ?: '(global default)';
+    $def_model    = $config->get('default_model') ?: '(global default)';
     $this->io()->note(sprintf(
       'Module default → provider: %s | model: %s',
       $def_provider,
@@ -130,8 +130,7 @@ final class AiContentAuditCommands extends DrushCommands {
   }
 
   /**
-   * @deprecated The site-wide audit pipeline has been removed. Command retained
-   *   only to provide a helpful runtime error if invoked on older tooling.
+   * Fails fast when the removed site-wide audit command is invoked.
    */
   #[Command(name: 'ai_content_audit:site-audit', aliases: ['acsa'])]
   #[Help(description: 'This command has been removed. Use `drush ai_content_audit:assess --all` for bulk node assessment.')]
@@ -184,7 +183,7 @@ final class AiContentAuditCommands extends DrushCommands {
     $this->io()->success('ai_content_audit reinstalled successfully.');
   }
 
-  // ── Private helpers ────────────────────────────────────────────────────────
+  /* ── Private helpers ──────────────────────────────────────────────────────── */
 
   /**
    * Deletes all ai_content_assessment entities in batches.
@@ -232,7 +231,7 @@ final class AiContentAuditCommands extends DrushCommands {
    * Runs an AI assessment on a single node synchronously.
    *
    * @param int $nid
-   *   Node ID to assess (loads the default revision; use the UI for draft revisions).
+   *   Node ID to assess (default revision; use the UI for drafts).
    * @param array $ai_options
    *   Optional AI overrides passed to AiAssessmentService::assessNode().
    *   Supported keys: 'provider_id', 'model_id'.

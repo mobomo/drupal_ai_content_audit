@@ -32,7 +32,7 @@ final class NodeEditFormAlterer {
    * Implements hook_form_node_form_alter() logic.
    */
   public function alterForm(array &$form, FormStateInterface $form_state, string $form_id): void {
-    // AIRO Analysis tab: panel lives in airo-analysis-node-page aside, not in advanced.
+    // AIRO Analysis tab: panel in airo-analysis-node-page aside, not advanced.
     if ($this->routeMatch->getRouteName() === AiroNodeAnalysisFormAlterer::ROUTE_NAME) {
       self::stripAiroAnalysisTabSidebar($form);
       return;
@@ -77,7 +77,7 @@ final class NodeEditFormAlterer {
   /**
    * Removes Gin entity-meta / advanced sidebar panel from the node edit form.
    *
-   * On the AIRO Analysis tab (sin LB) the panel renders in the fixed aside only.
+   * On the AIRO Analysis tab (sin LB) the panel renders in the fixed aside.
    */
   public static function stripAiroAnalysisTabSidebar(array &$form): void {
     unset($form['airo_analysis']);

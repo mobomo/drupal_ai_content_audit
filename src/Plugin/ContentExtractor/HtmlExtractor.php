@@ -258,7 +258,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
 
     $text = (string) preg_replace('/[^\S\n]+/', ' ', $text);
 
-    // Lines that are only spaces collapse so consecutive newline runs normalize.
+    // Collapse space-only lines so consecutive newline runs normalize.
     $text = (string) preg_replace('/^ +$/m', '', $text);
 
     // Collapse runs of three or more consecutive newlines to at most two.
@@ -289,7 +289,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    * Extracts meta tag values from the document head.
    *
    * Uses the name, property, or http-equiv attribute as the label and the
-   * content attribute as the value. Each line is formatted as "Meta {label}: {value}".
+   * content attribute as the value. Formatted as "Meta {label}: {value}".
    *
    * @param \DOMXPath $xpath
    *   The XPath object for the current document.

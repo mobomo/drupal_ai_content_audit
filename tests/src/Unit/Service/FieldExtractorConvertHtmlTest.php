@@ -56,9 +56,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->stripMethod->setAccessible(TRUE);
   }
 
-  // ---------------------------------------------------------------------------
-  // Heading conversion tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Heading conversion tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that h1–h6 tags are converted to markdown-style heading markers.
@@ -103,9 +105,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringNotContainsString('<strong>', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Image alt-text extraction tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Image alt-text extraction tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that an img with a non-empty alt attribute becomes [Image: alt].
@@ -141,7 +145,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
   }
 
   /**
-   * Tests that an img with no alt attribute at all becomes [Image: no alt text].
+   * Tests that img with no alt attribute becomes [Image: no alt text].
    *
    * @covers ::convertAndStripHtml
    */
@@ -156,9 +160,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringContainsString('[Image: no alt text]', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Link extraction tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Link extraction tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that anchor tags become [Link: text (href)] markers.
@@ -209,9 +215,11 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $this->assertStringContainsString('[Link: Contact (/contact)]', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // Remaining-tag stripping and whitespace normalisation tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * Remaining-tag stripping and whitespace normalisation tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that non-converted HTML tags (div, span, p, etc.) are stripped.
@@ -267,13 +275,15 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     // Assert — entities decoded, tags stripped.
     $this->assertStringContainsString('£10', $result);
     $this->assertStringContainsString('& more', $result);
-    // The literal "<details>" string from &lt;details&gt; should not become a tag.
+    // Literal "<details>" from &lt;details&gt; must not become a tag.
     $this->assertStringContainsString('<details>', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // stripHtml() helper tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * stripHtml() helper tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that stripHtml() removes all HTML tags and collapses whitespace.
@@ -294,7 +304,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
   /**
    * Tests that stripHtml() preserves the pre-inserted structural markers.
    *
-   * convertAndStripHtml() inserts [Image: ...] and [Link: ...] markers BEFORE
+   * ConvertAndStripHtml() inserts [Image: ...] and [Link: ...] markers BEFORE
    * calling stripHtml().  stripHtml() must not touch those marker strings since
    * they contain no HTML tags.
    *

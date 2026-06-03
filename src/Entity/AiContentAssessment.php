@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Entity;
 
+use Drupal\node\NodeInterface;
 use Drupal\ai_content_audit\AiContentAssessmentAccessControlHandler;
 use Drupal\ai_content_audit\AiContentAssessmentListBuilder;
 use Drupal\ai_content_audit\AiContentAssessmentViewsData;
@@ -66,7 +67,7 @@ class AiContentAssessment extends ContentEntityBase {
   /**
    * Returns the assessed node entity.
    */
-  public function getTargetNode(): ?\Drupal\node\NodeInterface {
+  public function getTargetNode(): ?NodeInterface {
     return $this->get('target_node')->entity;
   }
 

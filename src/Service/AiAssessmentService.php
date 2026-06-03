@@ -7,6 +7,7 @@ namespace Drupal\ai_content_audit\Service;
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai_content_audit\Entity\AiContentAssessment;
 use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -166,9 +167,10 @@ JSON;
    *   Optional overrides:
    *   - 'provider_id' (string): AI provider machine name.
    *   - 'model_id' (string): AI model machine name.
-   *   - 'render_mode' (string): How to extract content for assessment.
-   *     One of the RenderMode enum values: 'text' (default), 'html', 'screenshot'.
-   *     @see \Drupal\ai_content_audit\Enum\RenderMode
+   *   - 'render_mode' (string):
+   *     How to extract content for assessment. RenderMode enum values:
+   *     'text' (default), 'html', 'screenshot'.
+   *     See \Drupal\ai_content_audit\Enum\RenderMode.
    *
    * @return array
    *   Array with keys: 'raw_output', 'parsed', 'success', 'error'.
@@ -191,7 +193,7 @@ JSON;
     // 1. Runtime $options override (e.g. from Drush --provider / --model flags)
     // 2. Module-level defaults stored in ai_content_audit.settings
     // 3. Centrally configured 'content_audit' default in ai.settings
-    // 4. Centrally configured generic 'chat' default in ai.settings
+    // 4. Centrally configured generic 'chat' default in ai.settings.
     $module_provider = $config->get('default_provider') ?: NULL;
     $module_model    = $config->get('default_model') ?: NULL;
 
@@ -199,7 +201,7 @@ JSON;
       ?? $this->aiProvider->getDefaultProviderForOperationType('chat');
 
     $provider_id = $options['provider_id'] ?? $module_provider ?? $central['provider_id'] ?? '';
-    $model_id    = $options['model_id']    ?? $module_model    ?? $central['model_id']    ?? '';
+    $model_id    = $options['model_id'] ?? $module_model ?? $central['model_id'] ?? '';
 
     if (empty($provider_id)) {
       $message = 'Could not resolve an AI provider ID.';
@@ -353,7 +355,12 @@ JSON;
         '@nid'     => $node->id(),
         '@message' => $e->getMessage(),
       ]);
-      return ['success' => FALSE, 'error' => 'Failed to save assessment.', 'raw_output' => $raw_text, 'parsed' => $parsed];
+      return [
+        'success' => FALSE,
+        'error' => 'Failed to save assessment.',
+        'raw_output' => $raw_text,
+        'parsed' => $parsed,
+      ];
     }
 
     return [
@@ -373,7 +380,7 @@ JSON;
    * @return \Drupal\ai_content_audit\Entity\AiContentAssessment|null
    *   The latest assessment entity, or NULL.
    */
-  protected function getLatestAssessmentForNode(NodeInterface $node): ?\Drupal\ai_content_audit\Entity\AiContentAssessment {
+  protected function getLatestAssessmentForNode(NodeInterface $node): ?AiContentAssessment {
     $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
     $ids = $storage->getQuery()
       ->condition('target_node', $node->id())

@@ -39,6 +39,9 @@ class LlmsTxtCheck extends AuditCheckBase implements ContainerFactoryPluginInter
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,
@@ -148,7 +151,7 @@ class LlmsTxtCheck extends AuditCheckBase implements ContainerFactoryPluginInter
       }
 
       // --- Determine status ---
-      // pass = H1 + blockquote + ≥1 H2 + ≥1 link; warning = file exists but issues.
+      // pass = H1 + blockquote + ≥1 H2 + ≥1 link; warning = issues remain.
       $hasH1 = ($h1Count === 1);
       if ($hasH1 && $hasBlockquote && $h2SectionCount >= 1 && $linkCount >= 1) {
         $status = 'pass';

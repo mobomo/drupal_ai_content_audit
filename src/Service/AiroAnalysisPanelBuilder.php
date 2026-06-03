@@ -20,7 +20,7 @@ final class AiroAnalysisPanelBuilder {
   use StringTranslationTrait;
 
   /**
-   * Node-scoped technical checks shown in the overlay (matches score tab filter).
+   * Node-scoped technical checks in the overlay (score tab filter).
    */
   private const NODE_TECHNICAL_CHECKS = [
     'canonical_url',
@@ -37,6 +37,9 @@ final class AiroAnalysisPanelBuilder {
     protected ModuleHandlerInterface $moduleHandler,
   ) {}
 
+  /**
+   * Returns the URL for the AIRO logo asset.
+   */
   public function getAiroLogoUrl(): string {
     $module_path = $this->moduleHandler->getModule('ai_content_audit')->getPath();
     return Url::fromUri('base:' . $module_path . '/images/airo-logo.svg')->toString();
@@ -57,7 +60,7 @@ final class AiroAnalysisPanelBuilder {
   public function build(NodeInterface $node, array $options = []): array {
     $options += ['variant' => 'page'];
 
-    // Page tab: same accordion workspace as the node edit sidebar (no debug lists).
+    // Page tab: same accordion workspace as the node edit sidebar.
     if ($options['variant'] === 'page') {
       $build = [
         '#type' => 'container',
@@ -115,6 +118,7 @@ final class AiroAnalysisPanelBuilder {
    * Tab panes keyed by tab ID (for accordion / embedded panel themes).
    *
    * @return array<string, array>
+   *   Tab pane render arrays keyed by tab ID.
    */
   public function buildTabPanes(NodeInterface $node, bool $pageSkin = FALSE): array {
     $preview = $this->airoPanelController->buildPreviewTab($node, $pageSkin);
@@ -136,6 +140,7 @@ final class AiroAnalysisPanelBuilder {
    * Assess and full-report URLs for the node.
    *
    * @return array{assess_url: string, full_report_url: string|null}
+   *   URLs for running an assessment and viewing the full report.
    */
   public function buildActionUrls(NodeInterface $node): array {
     $nodeId = (int) $node->id();

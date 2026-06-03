@@ -59,13 +59,13 @@ final class AiroNodeAnalysisFormAlterer {
       $form['#gin_lb_form'] = TRUE;
       $form['#attributes']['class'][] = 'glb-form';
       GinLayoutBuilderUtility::attachGinLbForm($form);
-      // Step 1: inject panel as first form child (gin_lb renders children inside sidebar).
+      // Step 1: inject panel as first form child (gin_lb sidebar slot).
       $form['airo_panel_slot'] = $panel;
       $form['airo_panel_slot']['#weight'] = -10000;
       return;
     }
 
-    // Sin LB: panel in aside; strip Gin entity-meta duplicate at bottom of page.
+    // Sin LB: panel in aside; strip Gin entity-meta duplicate at page bottom.
     $form['#attributes']['class'][] = 'airo-analysis-page__edit-form';
     NodeEditFormAlterer::stripAiroAnalysisTabSidebar($form);
     $form['#after_build'][] = [NodeEditFormAlterer::class, 'afterBuildStripSidebarPanel'];

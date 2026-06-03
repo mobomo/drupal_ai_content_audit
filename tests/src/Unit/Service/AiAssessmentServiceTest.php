@@ -27,13 +27,39 @@ use PHPUnit\Framework\TestCase;
  */
 class AiAssessmentServiceTest extends TestCase {
 
+  /**
+   * The service under test.
+   */
   protected AiAssessmentService $service;
+
+  /**
+   * AI provider plugin manager mock.
+   */
   protected AiProviderPluginManager $aiProvider;
+
+  /**
+   * Content extractor manager mock.
+   */
   protected ContentExtractorManager $extractorManager;
+
+  /**
+   * Content extractor mock.
+   */
   protected ContentExtractorInterface $mockExtractor;
+
+  /**
+   * Logger factory mock.
+   */
   protected LoggerChannelFactoryInterface $loggerFactory;
+
+  /**
+   * Config factory mock.
+   */
   protected ConfigFactoryInterface $configFactory;
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -203,7 +229,7 @@ class AiAssessmentServiceTest extends TestCase {
     // Extractor manager mock routes to the content extractor mock.
     $extractorManager = $this->createMock(ContentExtractorManager::class);
     $extractorManager->method('getExtractorForMode')
-      ->with(RenderMode::TEXT->value)
+      ->with(RenderMode::Text->value)
       ->willReturn($mockExtractor);
 
     // Logger (silent in happy path).

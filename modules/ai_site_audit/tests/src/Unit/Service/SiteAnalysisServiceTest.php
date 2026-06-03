@@ -22,10 +22,29 @@ use Psr\Log\LoggerInterface;
  */
 class SiteAnalysisServiceTest extends TestCase {
 
+  /**
+   * AI provider plugin manager mock.
+   */
   protected AiProviderPluginManager $aiProvider;
+
+  /**
+   * Key-value expirable factory mock.
+   */
   protected KeyValueExpirableFactoryInterface $kvFactory;
+
+  /**
+   * State service mock.
+   */
   protected StateInterface $state;
+
+  /**
+   * Config factory mock.
+   */
   protected ConfigFactoryInterface $configFactory;
+
+  /**
+   * Logger mock.
+   */
   protected LoggerInterface $logger;
 
   /**
@@ -52,6 +71,9 @@ class SiteAnalysisServiceTest extends TestCase {
       ->willReturn($config);
   }
 
+  /**
+   * Builds a SiteAnalysisService wired with the test mocks.
+   */
   protected function createService(): SiteAnalysisService {
     return new SiteAnalysisService(
       $this->aiProvider,

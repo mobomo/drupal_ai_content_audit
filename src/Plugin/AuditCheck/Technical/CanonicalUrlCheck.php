@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Checks that published nodes have a canonical URL meta tag pointing to the correct URL.
+ * Checks published nodes have a canonical URL meta tag.
  */
 #[AuditCheck(
   id: 'canonical_url',
@@ -39,6 +39,9 @@ class CanonicalUrlCheck extends AuditCheckBase implements ContainerFactoryPlugin
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,
@@ -88,7 +91,7 @@ class CanonicalUrlCheck extends AuditCheckBase implements ContainerFactoryPlugin
         $this->logger->warning('Technical audit: canonical URL live check failed: could not fetch @url.', ['@url' => $expectedUrl]);
       }
       else {
-        // Parse <link rel="canonical" href="..."> — handle both attribute orders.
+        // Parse canonical link tag — handle both attribute orders.
         if (preg_match(
           '/<link[^>]+rel=["\']canonical["\'][^>]+href=["\']([^"\']+)["\'][^>]*\/?>/i',
           $html,

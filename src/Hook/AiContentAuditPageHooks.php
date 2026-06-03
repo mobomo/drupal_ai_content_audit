@@ -44,6 +44,9 @@ final class AiContentAuditPageHooks {
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
   ) {}
 
+  /**
+   * Implements hook_preprocess_html().
+   */
   #[Hook('preprocess_html')]
   public function preprocessHtml(array &$variables): void {
     if ($this->routeMatch->getRouteName() !== 'ai_content_audit.node.airo_analysis') {
@@ -53,6 +56,9 @@ final class AiContentAuditPageHooks {
     $variables['attributes']['class'][] = 'airo-analysis-route';
   }
 
+  /**
+   * Implements hook_page_attachments_alter().
+   */
   #[Hook('page_attachments_alter')]
   public function pageAttachmentsAlter(array &$attachments): void {
     $system_theme_config = $this->configFactory->get('system.theme');

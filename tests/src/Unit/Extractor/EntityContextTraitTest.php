@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_content_audit\Unit\Extractor;
 
+use Drupal\user\UserInterface;
+use Drupal\Core\Url;
 use Drupal\ai_content_audit\Extractor\EntityContextTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\node\NodeInterface;
-use Drupal\user\UserInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,29 +32,48 @@ class EntityContextTraitTest extends TestCase {
    *   callBuildEntityContextBlock() public wrappers.
    */
   private function createTraitHost(): object {
-    return new class {
+    return new class() {
       use EntityContextTrait;
 
-      /** @param \Drupal\node\NodeInterface $node */
+      /**
+       * Proxies buildContentMetadataBlock().
+       *
+       * @param \Drupal\node\NodeInterface $node
+       *   The node under test.
+       *
+       * @return string
+       *   Metadata block text.
+       */
       public function callBuildContentMetadataBlock(NodeInterface $node): string {
         return $this->buildContentMetadataBlock($node);
       }
 
-      /** @param \Drupal\node\NodeInterface $node */
+      /**
+       * Proxies buildEntityContextBlock().
+       *
+       * @param \Drupal\node\NodeInterface $node
+       *   The node under test.
+       *
+       * @return string
+       *   Entity context block text.
+       */
       public function callBuildEntityContextBlock(NodeInterface $node): string {
         return $this->buildEntityContextBlock($node);
       }
+
     };
   }
 
   /**
-   * Creates a stdClass representing the node's "type" field item with an optional
-   * bundle entity stub, so that `$node->type->entity` works in tests.
+   * Creates a stdClass type field stub for tests.
+   *
+   * Supports optional bundle entity label via `$node->type->entity`.
    *
    * @param string|null $label
-   *   Label returned by the bundle entity, or NULL to simulate no bundle entity.
+   *   Label from the bundle entity, or NULL when no bundle entity exists.
    *
    * @return \stdClass
+   *   Object mimicking a type field item list.
    */
   private function makeTypeProp(?string $label): \stdClass {
     $typeProp = new \stdClass();
@@ -69,17 +89,25 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Builds a basic NodeInterface mock with configurable type, bundle, dates, id.
+   * Builds a NodeInterface mock with type, bundle, dates, and id.
    *
    * @param string $label
+   *   Node title.
    * @param string $bundle
+   *   Node bundle machine name.
    * @param int $nid
+   *   Node ID.
    * @param int $created
+   *   Created timestamp.
    * @param int $changed
-   * @param string|null $bundleLabel  Human-readable bundle label (NULL = use bundle as fallback).
-   * @param string|\Exception $urlOrException  URL string or exception to throw from toUrl().
+   *   Changed timestamp.
+   * @param string|null $bundleLabel
+   *   Human-readable bundle label (NULL = use bundle as fallback).
+   * @param string|\Exception $urlOrException
+   *   URL string or exception to throw from toUrl().
    *
    * @return \Drupal\node\NodeInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Configured node mock.
    */
   private function buildNodeMock(
     string $label = 'Test Title',
@@ -106,7 +134,7 @@ class EntityContextTraitTest extends TestCase {
     );
 
     // Configure toUrl() behaviour.
-    $urlMock = $this->createMock(\Drupal\Core\Url::class);
+    $urlMock = $this->createMock(Url::class);
     if ($urlOrException instanceof \Exception) {
       $node->method('toUrl')->willThrowException($urlOrException);
     }
@@ -118,9 +146,11 @@ class EntityContextTraitTest extends TestCase {
     return $node;
   }
 
-  // ---------------------------------------------------------------------------
-  // buildContentMetadataBlock() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * buildContentMetadataBlock() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that the metadata block includes title, content type, dates, and URL.
@@ -182,7 +212,8 @@ class EntityContextTraitTest extends TestCase {
     $host = $this->createTraitHost();
     $node = $this->buildNodeMock(
       bundle     : 'landing_page',
-      bundleLabel: NULL,  // Forces fallback.
+    // Forces fallback.
+      bundleLabel: NULL,
     );
 
     // Act.
@@ -192,9 +223,11 @@ class EntityContextTraitTest extends TestCase {
     $this->assertStringContainsString('Content Type: landing_page', $result);
   }
 
-  // ---------------------------------------------------------------------------
-  // buildEntityContextBlock() tests
-  // ---------------------------------------------------------------------------
+  /*
+   * ---------------------------------------------------------------------------
+   * buildEntityContextBlock() tests
+   * ---------------------------------------------------------------------------
+   */
 
   /**
    * Tests that a named author is present in the entity context block.
@@ -205,7 +238,7 @@ class EntityContextTraitTest extends TestCase {
     // Arrange.
     $host = $this->createTraitHost();
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Jane Doe');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();
@@ -241,8 +274,9 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Tests that taxonomy term names are included for entity_reference fields
-   * whose target_type is taxonomy_term.
+   * Tests taxonomy term names in entity_reference fields.
+   *
+   * Covers fields whose target_type is taxonomy_term.
    *
    * @covers ::buildEntityContextBlock
    */
@@ -268,7 +302,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldList->method('referencedEntities')->willReturn([$term1, $term2]);
 
     // Owner mock.
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     // Node mock.
@@ -286,7 +320,7 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Tests that non-taxonomy, non-user entity references show "Related X: N items".
+   * Non-taxonomy entity references show "Related X: N items".
    *
    * @covers ::buildEntityContextBlock
    */
@@ -303,7 +337,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldList->method('isEmpty')->willReturn(FALSE);
     $fieldList->method('count')->willReturn(3);
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();
@@ -336,7 +370,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldList->method('isEmpty')->willReturn(FALSE);
     $fieldList->method('count')->willReturn(1);
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();
@@ -369,7 +403,7 @@ class EntityContextTraitTest extends TestCase {
     $emptyFieldList = $this->createMock(FieldItemListInterface::class);
     $emptyFieldList->method('isEmpty')->willReturn(TRUE);
 
-    $owner = $this->createMock(\Drupal\user\UserInterface::class);
+    $owner = $this->createMock(UserInterface::class);
     $owner->method('getDisplayName')->willReturn('Admin');
 
     $node = $this->getMockBuilder(NodeInterface::class)->getMock();

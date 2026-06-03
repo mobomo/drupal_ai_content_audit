@@ -6,10 +6,8 @@ namespace Drupal\ai_content_audit\Plugin\AuditCheck\Filesystem;
 
 use Drupal\ai_content_audit\Attribute\AuditCheck;
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Scans sites/default/files/ and webroot for .log files exceeding 50 MB.
@@ -21,25 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   scope: 'site',
   category: 'Filesystem Health',
 )]
-class LargeLogFilesCheck extends FilesystemCheckBase implements ContainerFactoryPluginInterface {
-
-  public function __construct(
-    array $configuration,
-    string $plugin_id,
-    mixed $plugin_definition,
-    string $drupalRoot,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $drupalRoot);
-  }
-
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->getParameter('app.root'),
-    );
-  }
+class LargeLogFilesCheck extends FilesystemCheckBase {
 
   /**
    * {@inheritdoc}

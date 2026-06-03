@@ -13,7 +13,9 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Verifies the temporary files directory is writable, falling back to sys_get_temp_dir().
+ * Verifies the temporary files directory is writable.
+ *
+ * Falls back to sys_get_temp_dir() when needed.
  */
 #[AuditCheck(
   id: 'fs_temp_writable',
@@ -34,6 +36,9 @@ class TempDirWritableCheck extends FilesystemCheckBase implements ContainerFacto
     parent::__construct($configuration, $plugin_id, $plugin_definition, $drupalRoot);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
     return new static(
       $configuration,

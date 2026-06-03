@@ -10,7 +10,7 @@ use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 
 /**
- * hook_theme() and preprocess implementations for AIRO templates.
+ * Hook_theme() and preprocess implementations for AIRO templates.
  */
 final class AiContentAuditThemeHooks {
 

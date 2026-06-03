@@ -26,6 +26,7 @@ use Drupal\ai_content_audit\Service\FilesystemAuditService;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use Drupal\ai_content_audit\Service\TechnicalAuditService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -42,6 +43,7 @@ class AiroPanelController extends ControllerBase {
     protected PrivateTempStoreFactory $tempStoreFactory,
     protected ProviderModelChoices $providerModelChoices,
     protected ContentExtractorManager $contentExtractorManager,
+    protected RequestStack $requestStack,
   ) {}
 
   /**
@@ -57,6 +59,7 @@ class AiroPanelController extends ControllerBase {
       $container->get('tempstore.private'),
       $container->get('ai_content_audit.provider_model_choices'),
       $container->get('ai_content_audit.extractor_manager'),
+      $container->get('request_stack'),
     );
   }
 
@@ -154,13 +157,13 @@ class AiroPanelController extends ControllerBase {
    */
   public function assessNode(NodeInterface $node): JsonResponse {
     try {
-      $decoded = json_decode(\Drupal::request()->getContent() ?: '{}', TRUE);
+      $decoded = json_decode($this->requestStack->getCurrentRequest()?->getContent() ?: '{}', TRUE);
       $decoded = is_array($decoded) ? $decoded : [];
       $node = $this->resolveNodeRevisionFromRequestBody($node, $decoded);
       // AIRO panel analysis must evaluate rendered page content (LB-aware),
       // not plain text field extraction.
       $result = $this->assessmentService->assessNode($node, [
-        'render_mode' => RenderMode::HTML->value,
+        'render_mode' => RenderMode::Html->value,
       ]);
 
       if (!$result['success']) {
@@ -214,8 +217,13 @@ class AiroPanelController extends ControllerBase {
    * clients send the form entity revision ID so drafts and Layout Builder
    * overrides match what the editor sees.
    *
+   * @param \Drupal\node\NodeInterface $route_node
+   *   Node provided by the route parameter.
    * @param array<string, mixed> $decoded
    *   Decoded JSON request body.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The revision to assess, or the route node when no revision is specified.
    */
   private function resolveNodeRevisionFromRequestBody(NodeInterface $route_node, array $decoded): NodeInterface {
     if (empty($decoded['revision_id'])) {
@@ -237,9 +245,7 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * G5: Re-renders the inline score widget for a given node and returns a
-   * Drupal AJAX ReplaceCommand so the browser can swap only the widget card
-   * without a full page reload.
+   * Re-renders the inline score widget and returns a Drupal AJAX command.
    *
    * The selector targets `.airo-widget[data-node-id="N"]` so multiple widgets
    * on the same page (e.g. multiple tabs) are handled correctly.
@@ -253,14 +259,14 @@ class AiroPanelController extends ControllerBase {
       ->range(0, 1)
       ->execute();
 
-    $assessment = !empty($ids) ? $storage->load(reset($ids)) : NULL;
-    $score      = $assessment ? (int) $assessment->get('score')->value : NULL;
+    $assessment     = !empty($ids) ? $storage->load(reset($ids)) : NULL;
+    $score          = $assessment ? (int) $assessment->get('score')->value : NULL;
     $has_assessment = $assessment !== NULL;
 
     // Map score to GIN-aligned color token name and status label.
     if ($score === NULL) {
-      $score_color   = 'danger';
-      $status_label  = $this->t('Not analyzed');
+      $score_color  = 'danger';
+      $status_label = $this->t('Not analyzed');
     }
     elseif ($score >= 70) {
       $score_color  = 'good';
@@ -276,9 +282,9 @@ class AiroPanelController extends ControllerBase {
     }
 
     // SVG donut geometry.
-    $donut_radius         = 26;
-    $donut_circumference  = round(2 * M_PI * $donut_radius, 2);
-    $donut_offset         = $score !== NULL
+    $donut_radius        = 26;
+    $donut_circumference = round(2 * M_PI * $donut_radius, 2);
+    $donut_offset        = $score !== NULL
       ? round($donut_circumference * (1 - $score / 100), 2)
       : $donut_circumference;
 
@@ -324,7 +330,7 @@ class AiroPanelController extends ControllerBase {
 
     $html = (string) $this->renderer->renderRoot($widget_build);
 
-    // Target only the widget for this specific node — keeps sibling widgets intact.
+    // Target only this node's widget — keeps sibling widgets intact.
     $selector = '.airo-widget[data-node-id="' . $node->id() . '"]';
 
     $response = new AjaxResponse();
@@ -398,9 +404,9 @@ class AiroPanelController extends ControllerBase {
       foreach ($raw_checkpoints as $cp) {
         $category = $cp['category'] ?? 'Other';
         $checkpoints_by_category[$category][] = $cp;
-        }
+      }
 
-        // Extract metadata from result_json for the overview metadata row.
+      // Extract metadata from result_json for the overview metadata row.
       $result_json = $assessment->getParsedResult();
       $grade_raw = $result_json['readability']['grade_level'] ?? NULL;
       $readability_grade = $grade_raw !== NULL ? (int) $grade_raw : NULL;
@@ -455,7 +461,7 @@ class AiroPanelController extends ControllerBase {
       '#trend_delta' => $trend_delta,
       '#node_id' => $node->id(),
       '#revision_id' => (int) $node->getRevisionId(),
-      '#assess_url' => \Drupal\Core\Url::fromRoute(
+      '#assess_url' => Url::fromRoute(
         'ai_content_audit.panel.assess',
         ['node' => $node->id()]
       )->toString(),
@@ -502,9 +508,11 @@ class AiroPanelController extends ControllerBase {
           case 'high':
             $high_items[] = $item;
             break;
+
           case 'medium':
             $medium_items[] = $item;
             break;
+
           default:
             $low_items[] = $item;
             break;
@@ -530,7 +538,7 @@ class AiroPanelController extends ControllerBase {
       '#high_count' => count($high_items),
       '#node_id' => $node->id(),
       '#revision_id' => (int) $node->getRevisionId(),
-      '#assess_url' => \Drupal\Core\Url::fromRoute('ai_content_audit.panel.assess', ['node' => $node->id()])->toString(),
+      '#assess_url' => Url::fromRoute('ai_content_audit.panel.assess', ['node' => $node->id()])->toString(),
       '#attached' => [
         'library' => [
           'ai_content_audit/action-items-tab',
@@ -559,14 +567,14 @@ class AiroPanelController extends ControllerBase {
     $status = $assessment->getActionItemsStatus() ?? [];
 
     // Get the request body.
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
     $body = json_decode($request->getContent(), TRUE);
     $completed = !empty($body['completed']);
 
     if ($completed) {
       $status[$item_id] = [
         'completed' => TRUE,
-        'completed_by' => (int) \Drupal::currentUser()->id(),
+        'completed_by' => (int) $this->currentUser()->id(),
         'completed_at' => date('c'),
       ];
     }
@@ -604,7 +612,7 @@ class AiroPanelController extends ControllerBase {
    */
   public function buildTechnicalAuditTab(NodeInterface $node): array {
     // Check if force refresh was requested.
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
     $forceRefresh = $request->query->get('force_refresh', FALSE);
 
     $results = $this->technicalAuditService->runAllChecks($node, (bool) $forceRefresh);
@@ -664,14 +672,15 @@ class AiroPanelController extends ControllerBase {
       $central = $this->aiProviderManager->getDefaultProviderForOperationType('content_audit')
         ?? $this->aiProviderManager->getDefaultProviderForOperationType('chat');
       if (!empty($central['provider_id'])) {
-        $key   = $central['provider_id'] . '__' . ($central['model_id'] ?? '');
-        $label = ucwords(str_replace(['-', '_'], ' ', $central['provider_id']));
+        $key        = $central['provider_id'] . '__' . ($central['model_id'] ?? '');
+        $label      = ucwords(str_replace(['-', '_'], ' ', $central['provider_id']));
         $allChoices = [[
           'key'         => $key,
           'label'       => $label,
           'provider_id' => $central['provider_id'],
           'model_id'    => $central['model_id'] ?? '',
-        ]];
+        ],
+        ];
       }
       else {
         $allChoices = [];
@@ -679,9 +688,9 @@ class AiroPanelController extends ControllerBase {
     }
 
     // Load last-used selection from per-user private tempstore.
-    $store      = $this->tempStoreFactory->get('ai_content_audit');
-    $savedKeys  = $store->get('last_provider_models') ?? [];
-    $validKeys  = array_column($allChoices, 'key');
+    $store     = $this->tempStoreFactory->get('ai_content_audit');
+    $savedKeys = $store->get('last_provider_models') ?? [];
+    $validKeys = array_column($allChoices, 'key');
     // Keep only saved keys that still exist in the current choice list.
     $selectedKeys = array_values(
       array_filter($savedKeys, fn($k) => in_array($k, $validKeys, TRUE))
@@ -706,7 +715,7 @@ class AiroPanelController extends ControllerBase {
       '#suggested_prompts' => $suggested_prompts,
       '#node_id'          => $node->id(),
       '#revision_id'      => (int) $node->getRevisionId(),
-      '#query_url'        => \Drupal\Core\Url::fromRoute(
+      '#query_url'        => Url::fromRoute(
         'ai_content_audit.panel.preview_query',
         ['node' => $node->id()]
       )->toString(),
@@ -730,7 +739,7 @@ class AiroPanelController extends ControllerBase {
    *   {
    *     "question": "...",
    *     "provider_models": ["openai__gpt-4o-mini", ...],
-   *     "revision_id": <optional int — same nid, specific revision for drafts/LB>
+   *     "revision_id": <optional int — specific revision for drafts/LB>
    *   }
    *
    * Response JSON:
@@ -742,7 +751,7 @@ class AiroPanelController extends ControllerBase {
    * its error string is embedded in the per-result "error" field.
    */
   public function submitPreviewQuery(NodeInterface $node): JsonResponse {
-    $request = \Drupal::request();
+    $request = $this->requestStack->getCurrentRequest();
     $body = json_decode($request->getContent(), TRUE);
     $body = is_array($body) ? $body : [];
     $node = $this->resolveNodeRevisionFromRequestBody($node, $body);
@@ -753,8 +762,8 @@ class AiroPanelController extends ControllerBase {
     }
 
     // Determine which provider+model keys to query.
-    $requestedKeys  = array_filter((array) ($body['provider_models'] ?? []));
-    $hasPermission  = $this->currentUser()->hasPermission('use any ai provider in airo');
+    $requestedKeys = array_filter((array) ($body['provider_models'] ?? []));
+    $hasPermission = $this->currentUser()->hasPermission('use any ai provider in airo');
 
     // Fall back to site default for users without the permission or when no
     // specific providers were requested.
@@ -769,7 +778,7 @@ class AiroPanelController extends ControllerBase {
       }
     }
 
-    // Build the shared prompts once — same rendered node text for every provider.
+    // Build shared prompts once — same rendered node text for all providers.
     $nodeContent  = $this->extractRenderedNodeContextForPreview($node);
     $nodeContent  = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
     $systemPrompt = 'You are simulating how an AI system would answer questions about web content. '
@@ -788,7 +797,7 @@ class AiroPanelController extends ControllerBase {
       'key'
     );
 
-    // Query each provider+model sequentially (Phase 1 — sequential, all-at-once).
+    // Query each provider+model sequentially (Phase 1).
     $results     = [];
     $successKeys = [];
 
@@ -797,7 +806,7 @@ class AiroPanelController extends ControllerBase {
       if (empty($providerId)) {
         continue;
       }
-      $label    = $labelMap[$key] ?? ucwords(str_replace(['-', '_'], ' ', $providerId));
+      $label     = $labelMap[$key] ?? ucwords(str_replace(['-', '_'], ' ', $providerId));
       $oneResult = $this->queryOneProvider($systemPrompt, $userPrompt, $providerId, $modelId);
 
       $results[] = [
@@ -839,6 +848,7 @@ class AiroPanelController extends ControllerBase {
    * 'error' key so one failing provider never aborts the whole comparison run.
    *
    * @return array{html: string|null, duration_ms: int, error: string|null}
+   *   Normalised provider response payload.
    */
   private function queryOneProvider(
     string $systemPrompt,
@@ -886,14 +896,17 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Returns a JSON list of all configured provider+model choices for the given
-   * AI operation type.  Used by the AIRO panel JS to refresh the selector
-   * (Phase 2 lazy-fetch stub — currently not called from the UI).
+   * Returns configured provider and model choices as JSON.
    *
+   * Used by AIRO panel JS to refresh the model selector.
    * Query parameter: op_type (default: 'chat').
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON response containing available model choices.
    */
   public function listAvailableModels(): JsonResponse {
-    $opType  = \Drupal::request()->query->get('op_type', 'chat');
+    $request = $this->requestStack->getCurrentRequest();
+    $opType = $request?->query->get('op_type', 'chat');
     $choices = $this->providerModelChoices->forOperationType((string) $opType);
 
     // Model list is session/user-specific dynamic data — never cache.
@@ -905,7 +918,7 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Builds page context for AI Preview using the HTML render extractor (LB-aware).
+   * Builds AI Preview page context via the HTML extractor (LB-aware).
    *
    * Falls back to title + body plain text if the HTML extractor is unavailable
    * or throws.
@@ -913,7 +926,7 @@ class AiroPanelController extends ControllerBase {
   private function extractRenderedNodeContextForPreview(NodeInterface $node): string {
     try {
       return $this->contentExtractorManager
-        ->getExtractorForMode(RenderMode::HTML->value)
+        ->getExtractorForMode(RenderMode::Html->value)
         ->extract($node);
     }
     catch (\Throwable $e) {
@@ -1071,6 +1084,7 @@ class AiroPanelController extends ControllerBase {
    */
   private function simpleMarkdownToHtml(string $text): string {
     // Escape HTML entities first to prevent XSS.
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
     // Headers (must run before bold to avoid double-processing).

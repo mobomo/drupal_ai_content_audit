@@ -16,6 +16,9 @@ final class AiContentAuditCronHooks {
     protected AiContentAuditLifecycle $lifecycle,
   ) {}
 
+  /**
+   * Implements hook_cron().
+   */
   #[Hook('cron')]
   public function cron(): void {
     $this->lifecycle->enqueueExcessAssessmentsForPurge();
