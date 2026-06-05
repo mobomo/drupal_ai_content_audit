@@ -897,10 +897,21 @@ class AiroPanelController extends ControllerBase {
       return [
         'html'        => NULL,
         'duration_ms' => (int) round((microtime(TRUE) - $start) * 1000),
-        'error'       => $e->getMessage(),
+        'error'       => $this->formatPreviewUserErrorMessage($e),
         'error_hint'  => $this->detectPreviewErrorHint($e->getMessage()),
       ];
     }
+  }
+
+  /**
+   * Returns a short, user-safe preview error (technical details stay in logs).
+   */
+  private function formatPreviewUserErrorMessage(\Exception $e): string {
+    $lower = strtolower($e->getMessage());
+    if (str_contains($lower, 'no ai chat provider')) {
+      return (string) $this->t('No AI provider is configured for this site.');
+    }
+    return (string) $this->t('The AI model could not generate a response. Please try again or check your provider configuration.');
   }
 
   /**

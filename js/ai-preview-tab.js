@@ -954,7 +954,7 @@
         html: null,
         duration_ms: 0,
         error: Drupal.t('Request failed. Please try again.'),
-        error_hint: 'api_key',
+        error_hint: null,
       };
     });
   }
