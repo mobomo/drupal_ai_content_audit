@@ -2,11 +2,18 @@
  * @file
  * AIRO AI Preview tab — parallel provider comparison + page skin two-screen flow.
  */
-(function (Drupal, once) {
+(function (Drupal, once, Cookies) {
   'use strict';
 
   /** @type {string} BEM block prefix */
   var P = 'airo-preview';
+
+  /** @type {string} Cookie keys for saved preview prompts (per browser). */
+  var PROMPT_COOKIE_MODE = 'ai_ca_pp_mode';
+  var PROMPT_COOKIE_SYSTEM = 'ai_ca_pp_sys';
+  var PROMPT_COOKIE_USER = 'ai_ca_pp_usr';
+  var PROMPT_COOKIE_EXPIRES_DAYS = 365;
+  var PROMPT_COOKIE_MAX_CHARS = 3500;
 
   // ─── DOM helpers ──────────────────────────────────────────────────────────
 
@@ -45,6 +52,291 @@
     });
   }
 
+  /**
+   * @param {Element} screenRoot
+   */
+  function updatePromptCustomVisibility(screenRoot) {
+    if (!screenRoot) return;
+    var customPanel = screenRoot.querySelector('.' + P + '__prompt-custom');
+    var customMode = screenRoot.querySelector('.' + P + '__prompt-mode[value="custom"]:checked');
+    if (customPanel) {
+      customPanel.hidden = !customMode;
+    }
+    var badge = screenRoot.querySelector('[data-prompt-mode-badge]');
+    if (badge) {
+      badge.textContent = customMode ? Drupal.t('Custom') : Drupal.t('Default');
+    }
+  }
+
+  /**
+   * @param {Element} wrapper
+   */
+  function updateAllPromptBadges(wrapper) {
+    if (!wrapper) return;
+    wrapper.querySelectorAll('.' + P + '__prompt-fieldset').forEach(function (fieldset) {
+      updatePromptCustomVisibility(fieldset);
+    });
+  }
+
+  /**
+   * @param {Element} fromScreen
+   * @param {Element} toScreen
+   */
+  function syncPromptEditorBetweenScreens(fromScreen, toScreen) {
+    if (!fromScreen || !toScreen) return;
+
+    var fromMode = fromScreen.querySelector('.' + P + '__prompt-mode:checked');
+    if (fromMode) {
+      toScreen.querySelectorAll('.' + P + '__prompt-mode').forEach(function (radio) {
+        radio.checked = radio.value === fromMode.value;
+      });
+    }
+
+    var fromSystem = fromScreen.querySelector('.' + P + '__prompt-system');
+    var toSystem = toScreen.querySelector('.' + P + '__prompt-system');
+    if (fromSystem && toSystem) {
+      toSystem.value = fromSystem.value;
+    }
+
+    var fromUser = fromScreen.querySelector('.' + P + '__prompt-user-template');
+    var toUser = toScreen.querySelector('.' + P + '__prompt-user-template');
+    if (fromUser && toUser) {
+      toUser.value = fromUser.value;
+    }
+
+    updatePromptCustomVisibility(toScreen);
+  }
+
+  /**
+   * @param {Element} wrapper
+   * @returns {Element}
+   */
+  function getActivePromptScreenRoot(wrapper) {
+    if (!usesPageSkin(wrapper)) {
+      return wrapper;
+    }
+    var panel = getPageSkinPanel(wrapper);
+    if (panel && panel.getAttribute('data-airo-ui-state') === 'conversation') {
+      var conv = wrapper.querySelector('.airo-panel__screen--conversation');
+      if (conv) {
+        return conv;
+      }
+    }
+    var landing = wrapper.querySelector('.airo-panel__screen--landing');
+    return landing || wrapper;
+  }
+
+  /**
+   * @param {Element} wrapper
+   * @returns {object}
+   */
+  function getPromptPayload(wrapper) {
+    var root = getActivePromptScreenRoot(wrapper);
+    var customMode = root.querySelector('.' + P + '__prompt-mode[value="custom"]:checked');
+    if (!customMode) {
+      return { prompt_mode: 'default' };
+    }
+
+    var system = root.querySelector('.' + P + '__prompt-system');
+    var userTemplate = root.querySelector('.' + P + '__prompt-user-template');
+
+    return {
+      prompt_mode: 'custom',
+      system_prompt: system ? system.value : '',
+      user_prompt_template: userTemplate ? userTemplate.value : '',
+    };
+  }
+
+  /**
+   * @param {Element} wrapper
+   * @returns {{system: string, userTemplate: string}}
+   */
+  function getPromptDefaults(wrapper) {
+    var el = wrapper ? wrapper.querySelector('.' + P + '__prompt-defaults') : null;
+    if (!el) {
+      return { system: '', userTemplate: '' };
+    }
+    try {
+      var parsed = JSON.parse(el.textContent || '{}');
+      return {
+        system: parsed.system || '',
+        userTemplate: parsed.userTemplate || '',
+      };
+    }
+    catch (e) {
+      return { system: '', userTemplate: '' };
+    }
+  }
+
+  /**
+   * @param {Function} fn
+   * @param {number} wait
+   * @returns {function(...[*])}
+   */
+  function debounce(fn, wait) {
+    var timeoutId;
+    return function () {
+      var args = arguments;
+      var self = this;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(function () {
+        fn.apply(self, args);
+      }, wait);
+    };
+  }
+
+  /**
+   * @param {string} name
+   * @param {string} value
+   */
+  function writePromptCookie(name, value) {
+    if (!Cookies || value.length > PROMPT_COOKIE_MAX_CHARS) {
+      return;
+    }
+    Cookies.set(name, value, {
+      expires: PROMPT_COOKIE_EXPIRES_DAYS,
+      path: '/',
+      sameSite: 'Lax',
+    });
+  }
+
+  /**
+   * @param {string} name
+   * @returns {string}
+   */
+  function readPromptCookie(name) {
+    return Cookies ? (Cookies.get(name) || '') : '';
+  }
+
+  /**
+   * @param {Element} wrapper
+   * @returns {{mode: string, system: string, userTemplate: string}}
+   */
+  function collectPromptState(wrapper) {
+    if (!wrapper) {
+      return { mode: 'default', system: '', userTemplate: '' };
+    }
+
+    var customMode = wrapper.querySelector('.' + P + '__prompt-mode[value="custom"]:checked');
+    var systemEl = wrapper.querySelector('.' + P + '__prompt-system');
+    var userEl = wrapper.querySelector('.' + P + '__prompt-user-template');
+
+    return {
+      mode: customMode ? 'custom' : 'default',
+      system: systemEl ? systemEl.value : '',
+      userTemplate: userEl ? userEl.value : '',
+    };
+  }
+
+  /**
+   * Persists prompt mode and textarea content in browser cookies.
+   *
+   * @param {Element} wrapper
+   */
+  function savePromptToCookies(wrapper) {
+    if (!wrapper || !Cookies) {
+      return;
+    }
+
+    var state = collectPromptState(wrapper);
+    writePromptCookie(PROMPT_COOKIE_MODE, state.mode);
+    writePromptCookie(PROMPT_COOKIE_SYSTEM, state.system);
+    writePromptCookie(PROMPT_COOKIE_USER, state.userTemplate);
+  }
+
+  var savePromptToCookiesDebounced = debounce(savePromptToCookies, 400);
+
+  /**
+   * @param {Element} wrapper
+   * @param {{mode?: string, system?: string, userTemplate?: string}} state
+   */
+  function applyPromptState(wrapper, state) {
+    if (!wrapper || !state) {
+      return;
+    }
+
+    var mode = state.mode === 'custom' ? 'custom' : 'default';
+    wrapper.querySelectorAll('.' + P + '__prompt-mode').forEach(function (radio) {
+      radio.checked = radio.value === mode;
+    });
+
+    if (typeof state.system === 'string' && state.system !== '') {
+      wrapper.querySelectorAll('.' + P + '__prompt-system').forEach(function (el) {
+        el.value = state.system;
+      });
+    }
+
+    if (typeof state.userTemplate === 'string' && state.userTemplate !== '') {
+      wrapper.querySelectorAll('.' + P + '__prompt-user-template').forEach(function (el) {
+        el.value = state.userTemplate;
+      });
+    }
+
+    updateAllPromptBadges(wrapper);
+  }
+
+  /**
+   * Restores the last saved prompt from cookies, if present.
+   *
+   * @param {Element} wrapper
+   */
+  function loadPromptFromCookies(wrapper) {
+    if (!wrapper || !Cookies) {
+      return;
+    }
+
+    var mode = readPromptCookie(PROMPT_COOKIE_MODE);
+    if (mode !== 'default' && mode !== 'custom') {
+      return;
+    }
+
+    applyPromptState(wrapper, {
+      mode: mode,
+      system: readPromptCookie(PROMPT_COOKIE_SYSTEM),
+      userTemplate: readPromptCookie(PROMPT_COOKIE_USER),
+    });
+  }
+
+  /**
+   * @param {Element} wrapper
+   * @param {HTMLTextAreaElement} source
+   */
+  function syncPromptTextareasInWrapper(wrapper, source) {
+    if (!wrapper || !source) {
+      return;
+    }
+
+    var selector = source.classList.contains(P + '__prompt-system')
+      ? '.' + P + '__prompt-system'
+      : '.' + P + '__prompt-user-template';
+
+    wrapper.querySelectorAll(selector).forEach(function (el) {
+      if (el !== source) {
+        el.value = source.value;
+      }
+    });
+  }
+
+  /**
+   * Refills custom prompt fields with the built-in template text.
+   *
+   * Does not change the selected mode — use "Use default prompt" for that.
+   *
+   * @param {Element} wrapper
+   */
+  function restorePromptTemplate(wrapper) {
+    if (!wrapper) return;
+    var defaults = getPromptDefaults(wrapper);
+
+    wrapper.querySelectorAll('.' + P + '__prompt-system').forEach(function (el) {
+      el.value = defaults.system;
+    });
+    wrapper.querySelectorAll('.' + P + '__prompt-user-template').forEach(function (el) {
+      el.value = defaults.userTemplate;
+    });
+    savePromptToCookies(wrapper);
+  }
+
   function setUiState(wrapper, state) {
     var panel = getPageSkinPanel(wrapper);
     if (!panel) return;
@@ -53,9 +345,11 @@
     if (landingScreen && convScreen) {
       if (state === 'conversation') {
         syncModelCheckboxesBetweenScreens(wrapper, landingScreen, convScreen);
+        syncPromptEditorBetweenScreens(landingScreen, convScreen);
       }
       else {
         syncModelCheckboxesBetweenScreens(wrapper, convScreen, landingScreen);
+        syncPromptEditorBetweenScreens(convScreen, landingScreen);
       }
     }
     panel.setAttribute('data-airo-ui-state', state);
@@ -531,6 +825,12 @@
       question: question,
       provider_models: key ? [key] : [],
     };
+    if (wrapper) {
+      var promptPayload = getPromptPayload(wrapper);
+      Object.keys(promptPayload).forEach(function (k) {
+        postBody[k] = promptPayload[k];
+      });
+    }
     var rid = wrapper && wrapper.getAttribute('data-revision-id');
     if (rid) {
       var parsed = parseInt(rid, 10);
@@ -877,8 +1177,58 @@
         });
       });
 
+      once('airo-preview-prompt-mode', '.' + P + '__prompt-mode', context).forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          var wrapper = getWrapper(radio);
+          if (!wrapper) return;
+
+          var fromScreen = radio.closest('.airo-panel__screen--landing, .airo-panel__screen--conversation, .' + P);
+          if (usesPageSkin(wrapper) && fromScreen) {
+            var toScreen = fromScreen.classList.contains('airo-panel__screen--landing')
+              ? wrapper.querySelector('.airo-panel__screen--conversation')
+              : wrapper.querySelector('.airo-panel__screen--landing');
+            syncPromptEditorBetweenScreens(fromScreen, toScreen || fromScreen);
+          }
+
+          updateAllPromptBadges(wrapper);
+          savePromptToCookies(wrapper);
+        });
+      });
+
+      once('airo-preview-prompt-input', '.' + P + '__prompt-system, .' + P + '__prompt-user-template', context).forEach(function (textarea) {
+        textarea.addEventListener('input', function () {
+          var wrapper = getWrapper(textarea);
+          if (!wrapper) return;
+
+          syncPromptTextareasInWrapper(wrapper, textarea);
+
+          if (usesPageSkin(wrapper)) {
+            var fromScreen = textarea.closest('.airo-panel__screen--landing, .airo-panel__screen--conversation');
+            if (fromScreen) {
+              var toScreen = fromScreen.classList.contains('airo-panel__screen--landing')
+                ? wrapper.querySelector('.airo-panel__screen--conversation')
+                : wrapper.querySelector('.airo-panel__screen--landing');
+              if (toScreen) {
+                syncPromptEditorBetweenScreens(fromScreen, toScreen);
+              }
+            }
+          }
+
+          savePromptToCookiesDebounced(wrapper);
+        });
+      });
+
+      once('airo-preview-prompt-restore', '.' + P + '__prompt-restore', context).forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          restorePromptTemplate(getWrapper(btn));
+        });
+      });
+
       once('airo-preview-init', '.' + P, context).forEach(function (wrapper) {
+        loadPromptFromCookies(wrapper);
         syncButton(wrapper);
+        updateAllPromptBadges(wrapper);
         if (usesPageSkin(wrapper)) {
           setUiState(wrapper, 'landing');
           updateModelSelectorUi(wrapper);
@@ -893,4 +1243,4 @@
     },
   };
 
-})(Drupal, once);
+})(Drupal, once, window.Cookies);

@@ -713,6 +713,8 @@ class AiroPanelController extends ControllerBase {
       '#selected_keys'    => $selectedKeys,
       '#has_permission'   => $hasPermission,
       '#suggested_prompts' => $suggested_prompts,
+      '#default_system_prompt' => $this->getDefaultPreviewSystemPrompt(),
+      '#default_user_prompt_template' => $this->getDefaultPreviewUserPromptTemplate(),
       '#node_id'          => $node->id(),
       '#revision_id'      => (int) $node->getRevisionId(),
       '#query_url'        => Url::fromRoute(
@@ -739,7 +741,11 @@ class AiroPanelController extends ControllerBase {
    *   {
    *     "question": "...",
    *     "provider_models": ["openai__gpt-4o-mini", ...],
-   *     "revision_id": <optional int — specific revision for drafts/LB>
+   *     "revision_id": <optional int — specific revision for drafts/LB>,
+   *     "prompt_mode": "default"|"custom" (optional),
+   *     "system_prompt": "..." (optional, when prompt_mode is custom),
+   *     "user_prompt_template": "..." (optional; tokens: {node_content},
+   *       {question})
    *   }
    *
    * Response JSON:
@@ -781,14 +787,9 @@ class AiroPanelController extends ControllerBase {
     // Build shared prompts once — same rendered node text for all providers.
     $nodeContent  = $this->extractRenderedNodeContextForPreview($node);
     $nodeContent  = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
-    $systemPrompt = 'You are simulating how an AI system would answer questions about web content. '
-      . 'You have been given a structured text representation of the page as rendered by Drupal '
-      . '(including Layout Builder regions when present). Answer the user\'s question '
-      . 'based solely on this content. If the content does not contain enough information '
-      . 'to fully answer, note what is missing. Format your response in clear paragraphs.';
-    $userPrompt   = "PAGE CONTENT:\n---\n{$nodeContent}\n---\n\n"
-      . "USER QUESTION: {$question}\n\n"
-      . 'Provide your answer based on the page content above.';
+    $prompts      = $this->resolvePreviewPrompts($body, $nodeContent, $question);
+    $systemPrompt = $prompts['system'];
+    $userPrompt   = $prompts['user'];
 
     // Build a map of key → label for display purposes.
     $labelMap = array_column(
@@ -1109,6 +1110,69 @@ class AiroPanelController extends ControllerBase {
     $text = preg_replace('/(<\/(?:ul|ol|h[2-6])>)<\/p>/i', '$1', $text);
 
     return $text;
+  }
+
+  /**
+   * Default system message for the AI Preview tab.
+   */
+  private function getDefaultPreviewSystemPrompt(): string {
+    return 'You are simulating how an AI system would answer questions about web content. '
+      . 'You have been given a structured text representation of the page as rendered by Drupal '
+      . '(including Layout Builder regions when present). Answer the user\'s question '
+      . 'based solely on this content. If the content does not contain enough information '
+      . 'to fully answer, note what is missing. Format your response in clear paragraphs.';
+  }
+
+  /**
+   * Default user prompt template for the AI Preview tab.
+   *
+   * Tokens: {node_content}, {question}.
+   */
+  private function getDefaultPreviewUserPromptTemplate(): string {
+    return "PAGE CONTENT:\n---\n{node_content}\n---\n\n"
+      . "USER QUESTION: {question}\n\n"
+      . 'Provide your answer based on the page content above.';
+  }
+
+  /**
+   * Resolves system and user prompts from the request body.
+   *
+   * @return array{system: string, user: string}
+   *   Resolved system and user prompt strings.
+   */
+  private function resolvePreviewPrompts(array $body, string $nodeContent, string $question): array {
+    $defaultSystem = $this->getDefaultPreviewSystemPrompt();
+    $defaultUserTemplate = $this->getDefaultPreviewUserPromptTemplate();
+
+    if (($body['prompt_mode'] ?? 'default') !== 'custom') {
+      return [
+        'system' => $defaultSystem,
+        'user' => $this->buildPreviewUserPrompt($defaultUserTemplate, $nodeContent, $question),
+      ];
+    }
+
+    $system = trim((string) ($body['system_prompt'] ?? ''));
+    $userTemplate = trim((string) ($body['user_prompt_template'] ?? ''));
+
+    return [
+      'system' => $system !== '' ? $system : $defaultSystem,
+      'user' => $this->buildPreviewUserPrompt(
+        $userTemplate !== '' ? $userTemplate : $defaultUserTemplate,
+        $nodeContent,
+        $question,
+      ),
+    ];
+  }
+
+  /**
+   * Substitutes preview prompt template tokens.
+   */
+  private function buildPreviewUserPrompt(string $template, string $nodeContent, string $question): string {
+    return str_replace(
+      ['{node_content}', '{question}'],
+      [$nodeContent, $question],
+      $template,
+    );
   }
 
 }

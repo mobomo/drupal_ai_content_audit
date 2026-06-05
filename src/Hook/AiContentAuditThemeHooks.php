@@ -151,6 +151,8 @@ final class AiContentAuditThemeHooks {
           'selected_keys' => [],
           'has_permission' => FALSE,
           'suggested_prompts' => [],
+          'default_system_prompt' => '',
+          'default_user_prompt_template' => '',
           'node_id' => NULL,
           'revision_id' => NULL,
           'query_url' => NULL,

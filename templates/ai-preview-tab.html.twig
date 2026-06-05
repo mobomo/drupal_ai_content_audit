@@ -11,6 +11,10 @@
   data-revision-id="{{ revision_id }}"
   data-query-url="{{ query_url }}"
   {% if use_page_skin %}data-page-skin="1"{% endif %}>
+  <script type="application/json" class="airo-preview__prompt-defaults">{{ {
+    system: default_system_prompt,
+    userTemplate: default_user_prompt_template,
+  }|json_encode|raw }}</script>
 
   {% if use_page_skin %}
     {# Screen 1: landing (full blue panel via CSS on parent). #}
@@ -50,6 +54,12 @@
             </button>
           </div>
         </div>
+
+        {% include '@ai_content_audit/airo-preview-prompt-editor.html.twig' with {
+          screen_id: 'landing-' ~ node_id,
+          default_system_prompt: default_system_prompt,
+          default_user_prompt_template: default_user_prompt_template,
+        } only %}
 
         <div class="airo-preview__howto-notice" role="note">
           {% include '@ai_content_audit/airo-preview-howto-icon.html.twig' with { howto_clip_id: 'airo-preview-howto-clip-landing-' ~ node_id } only %}
@@ -100,6 +110,14 @@
         aria-live="polite"
         aria-label="{{ 'AI conversation'|t }}"
         tabindex="-1">
+      </div>
+
+      <div class="airo-preview__prompt-editor--conversation">
+        {% include '@ai_content_audit/airo-preview-prompt-editor.html.twig' with {
+          screen_id: 'conversation-' ~ node_id,
+          default_system_prompt: default_system_prompt,
+          default_user_prompt_template: default_user_prompt_template,
+        } only %}
       </div>
 
       <div class="airo-panel__composer airo-preview__composer-footer">
@@ -154,6 +172,12 @@
         } only %}
       </div>
     {% endif %}
+
+    {% include '@ai_content_audit/airo-preview-prompt-editor.html.twig' with {
+      screen_id: 'accordion-' ~ node_id,
+      default_system_prompt: default_system_prompt,
+      default_user_prompt_template: default_user_prompt_template,
+    } only %}
 
     <div class="airo-preview__results" id="airo-preview-results-{{ node_id }}">
     </div>

@@ -198,15 +198,18 @@
 
 .airo-preview--page-skin .airo-panel__screen--landing {
   padding: 0 1.25rem 1.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .airo-panel--page-skin[data-airo-ui-state="landing"] .airo-preview__landing {
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 1rem;
   justify-content: flex-start;
-  min-height: 0;
 }
 
 .airo-preview__landing-title {
@@ -407,6 +410,61 @@
   height: 20px;
   margin-top: 0.125rem;
   color: #04365c;
+}
+
+/* Prompt editor — landing (sobre fondo azul). */
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-fieldset,
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__howto-notice {
+  flex-shrink: 0;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-fieldset {
+  border-color: rgb(255 255 255 / 35%);
+  background: rgb(255 255 255 / 10%);
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-legend,
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-mode-option {
+  color: #fff;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-legend-label {
+  color: #fff;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-mode-badge {
+  background: rgb(255 255 255 / 20%);
+  color: #fff;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-custom {
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-help,
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-custom .airo-preview__prompt-mode-option,
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-custom .airo-preview__prompt-label,
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-custom .airo-preview__prompt-hint {
+  color: #374151;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-help {
+  color: rgb(255 255 255 / 85%);
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__prompt-custom .airo-preview__prompt-hint--intro {
+  background: #f3f4f6;
+}
+
+/* Prompt editor — conversation (encima del composer). */
+.airo-preview__prompt-editor--conversation {
+  padding: 0 1.25rem;
+}
+
+.airo-preview--page-skin .airo-panel__screen--conversation .airo-preview__prompt-fieldset {
+  margin-bottom: 0.5rem;
 }
 
 /* Pantalla 2 — icono info alineado a la derecha del panel, altura del chevron. */

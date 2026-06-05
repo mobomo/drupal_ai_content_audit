@@ -1,0 +1,74 @@
+{#
+/**
+ * @file
+ * Collapsible AI prompt editor — default vs custom override.
+ *
+ * Included twice in page-skin (landing + conversation); JS keeps both in sync.
+ */
+#}
+<details class="airo-preview__prompt-fieldset">
+  <summary class="airo-preview__prompt-legend">
+    <span class="airo-preview__prompt-legend-label">{{ 'AI prompt'|t }}</span>
+    <span class="airo-preview__prompt-mode-badge" data-prompt-mode-badge>{{ 'Default'|t }}</span>
+  </summary>
+
+  <div class="airo-preview__prompt-body">
+    <fieldset class="airo-preview__prompt-mode-fieldset">
+      <legend class="visually-hidden">{{ 'Prompt source'|t }}</legend>
+      <label class="airo-preview__prompt-mode-option">
+        <input type="radio"
+          class="airo-preview__prompt-mode"
+          name="airo-preview-prompt-mode-{{ screen_id }}"
+          value="default"
+          checked>
+        <span>{{ 'Use default prompt'|t }}</span>
+      </label>
+      <label class="airo-preview__prompt-mode-option">
+        <input type="radio"
+          class="airo-preview__prompt-mode"
+          name="airo-preview-prompt-mode-{{ screen_id }}"
+          value="custom">
+        <span>{{ 'Edit custom prompt'|t }}</span>
+      </label>
+    </fieldset>
+
+    <p class="airo-preview__prompt-help">
+      {{ 'Default uses the built-in prompt. Custom sends your edited text to the AI.'|t }}
+    </p>
+
+    <div class="airo-preview__prompt-custom" hidden>
+      <p class="airo-preview__prompt-hint airo-preview__prompt-hint--intro">
+        {{ 'Fields start with the default template so you can tweak it. Drupal replaces @tokens when sending the request.'|t({'@tokens': '{node_content}'}) }}
+      </p>
+
+      <div class="airo-preview__prompt-field">
+        <label class="airo-preview__prompt-label" for="airo-preview-system-{{ screen_id }}">
+          {{ 'System prompt'|t }}
+        </label>
+        <textarea
+          id="airo-preview-system-{{ screen_id }}"
+          class="airo-preview__prompt-system"
+          rows="4"
+          spellcheck="false">{{ default_system_prompt }}</textarea>
+      </div>
+
+      <div class="airo-preview__prompt-field">
+        <label class="airo-preview__prompt-label" for="airo-preview-user-{{ screen_id }}">
+          {{ 'User prompt template'|t }}
+        </label>
+        <textarea
+          id="airo-preview-user-{{ screen_id }}"
+          class="airo-preview__prompt-user-template"
+          rows="6"
+          spellcheck="false">{{ default_user_prompt_template }}</textarea>
+        <p class="airo-preview__prompt-hint">
+          {{ 'Placeholders: @tokens'|t({'@tokens': '{node_content}, {question}'}) }}
+        </p>
+      </div>
+
+      <button type="button" class="airo-preview__prompt-restore">
+        {{ 'Restore default template'|t }}
+      </button>
+    </div>
+  </div>
+</details>

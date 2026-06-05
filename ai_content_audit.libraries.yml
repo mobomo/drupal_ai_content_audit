@@ -130,6 +130,7 @@ preview-tab:
     js/ai-preview-tab.js: {}
   dependencies:
     - core/drupal
+    - core/js-cookie
     - core/once
     - ai_content_audit/design-tokens
     - ai_content_audit/provider_tabs
