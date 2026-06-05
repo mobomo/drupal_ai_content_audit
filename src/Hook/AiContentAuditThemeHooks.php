@@ -156,6 +156,7 @@ final class AiContentAuditThemeHooks {
           'node_id' => NULL,
           'revision_id' => NULL,
           'query_url' => NULL,
+          'providers_url' => NULL,
           'providers' => [],
           'active_provider' => NULL,
         ],
