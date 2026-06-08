@@ -6,6 +6,7 @@ namespace Drupal\ai_content_audit\Form;
 
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -44,7 +45,13 @@ final class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct($config_factory, TypedConfigManagerInterface $typedConfigManager, AiProviderPluginManager $ai_provider_manager, EntityTypeManagerInterface $entity_type_manager, ProviderModelChoices $provider_model_choices) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    TypedConfigManagerInterface $typedConfigManager,
+    AiProviderPluginManager $ai_provider_manager,
+    EntityTypeManagerInterface $entity_type_manager,
+    ProviderModelChoices $provider_model_choices
+  ) {
     parent::__construct($config_factory, $typedConfigManager);
 
     $this->aiProviderManager = $ai_provider_manager;
@@ -56,7 +63,13 @@ final class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container): static {
-    return new static($container->get('config.factory'), $container->get('config.typed'), $container->get('ai.provider'), $container->get('entity_type.manager'), $container->get('ai_content_audit.provider_model_choices'),);
+    return new static(
+      $container->get('config.factory'),
+      $container->get('config.typed'),
+      $container->get('ai.provider'),
+      $container->get('entity_type.manager'),
+      $container->get('ai_content_audit.provider_model_choices'),
+    );
   }
 
   /**
