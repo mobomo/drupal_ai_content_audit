@@ -11,6 +11,7 @@ use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -43,6 +44,13 @@ final class SettingsForm extends ConfigFormBase {
   protected ?ProviderModelChoices $providerModelChoices = NULL;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected AccountInterface $currentUser;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
@@ -50,13 +58,15 @@ final class SettingsForm extends ConfigFormBase {
     TypedConfigManagerInterface $typedConfigManager,
     AiProviderPluginManager $ai_provider_manager,
     EntityTypeManagerInterface $entity_type_manager,
-    ProviderModelChoices $provider_model_choices
+    ProviderModelChoices $provider_model_choices,
+    AccountInterface $current_user,
   ) {
     parent::__construct($config_factory, $typedConfigManager);
 
     $this->aiProviderManager = $ai_provider_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->providerModelChoices = $provider_model_choices;
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -69,6 +79,7 @@ final class SettingsForm extends ConfigFormBase {
       $container->get('ai.provider'),
       $container->get('entity_type.manager'),
       $container->get('ai_content_audit.provider_model_choices'),
+      $container->get('current_user'),
     );
   }
 
@@ -98,6 +109,7 @@ final class SettingsForm extends ConfigFormBase {
           ':url' => $providers_url,
         ]) . '</div>',
         '#weight' => -100,
+        '#access' => $this->currentUser->hasPermission('administer ai content audit'),
       ];
     }
     else {
@@ -107,12 +119,14 @@ final class SettingsForm extends ConfigFormBase {
           ':url' => $providers_url,
         ]) . '</div>',
         '#weight' => -100,
+        '#access' => $this->currentUser->hasPermission('administer ai content audit'),
       ];
     }
 
     $form['provider_model_fieldset'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Default AI provider and model'),
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     // Build the grouped select options from all enabled chat providers.
@@ -152,6 +166,7 @@ final class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('Run AI assessment automatically when a node is saved'),
       '#default_value' => (bool) ($config->get('enable_on_save') ?? FALSE),
       '#description' => $this->t('Assessments will be enqueued and processed by cron.'),
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['node_types'] = [
@@ -165,6 +180,7 @@ final class SettingsForm extends ConfigFormBase {
           ':input[name="assess_on_save"]' => ['checked' => TRUE],
         ],
       ],
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['max_chars_per_request'] = [
@@ -175,6 +191,7 @@ final class SettingsForm extends ConfigFormBase {
       '#max' => 32000,
       '#step' => 100,
       '#description' => $this->t('Content is truncated to this length before sending to the AI provider to avoid token overruns. Default: 8000.'),
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['enable_history'] = [
@@ -182,6 +199,7 @@ final class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('Keep assessment history'),
       '#default_value' => (bool) ($config->get('enable_history') ?? TRUE),
       '#description' => $this->t('When enabled, all past assessments are stored. When disabled, only the latest assessment per node is kept.'),
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['max_assessments_per_node'] = [
@@ -190,6 +208,7 @@ final class SettingsForm extends ConfigFormBase {
       '#description' => $this->t('Number of historical assessments to retain per node. Set to 0 to keep all. Older records are pruned during cron.'),
       '#default_value' => $config->get('max_assessments_per_node') ?? 10,
       '#min' => 0,
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['render_mode'] = [
@@ -201,6 +220,7 @@ final class SettingsForm extends ConfigFormBase {
       ],
       '#default_value' => $config->get('render_mode') ?? 'text',
       '#description' => $this->t('How node content is extracted for AI analysis.'),
+      '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['prompts'] = [
@@ -208,6 +228,7 @@ final class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('AI Content Audit prompts.'),
       '#open' => TRUE,
       '#tree' => TRUE,
+      '#access' => $this->currentUser->hasPermission('manage content audit prompts'),
     ];
 
     $form['prompts']['enable_custom_system_prompt'] = [
