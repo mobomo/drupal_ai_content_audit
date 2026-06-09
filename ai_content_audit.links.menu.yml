@@ -5,10 +5,8 @@ entity.ai_content_assessment.collection:
   route_name: entity.ai_content_assessment.collection
   parent: system.admin_content
   weight: 10
-
 ai_content_audit.settings:
-  title: 'AI Content Audit'
-  description: 'Configure AI provider, assessment triggers, and node types.'
+  title: 'AI Content Audit settings'
+  description: 'Configure AI provider, assessment triggers, node types and prompts.'
   route_name: ai_content_audit.settings
-  parent: system.admin_config
-  weight: 10
+  parent: ai.admin_settings
