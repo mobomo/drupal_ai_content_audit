@@ -509,7 +509,9 @@
 .airo-preview--page-skin .airo-preview__results {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
@@ -601,10 +603,14 @@
 
 .airo-preview--page-skin .ai-content-audit-compare--results {
   margin: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .airo-preview--page-skin .ai-content-audit-compare--results .ai-content-audit-tab-panel {
   padding: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .airo-preview--page-skin .ai-content-audit-compare--results .tabs-wrapper {
@@ -621,7 +627,10 @@
   border-right: 4px solid #0550E6;
   background: #DAE5FB;
   color: #101828;
-  min-width: 300px;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  width: min(100%, 300px);
 }
 
 .airo-preview__query-card-text {
@@ -630,9 +639,15 @@
   font-weight: 700;
   line-height: 1.4;
   color: #1e40af;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .airo-preview__answer-card {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
   padding: 0.875rem;
   border-radius: 6px;
   border-left: 4px solid #7c3aed;
@@ -643,6 +658,9 @@
   font-size: 0.875rem;
   line-height: 1.55;
   color: #374151;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .airo-preview__answer-card-body p {
