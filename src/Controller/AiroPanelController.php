@@ -21,8 +21,6 @@ use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\node\NodeInterface;
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\FilesystemAuditService;
@@ -794,7 +792,6 @@ class AiroPanelController extends ControllerBase {
 
     // Build shared prompts once — same rendered node text for all providers.
     $nodeContent = $this->extractRenderedNodeContextForPreview($node);
-    $nodeContent = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
 
     // Init user prompt with the page content and question.
     $user_prompt_header = "PAGE CONTENT:\n---\n{$nodeContent}\n---\n\n"
@@ -1027,132 +1024,6 @@ class AiroPanelController extends ControllerBase {
       );
       return $this->extractNodeContentLegacy($node);
     }
-  }
-
-  /**
-   * Ensures preview content includes meaningful textual field content.
-   *
-   * Some themes/layouts can render very little extractable text (or only title/
-   * metadata) after DOM conversion. This safety net appends plain text from
-   * textual fields (body/summary/string fields) when the extracted payload
-   * appears too short, so AI Preview does not collapse to title-only answers.
-   */
-  private function enrichPreviewContentWithTextFields(NodeInterface $node, string $content): string {
-    $textFallback = $this->extractNodeTextFieldsFallback($node);
-    if ($textFallback === '') {
-      return $content;
-    }
-
-    // If extraction is very short, append text fields unconditionally.
-    if (mb_strlen(trim($content)) < 300) {
-      return trim($content . "\n\n--- Content Fields Fallback ---\n" . $textFallback);
-    }
-
-    // If payload does not already contain both the start and end of fallback
-    // text, append it. Checking only the beginning can produce false positives
-    // because "Title: ..." often exists in metadata already.
-    $sampleStart = mb_substr($textFallback, 0, 120);
-    $sampleEnd = mb_substr($textFallback, max(0, mb_strlen($textFallback) - 120));
-    $hasStart = $sampleStart !== '' && str_contains($content, $sampleStart);
-    $hasEnd = $sampleEnd !== '' && str_contains($content, $sampleEnd);
-    if (!$hasStart || !$hasEnd) {
-      return trim($content . "\n\n--- Content Fields Fallback ---\n" . $textFallback);
-    }
-
-    return $content;
-  }
-
-  /**
-   * Extracts plain text from node fields and nested entity references.
-   *
-   * This catches common editorial models where body copy lives in referenced
-   * Paragraphs/components rather than in node.body.
-   */
-  private function extractNodeTextFieldsFallback(NodeInterface $node): string {
-    $visited = [];
-    $lines = $this->extractEntityTextRecursive($node, 0, $visited);
-    $text = trim(implode("\n\n", $lines));
-
-    // Keep fallback bounded so prompts stay predictable.
-    $max = 6000;
-    if (mb_strlen($text) > $max) {
-      $text = mb_substr($text, 0, $max) . "\n[Fallback content truncated]";
-    }
-
-    return $text;
-  }
-
-  /**
-   * Recursively collects textual content from an entity and child references.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   Current entity.
-   * @param int $depth
-   *   Recursion depth.
-   * @param array<string, bool> $visited
-   *   Cycle guard map.
-   *
-   * @return string[]
-   *   Extracted text lines.
-   */
-  private function extractEntityTextRecursive(EntityInterface $entity, int $depth, array &$visited): array {
-    if (!$entity instanceof FieldableEntityInterface) {
-      return [];
-    }
-
-    if ($depth > 3) {
-      return [];
-    }
-
-    $id = (string) ($entity->id() ?? 'new');
-    $revisionId = method_exists($entity, 'getRevisionId') ? (string) ($entity->getRevisionId() ?? '0') : '0';
-    $visitedKey = $entity->getEntityTypeId() . ':' . $id . ':' . $revisionId;
-    if (isset($visited[$visitedKey])) {
-      return [];
-    }
-    $visited[$visitedKey] = TRUE;
-
-    $lines = [];
-    foreach ($entity->getFieldDefinitions() as $fieldName => $definition) {
-      if (!$entity->hasField($fieldName) || $entity->get($fieldName)->isEmpty()) {
-        continue;
-      }
-
-      $type = (string) $definition->getType();
-      $label = (string) $definition->getLabel();
-      $field = $entity->get($fieldName);
-
-      if (in_array($type, ['text', 'text_long', 'text_with_summary', 'string', 'string_long'], TRUE)) {
-        foreach ($field as $item) {
-          $value = '';
-          if (isset($item->value) && is_string($item->value)) {
-            $value = $item->value;
-          }
-          elseif (isset($item->summary) && is_string($item->summary)) {
-            $value = $item->summary;
-          }
-          $value = trim(strip_tags($value));
-          if ($value !== '') {
-            $lines[] = sprintf('%s: %s', $label, $value);
-          }
-        }
-        continue;
-      }
-
-      if (in_array($type, ['entity_reference', 'entity_reference_revisions'], TRUE)) {
-        foreach ($field->referencedEntities() as $referenced) {
-          $nested = $this->extractEntityTextRecursive($referenced, $depth + 1, $visited);
-          if ($nested !== []) {
-            $entityLabel = method_exists($referenced, 'label') ? (string) ($referenced->label() ?? '') : '';
-            $header = $entityLabel !== '' ? sprintf('%s (%s):', $label, $entityLabel) : sprintf('%s:', $label);
-            $lines[] = $header;
-            $lines = array_merge($lines, $nested);
-          }
-        }
-      }
-    }
-
-    return $lines;
   }
 
   /**
