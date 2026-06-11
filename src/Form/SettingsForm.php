@@ -242,7 +242,7 @@ final class SettingsForm extends ConfigFormBase {
       '#type' => 'ai_prompt',
       '#title' => $this->t('Custom System Prompt Selection'),
       '#prompt_types' => ['content_audit_system'],
-      '#config_target' => self::CONFIG_NAME . ':prompts.system_prompt',
+      '#default_value' => $config->get('prompts.system_prompt') ?? '',
       '#parents' => ['prompts', 'system_prompt'],
       '#states' => [
         'visible' => [
@@ -262,7 +262,7 @@ final class SettingsForm extends ConfigFormBase {
       '#type' => 'ai_prompt',
       '#title' => $this->t('Custom User Prompt Selection'),
       '#prompt_types' => ['content_audit_user'],
-      '#config_target' => self::CONFIG_NAME . ':prompts.user_prompt',
+      '#default_value' => $config->get('prompts.user_prompt') ?? '',
       '#parents' => ['prompts', 'user_prompt'],
       '#states' => [
         'visible' => [
@@ -290,6 +290,8 @@ final class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $config = $this->config(self::CONFIG_NAME);
+
     // array_filter removes unchecked checkboxes (Drupal uses 0 when unchecked).
     $node_types = array_keys(array_filter($form_state->getValue('node_types')));
 
@@ -300,7 +302,7 @@ final class SettingsForm extends ConfigFormBase {
       $default_model,
     ] = $this->providerModelChoices->parseKey($provider_model_key);
 
-    $this->config(self::CONFIG_NAME)
+    $config
       ->set('enable_on_save', (bool) $form_state->getValue('assess_on_save'))
       ->set('node_types', $node_types)
       ->set('max_chars_per_request', (int) $form_state->getValue('max_chars_per_request'))
@@ -317,9 +319,64 @@ final class SettingsForm extends ConfigFormBase {
         'prompts',
         'enable_custom_user_prompt',
       ]))
+      ->set('prompts.system_prompt', $this->normalizePromptConfigValue(
+        $form_state->getValue(['prompts', 'system_prompt']),
+        (string) ($config->get('prompts.system_prompt') ?? '')
+      ))
+      ->set('prompts.user_prompt', $this->normalizePromptConfigValue(
+        $form_state->getValue(['prompts', 'user_prompt']),
+        (string) ($config->get('prompts.user_prompt') ?? '')
+      ))
       ->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Extracts a prompt entity ID from the ai_prompt element value.
+   *
+   * The AI prompt form element can submit a compound value while this module's
+   * configuration stores only the ai_prompt config entity ID.
+   */
+  private function normalizePromptConfigValue(mixed $value, string $fallback = ''): string {
+    if (is_string($value)) {
+      return $this->promptConfigExists($value) ? $value : $fallback;
+    }
+
+    if (!is_array($value)) {
+      return $fallback;
+    }
+
+    foreach (['target_id', 'entity_id', 'id', 'value', 'prompt', 'ai_prompt'] as $key) {
+      if (isset($value[$key]) && is_scalar($value[$key]) && $this->promptConfigExists((string) $value[$key])) {
+        return (string) $value[$key];
+      }
+    }
+
+    foreach ($value as $child) {
+      $normalized = $this->normalizePromptConfigValue($child);
+      if ($normalized !== '') {
+        return $normalized;
+      }
+    }
+
+    return $fallback;
+  }
+
+  /**
+   * Returns whether the given prompt config entity exists.
+   */
+  private function promptConfigExists(string $promptId): bool {
+    if ($promptId === '') {
+      return FALSE;
+    }
+
+    try {
+      return $this->entityTypeManager->getStorage('ai_prompt')->load($promptId) !== NULL;
+    }
+    catch (\Throwable) {
+      return FALSE;
+    }
   }
 
   /**
