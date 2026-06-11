@@ -6,3 +6,8 @@ max_assessments_per_node: 10
 render_mode: text
 default_provider: ''
 default_model: ''
+enable_custom_system_prompt: false
+enable_custom_user_prompt: false
+prompts:
+  system_prompt: 'content_audit_system__content_audit_system_default'
+  user_prompt: 'content_audit_user__content_audit_user_default'

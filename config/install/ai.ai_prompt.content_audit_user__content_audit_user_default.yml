@@ -1,0 +1,13 @@
+langcode: en
+dependencies:
+  config:
+    - ai.ai_prompt_type.content_audit_user
+  enforced:
+    module:
+      - ai_content_audit
+id: content_audit_user__content_audit_user_default
+label: 'Default recommended user prompt.'
+type: content_audit_user
+prompt: |
+  Answer as a helpful person who just read the page, based only on the content above.
+  Tone: Natural, human, helpful, lightly conversational, not salesy, not corporate, not technical.

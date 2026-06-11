@@ -31,3 +31,25 @@ ai_content_audit.settings:
     default_model:
       type: string
       label: 'Default AI model ID'
+    enable_custom_system_prompt:
+      type: boolean
+      label: 'Toggle custom system prompt override'
+    enable_custom_user_prompt:
+      type: boolean
+      label: 'Toggle custom user prompt override'
+    prompts:
+      type: mapping
+      label: 'Prompts settings'
+      mapping:
+        system_prompt:
+          type: string
+          label: 'System prompt'
+          constraints:
+            ConfigExists:
+              prefix: 'ai.ai_prompt.'
+        user_prompt:
+          type: string
+          label: 'User prompt'
+          constraints:
+            ConfigExists:
+              prefix: 'ai.ai_prompt.'

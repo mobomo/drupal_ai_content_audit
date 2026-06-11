@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Controller;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\Entity\AiPromptInterface;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai_content_audit\Entity\AiContentAssessment;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenOffCanvasDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -44,7 +47,10 @@ class AiroPanelController extends ControllerBase {
     protected ProviderModelChoices $providerModelChoices,
     protected ContentExtractorManager $contentExtractorManager,
     protected RequestStack $requestStack,
-  ) {}
+    ConfigFactoryInterface $configFactory,
+  ) {
+    $this->configFactory = $configFactory;
+  }
 
   /**
    * {@inheritdoc}
@@ -60,6 +66,7 @@ class AiroPanelController extends ControllerBase {
       $container->get('ai_content_audit.provider_model_choices'),
       $container->get('ai_content_audit.extractor_manager'),
       $container->get('request_stack'),
+      $container->get('config.factory'),
     );
   }
 
@@ -104,22 +111,23 @@ class AiroPanelController extends ControllerBase {
     // G4: Build URLs for the sticky footer actions.
     // "View Full Report" links to the assessment entity page if one exists;
     // fall back to NULL so the template can omit the button gracefully.
-    $full_report_url = $assessment
-      ? Url::fromRoute('ai_content_audit.assessment.report', ['ai_content_assessment' => $assessment->id()])->toString()
-      : NULL;
+    $full_report_url = $assessment instanceof AiContentAssessment ?
+        Url::fromRoute('ai_content_audit.assessment.report',
+          ['ai_content_assessment' => $assessment->id()])->toString() : NULL;
 
     $build = [
-      '#theme'           => 'ai_airo_panel',
-      '#node_id'         => $node->id(),
-      '#revision_id'     => (int) $node->getRevisionId(),
-      '#score'           => $assessment?->get('score')->value,
-      '#node_title'      => $node->getTitle(),
-      '#is_analyzing'    => FALSE,
-      '#active_tab'      => 'preview-tab',
-      '#tab_panes'       => $tab_panes_html,
-      '#attached'        => $merged_attached,
+      '#theme' => 'ai_airo_panel',
+      '#node_id' => $node->id(),
+      '#revision_id' => (int) $node->getRevisionId(),
+      '#score' => $assessment?->get('score')->value,
+      '#node_title' => $node->getTitle(),
+      '#is_analyzing' => FALSE,
+      '#active_tab' => 'preview-tab',
+      '#tab_panes' => $tab_panes_html,
+      '#attached' => $merged_attached,
       // G4: footer action URLs passed to the template.
-      '#assess_url'      => Url::fromRoute('ai_content_audit.panel.assess', ['node' => $node->id()])->toString(),
+      '#assess_url' => Url::fromRoute('ai_content_audit.panel.assess',
+        ['node' => $node->id()])->toString(),
       '#full_report_url' => $full_report_url,
     ];
 
@@ -259,8 +267,8 @@ class AiroPanelController extends ControllerBase {
       ->range(0, 1)
       ->execute();
 
-    $assessment     = !empty($ids) ? $storage->load(reset($ids)) : NULL;
-    $score          = $assessment ? (int) $assessment->get('score')->value : NULL;
+    $assessment = !empty($ids) ? $storage->load(reset($ids)) : NULL;
+    $score = $assessment ? (int) $assessment->get('score')->value : NULL;
     $has_assessment = $assessment !== NULL;
 
     // Map score to GIN-aligned color token name and status label.
@@ -282,14 +290,14 @@ class AiroPanelController extends ControllerBase {
     }
 
     // SVG donut geometry.
-    $donut_radius        = 26;
+    $donut_radius = 26;
     $donut_circumference = round(2 * M_PI * $donut_radius, 2);
-    $donut_offset        = $score !== NULL
+    $donut_offset = $score !== NULL
       ? round($donut_circumference * (1 - $score / 100), 2)
       : $donut_circumference;
 
     // Count high-priority action items.
-    $action_items        = $assessment ? ($assessment->getActionItems() ?? []) : [];
+    $action_items = $assessment instanceof AiContentAssessment ? ($assessment->getActionItems() ?? []) : [];
     $high_priority_count = count(array_filter(
       $action_items,
       static fn(array $item) => ($item['priority'] ?? 'low') === 'high'
@@ -353,9 +361,10 @@ class AiroPanelController extends ControllerBase {
 
     if (!empty($ids)) {
       $assessment = $storage->load(reset($ids));
+      /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment|NULL $assessment */
       return new JsonResponse([
         'status' => 'complete',
-        'score' => $assessment->get('score')->value,
+        'score' => $assessment?->get('score')->value,
       ]);
     }
 
@@ -437,6 +446,7 @@ class AiroPanelController extends ControllerBase {
 
     $history = [];
     if (!empty($history_ids)) {
+      /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment $history_assessments */
       $history_assessments = $storage->loadMultiple($history_ids);
       foreach ($history_assessments as $hist) {
         $created = (int) $hist->get('created')->value;
@@ -498,7 +508,7 @@ class AiroPanelController extends ControllerBase {
     $medium_items = [];
     $low_items = [];
 
-    if ($assessment) {
+    if ($assessment instanceof AiContentAssessment) {
       $action_items = $assessment->getActionItems() ?? [];
       $action_items_status = $assessment->getActionItemsStatus() ?? [];
 
@@ -562,7 +572,7 @@ class AiroPanelController extends ControllerBase {
     if (empty($ids)) {
       return new JsonResponse(['error' => 'No assessment found'], 404);
     }
-
+    /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment $assessment */
     $assessment = $storage->load(reset($ids));
     $status = $assessment->getActionItemsStatus() ?? [];
 
@@ -779,16 +789,15 @@ class AiroPanelController extends ControllerBase {
     }
 
     // Build shared prompts once — same rendered node text for all providers.
-    $nodeContent  = $this->extractRenderedNodeContextForPreview($node);
-    $nodeContent  = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
-    $systemPrompt = 'You are simulating how an AI system would answer questions about web content. '
-      . 'You have been given a structured text representation of the page as rendered by Drupal '
-      . '(including Layout Builder regions when present). Answer the user\'s question '
-      . 'based solely on this content. If the content does not contain enough information '
-      . 'to fully answer, note what is missing. Format your response in clear paragraphs.';
-    $userPrompt   = "PAGE CONTENT:\n---\n{$nodeContent}\n---\n\n"
-      . "USER QUESTION: {$question}\n\n"
-      . 'Provide your answer based on the page content above.';
+    $nodeContent = $this->extractRenderedNodeContextForPreview($node);
+    $nodeContent = $this->enrichPreviewContentWithTextFields($node, $nodeContent);
+
+    // Init user prompt with the page content and question.
+    $user_prompt_header = "PAGE CONTENT:\n---\n{$nodeContent}\n---\n\n"
+      . "VISITOR QUESTION: {$question}\n\n";
+
+    ['system_prompt' => $system_prompt, 'user_prompt' => $user_prompt] = $this->getConfiguredPrompts();
+    $user_prompt = $user_prompt_header . $user_prompt;
 
     // Build a map of key → label for display purposes.
     $labelMap = array_column(
@@ -807,7 +816,7 @@ class AiroPanelController extends ControllerBase {
         continue;
       }
       $label     = $labelMap[$key] ?? ucwords(str_replace(['-', '_'], ' ', $providerId));
-      $oneResult = $this->queryOneProvider($systemPrompt, $userPrompt, $providerId, $modelId);
+      $oneResult = $this->queryOneProvider($system_prompt, $user_prompt, $providerId, $modelId);
 
       $results[] = [
         'key'         => $key,
@@ -842,7 +851,59 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Calls one AI provider+model and returns a normalised result array.
+   * Defines default prompts if for any reason the default config is not present.
+   *
+   * @return array
+   *   The system and user prompts.
+   */
+  protected static function fallbackPrompts() : array {
+    return [
+      'system_prompt' => 'You are acting as a real website visitor or potential customer reading this company page. '
+      . 'Answer the user question naturally, as a person would after reading the page. '
+      . 'Use only the information found in the provided page content. '
+      . 'Do not mention Drupal, Layout Builder, structured content, fields, or that you are simulating an AI system. '
+      . 'If the page does not provide enough information, say what is not clear or what information is missing. '
+      . 'Keep the answer helpful, direct, and conversational. '
+      . 'If the question is about the company, describe what the company appears to do based on the page content only.',
+      'user_prompt' => 'Answer as a helpful person who just read the page, based only on the content above.'
+      . 'Tone: natural, human, helpful, lightly conversational, not salesy, not corporate, not technical.',
+    ];
+  }
+
+  /**
+   * Gets the configured prompts.
+   *
+   * Returns a prompt type keyed array with the configured prompts set in the
+   * module configuration form.
+   */
+  private function getConfiguredPrompts(): array {
+    // Get module configuration.
+    $config = $this->configFactory->get('ai_content_audit.settings');
+    $system_prompt_id = $config->get('prompts.system_prompt');
+    $user_prompt_id = $config->get('prompts.user_prompt');
+
+    if (empty($system_prompt_id) || empty($user_prompt_id)) {
+      return static::fallbackPrompts();
+    }
+    // Load the prompt entities.
+    $system_prompt_entity = $this->entityTypeManager->getStorage('ai_prompt')->load($system_prompt_id);
+    $user_prompt_entity = $this->entityTypeManager->getStorage('ai_prompt')->load($user_prompt_id);
+
+    if (!$system_prompt_entity instanceof AiPromptInterface || !$user_prompt_entity instanceof AiPromptInterface) {
+      // Fallback values.
+      // @todo Remove once we confirm customizable prompts are OK.
+      return static::fallbackPrompts();
+    }
+
+    return [
+      'system_prompt' => $system_prompt_entity->getPrompt(),
+      'user_prompt' => $user_prompt_entity->getPrompt(),
+    ];
+
+  }
+
+  /**
+   * Calls one AI provider+model and returns a normalized result array.
    *
    * Always succeeds at the PHP level: exceptions are caught and returned in the
    * 'error' key so one failing provider never aborts the whole comparison run.
@@ -868,29 +929,30 @@ class AiroPanelController extends ControllerBase {
         new ChatMessage('user', $userPrompt),
       ]);
 
+      /** @var \Drupal\ai\OperationType\Chat\ChatInterface $proxy */
       $proxy  = $this->aiProviderManager->createInstance($providerId);
       $output = $proxy->chat($chatInput, $modelId, ['ai_content_audit', 'preview']);
       $text   = $output->getNormalized()->getText();
 
       return [
-        'html'        => $this->simpleMarkdownToHtml($text),
+        'html' => $this->simpleMarkdownToHtml($text),
         'duration_ms' => (int) round((microtime(TRUE) - $start) * 1000),
-        'error'       => NULL,
+        'error' => NULL,
       ];
+
     }
     catch (\Exception $e) {
-      $this->getLogger('ai_content_audit')->error(
-        'Preview query failed for @provider/@model: @msg',
-        [
+      $this->getLogger('ai_content_audit')
+        ->error('Preview query failed for @provider/@model: @msg', [
           '@provider' => $providerId,
-          '@model'    => $modelId,
-          '@msg'      => $e->getMessage(),
-        ]
-      );
+          '@model' => $modelId,
+          '@msg' => $e->getMessage(),
+        ]);
+
       return [
-        'html'        => NULL,
+        'html' => NULL,
         'duration_ms' => (int) round((microtime(TRUE) - $start) * 1000),
-        'error'       => $e->getMessage(),
+        'error' => $e->getMessage(),
       ];
     }
   }

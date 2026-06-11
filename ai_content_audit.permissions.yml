@@ -2,17 +2,17 @@ administer ai content audit:
   title: 'Administer AI Content Audit'
   description: 'Full control over settings and all assessment records.'
   restrict access: true
-
 view ai content assessment:
   title: 'View AI content assessments'
   description: 'Read-only access to assessment results and history.'
-
 run ai content assessment:
   title: 'Run AI content assessment'
   description: 'Trigger a new AI assessment for a node.'
   restrict access: true
-
 use any ai provider in airo:
   title: 'Use any AI provider in AIRO preview'
   description: 'Allows selecting and comparing multiple AI provider+model combinations in the AIRO Preview tab. Without this permission the panel uses the site-wide default provider.'
   restrict access: true
+manage content audit prompts:
+  title: 'Manage AI content audit prompts'
+  description: 'Manage the AI Content Audit prompts'

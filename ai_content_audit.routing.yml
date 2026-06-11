@@ -195,14 +195,10 @@ ai_content_audit.panel.available_models:
   methods: [GET]
   options:
     _admin_route: TRUE
-
-# Settings form.
 ai_content_audit.settings:
   path: '/admin/config/ai/content-audit'
   defaults:
     _form: '\Drupal\ai_content_audit\Form\SettingsForm'
     _title: 'AI Content Audit Settings'
   requirements:
-    _permission: 'administer ai content audit'
-  options:
-    _admin_route: TRUE
+    _permission: 'administer ai content audit+manage content audit prompts'
