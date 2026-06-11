@@ -729,6 +729,7 @@ class AiroPanelController extends ControllerBase {
         'ai_content_audit.panel.preview_query',
         ['node' => $node->id()]
       )->toString(),
+      '#providers_url'    => Url::fromRoute('ai.admin_providers')->toString(),
       '#attached' => [
         'library' => [
           'ai_content_audit/preview-tab',
@@ -784,7 +785,10 @@ class AiroPanelController extends ControllerBase {
         $requestedKeys = [$central['provider_id'] . '__' . ($central['model_id'] ?? '')];
       }
       else {
-        return new JsonResponse(['error' => 'No AI provider is configured.'], 500);
+        return new JsonResponse([
+          'error' => 'No AI provider is configured.',
+          'error_hint' => 'api_key',
+        ], 500);
       }
     }
 
@@ -826,6 +830,7 @@ class AiroPanelController extends ControllerBase {
         'html'        => $oneResult['html'],
         'duration_ms' => $oneResult['duration_ms'],
         'error'       => $oneResult['error'],
+        'error_hint'  => $oneResult['error_hint'] ?? NULL,
       ];
 
       if ($oneResult['error'] === NULL) {
@@ -908,7 +913,7 @@ class AiroPanelController extends ControllerBase {
    * Always succeeds at the PHP level: exceptions are caught and returned in the
    * 'error' key so one failing provider never aborts the whole comparison run.
    *
-   * @return array{html: string|null, duration_ms: int, error: string|null}
+   * @return array{html: string|null, duration_ms: int, error: string|null, error_hint: string|null}
    *   Normalised provider response payload.
    */
   private function queryOneProvider(
@@ -938,6 +943,7 @@ class AiroPanelController extends ControllerBase {
         'html' => $this->simpleMarkdownToHtml($text),
         'duration_ms' => (int) round((microtime(TRUE) - $start) * 1000),
         'error' => NULL,
+        'error_hint' => NULL,
       ];
 
     }
@@ -952,9 +958,32 @@ class AiroPanelController extends ControllerBase {
       return [
         'html' => NULL,
         'duration_ms' => (int) round((microtime(TRUE) - $start) * 1000),
-        'error' => $e->getMessage(),
+        'error' => $this->formatPreviewUserErrorMessage($e),
+        'error_hint' => $this->detectPreviewErrorHint($e->getMessage()),
       ];
     }
+  }
+
+  /**
+   * Returns a short, user-safe preview error (technical details stay in logs).
+   */
+  private function formatPreviewUserErrorMessage(\Exception $e): string {
+    $lower = strtolower($e->getMessage());
+    if (str_contains($lower, 'no ai chat provider')) {
+      return (string) $this->t('No AI provider is configured for this site.');
+    }
+    return (string) $this->t('The AI model could not generate a response. Please try again or check your provider configuration.');
+  }
+
+  /**
+   * Maps provider error messages to UI hints shown in the preview chat.
+   */
+  private function detectPreviewErrorHint(string $message): ?string {
+    $lower = strtolower($message);
+    if (preg_match('/api.?key|authentication|unauthorized|invalid.?key|credential|bearer|not configured|no ai chat provider/', $lower)) {
+      return 'api_key';
+    }
+    return NULL;
   }
 
   /**

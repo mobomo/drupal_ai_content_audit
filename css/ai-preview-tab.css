@@ -120,14 +120,16 @@ details.airo-preview__model-fieldset[open] > .airo-preview__model-legend::after 
 
 .airo-preview__model-options {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem 0.75rem;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.375rem;
   margin-top: 0.5rem;
 }
 
 /* Inline expand (accordion). Page skin uses absolute overlay instead. */
 .airo-preview:not(.airo-preview--page-skin) details.airo-preview__model-fieldset[open] .airo-preview__model-options {
-  max-height: min(9rem, 32vh);
+  max-height: min(14rem, 40vh);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -138,9 +140,15 @@ details.airo-preview__model-fieldset[open] > .airo-preview__model-legend::after 
   display: flex;
   align-items: center;
   gap: 0.375rem;
+  width: 100%;
   cursor: pointer;
   font-size: 0.8125rem;
   color: var(--airo-text, #222330);
+}
+
+.airo-preview__model-option-label {
+  min-width: 0;
+  line-height: 1.35;
 }
 
 .airo-preview__model-option:hover .airo-preview__model-option-label {
@@ -166,6 +174,20 @@ details.airo-preview__model-fieldset[open] > .airo-preview__model-legend::after 
 
 .airo-preview__model-single-label {
   font-weight: 500;
+}
+
+/* Reused by API-key error hints in the chat UI. */
+.airo-preview__prompt-hint {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-preview__prompt-hint--intro {
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--airo-radius-xs, 4px);
+  background: var(--airo-bg-wash, #edeff5);
 }
 
 /* ── Results container ──────────────────────────────────────────────────── */
@@ -267,6 +289,33 @@ details.airo-preview__model-fieldset[open] > .airo-preview__model-legend::after 
 
 .airo-preview--page-skin .airo-preview__error {
   border: 0;
+}
+
+.airo-preview__error-hint {
+  margin-top: 0.75rem;
+}
+
+.airo-preview__error-hint-steps {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-preview__error-hint-steps li + li {
+  margin-top: 0.25rem;
+}
+
+.airo-preview__error-hint-steps a {
+  color: var(--airo-primary, #0036b1);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.airo-preview__error-hint-steps a:hover {
+  color: var(--airo-primary-hover, #002a8a);
 }
 
 /* ── Reduced-motion ──────────────────────────────────────────────────────── */

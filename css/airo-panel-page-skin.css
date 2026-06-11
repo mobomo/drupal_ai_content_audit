@@ -198,15 +198,18 @@
 
 .airo-preview--page-skin .airo-panel__screen--landing {
   padding: 0 1.25rem 1.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .airo-panel--page-skin[data-airo-ui-state="landing"] .airo-preview__landing {
   display: flex;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 1rem;
   justify-content: flex-start;
-  min-height: 0;
 }
 
 .airo-preview__landing-title {
@@ -273,12 +276,13 @@
   z-index: 1;
   margin-top: 0;
   padding: 0.75rem 1rem 1rem;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
   background: #fff;
   border-radius: 0 0 8px 8px;
   box-shadow: 0 8px 20px rgb(0 0 0 / 14%);
-  max-height: min(11rem, 38vh);
+  max-height: min(16rem, 45vh);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -303,7 +307,9 @@
 
 .airo-preview--page-skin .airo-preview__model-options {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
   gap: 0.375rem;
   margin-top: 0.5rem;
 }
@@ -312,6 +318,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
   font-size: 0.8125rem;
   color: #374151;
   cursor: pointer;
@@ -407,6 +414,10 @@
   height: 20px;
   margin-top: 0.125rem;
   color: #04365c;
+}
+
+.airo-preview--page-skin .airo-panel__screen--landing .airo-preview__howto-notice {
+  flex-shrink: 0;
 }
 
 /* Pantalla 2 — icono info alineado a la derecha del panel, altura del chevron. */

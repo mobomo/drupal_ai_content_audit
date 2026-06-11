@@ -8,6 +8,7 @@
   /** @type {string} BEM block prefix */
   var P = 'airo-preview';
 
+
   // ─── DOM helpers ──────────────────────────────────────────────────────────
 
   /** @param {Element} el @returns {Element|null} */
@@ -44,6 +45,7 @@
       }
     });
   }
+
 
   function setUiState(wrapper, state) {
     var panel = getPageSkinPanel(wrapper);
@@ -477,10 +479,72 @@
   }
 
   /**
+   * @param {Element|null} wrapper
+   * @returns {string}
+   */
+  function getProvidersConfigUrl(wrapper) {
+    return wrapper ? (wrapper.getAttribute('data-providers-url') || '') : '';
+  }
+
+  /**
+   * @param {object} result
+   * @returns {boolean}
+   */
+  function shouldShowApiKeyHint(result) {
+    if (!result || !result.error) {
+      return false;
+    }
+    if (result.error_hint === 'api_key') {
+      return true;
+    }
+    var lower = String(result.error).toLowerCase();
+    return /api.?key|authentication|unauthorized|invalid.?key|credential|bearer|not configured|no ai chat provider/.test(lower);
+  }
+
+  /**
+   * @param {string} providersUrl
+   * @returns {string}
+   */
+  function buildApiKeyHintHtml(providersUrl) {
+    var url = providersUrl || '/admin/config/ai/providers';
+    var link =
+      '<a href="' + Drupal.checkPlain(url) + '" target="_blank" rel="noopener noreferrer">' +
+        Drupal.t('AI Providers configuration') +
+      '</a>';
+
+    return '<div class="' + P + '__error-hint">' +
+      '<p class="' + P + '__prompt-hint ' + P + '__prompt-hint--intro">' +
+        '<strong>' + Drupal.t('How to add your API key') + '</strong>' +
+      '</p>' +
+      '<ol class="' + P + '__error-hint-steps">' +
+        '<li>' + Drupal.t('In the Drupal admin menu, go to Configuration → AI.') + '</li>' +
+        '<li>' + Drupal.t('Open') + ' ' + link + '.</li>' +
+        '<li>' + Drupal.t('Select the provider for the model you chose (for example OpenAI or Anthropic).') + '</li>' +
+        '<li>' + Drupal.t('Paste your API key into the API key field.') + '</li>' +
+        '<li>' + Drupal.t('Save configuration, then ask your question again.') + '</li>' +
+      '</ol>' +
+    '</div>';
+  }
+
+  /**
+   * @param {object} result
+   * @param {Element|null} wrapper
+   * @returns {string}
+   */
+  function buildPreviewErrorHtml(result, wrapper) {
+    var html = '<div class="' + P + '__error">' + Drupal.checkPlain(result.error) + '</div>';
+    if (shouldShowApiKeyHint(result)) {
+      html += buildApiKeyHintHtml(getProvidersConfigUrl(wrapper));
+    }
+    return html;
+  }
+
+  /**
    * @param {Element} panel
    * @param {object} result
+   * @param {Element|null} wrapper
    */
-  function renderAccordionPanelResult(panel, result) {
+  function renderAccordionPanelResult(panel, result, wrapper) {
     var durationBadge = result.duration_ms
       ? '<span class="' + P + '__response-duration">' +
           Drupal.checkPlain(String(result.duration_ms)) + '\u202fms' +
@@ -488,7 +552,7 @@
       : '';
 
     var body = result.error
-      ? '<div class="' + P + '__error">' + Drupal.checkPlain(result.error) + '</div>'
+      ? buildPreviewErrorHtml(result, wrapper)
       : '<div class="' + P + '__response-body">' + (result.html || '') + '</div>';
 
     panel.innerHTML =
@@ -503,20 +567,23 @@
 
   /**
    * @param {{label:string, provider_id:string, html:string|null, duration_ms:number, error:string|null}} result
+   * @param {Element|null} wrapper
    */
-  function renderPageSkinAnswerCard(card, result) {
+  function renderPageSkinAnswerCard(card, result, wrapper) {
     var body = result.error
-      ? '<div class="' + P + '__error">' + Drupal.checkPlain(result.error) + '</div>'
+      ? buildPreviewErrorHtml(result, wrapper)
       : '<div class="' + P + '__answer-card-body">' + (result.html || '') + '</div>';
+
+    var footer = result.error
+      ? ''
+      : '<footer class="' + P + '__answer-card-footer">' +
+          '<span>' + Drupal.t('Simulated response') + '</span>' +
+          '<span>' + Drupal.t('Generated:') + ' ' + Drupal.checkPlain(formatGeneratedTimestamp()) + '</span>' +
+        '</footer>';
 
     card.classList.remove(P + '__loading-card', P + '__answer-card--loading');
     card.classList.add(P + '__answer-card');
-    card.innerHTML =
-      body +
-      '<footer class="' + P + '__answer-card-footer">' +
-        '<span>' + Drupal.t('Simulated response') + '</span>' +
-        '<span>' + Drupal.t('Generated:') + ' ' + Drupal.checkPlain(formatGeneratedTimestamp()) + '</span>' +
-      '</footer>';
+    card.innerHTML = body + footer;
   }
 
   /**
@@ -551,12 +618,46 @@
     .then(function (response) { return response.json(); })
     .then(function (data) {
       if (data.error) {
-        return { key: key, label: key, provider_id: '', model_id: '', html: null, duration_ms: 0, error: data.error };
+        return {
+          key: key,
+          label: key,
+          provider_id: '',
+          model_id: '',
+          html: null,
+          duration_ms: 0,
+          error: data.error,
+          error_hint: data.error_hint || null,
+        };
       }
-      return (data.results && data.results[0]) || { key: key, label: key, html: null, duration_ms: 0, error: 'No result returned.' };
+      var one = (data.results && data.results[0]) || {
+        key: key,
+        label: key,
+        html: null,
+        duration_ms: 0,
+        error: 'No result returned.',
+      };
+      return {
+        key: one.key || key,
+        label: one.label || key,
+        provider_id: one.provider_id || '',
+        model_id: one.model_id || '',
+        html: one.html || null,
+        duration_ms: one.duration_ms || 0,
+        error: one.error || null,
+        error_hint: one.error_hint || null,
+      };
     })
     .catch(function () {
-      return { key: key, label: key, provider_id: '', model_id: '', html: null, duration_ms: 0, error: Drupal.t('Request failed. Please try again.') };
+      return {
+        key: key,
+        label: key,
+        provider_id: '',
+        model_id: '',
+        html: null,
+        duration_ms: 0,
+        error: Drupal.t('Request failed. Please try again.'),
+        error_hint: null,
+      };
     });
   }
 
@@ -602,7 +703,7 @@
     fetchOneProvider(queryUrl, question, key, wrapper).then(function (result) {
       var card = document.getElementById(answerId);
       if (!card) return;
-      renderPageSkinAnswerCard(card, result);
+      renderPageSkinAnswerCard(card, result, wrapper);
     });
   }
 
@@ -679,7 +780,7 @@
       fetchOneProvider(queryUrl, question, key, wrapper).then(function (result) {
         var card = document.getElementById(answerId);
         if (!card) return;
-        renderPageSkinAnswerCard(card, result);
+        renderPageSkinAnswerCard(card, result, wrapper);
       });
     });
   }
@@ -724,7 +825,7 @@
       fetchOneProvider(queryUrl, question, key, wrapper).then(function (result) {
         var panel = document.getElementById(panelId);
         if (!panel) return;
-        renderAccordionPanelResult(panel, result);
+        renderAccordionPanelResult(panel, result, wrapper);
       });
     });
   }
@@ -809,6 +910,38 @@
     syncButton(wrapper);
   }
 
+  /** @type {boolean} */
+  var modelDropdownOutsideClickBound = false;
+
+  /**
+   * Closes open model selector dropdowns when the user clicks elsewhere.
+   *
+   * @param {MouseEvent} event
+   */
+  function closeOpenModelDropdownsOnOutsideClick(event) {
+    var target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    document.querySelectorAll('.' + P + '__model-fieldset[open]').forEach(function (details) {
+      if (!details.contains(target)) {
+        details.open = false;
+      }
+    });
+  }
+
+  /**
+   * Registers a single document listener for outside-click closing.
+   */
+  function ensureModelDropdownOutsideClickListener() {
+    if (modelDropdownOutsideClickBound) {
+      return;
+    }
+    modelDropdownOutsideClickBound = true;
+    document.addEventListener('click', closeOpenModelDropdownsOnOutsideClick);
+  }
+
   // ─── Drupal behavior ──────────────────────────────────────────────────────
 
   Drupal.behaviors.airoPreviewTab = {
@@ -878,6 +1011,7 @@
       });
 
       once('airo-preview-init', '.' + P, context).forEach(function (wrapper) {
+        ensureModelDropdownOutsideClickListener();
         syncButton(wrapper);
         if (usesPageSkin(wrapper)) {
           setUiState(wrapper, 'landing');
