@@ -254,6 +254,9 @@ details.airo-preview__model-fieldset[open] > .airo-preview__model-legend::after 
   font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--airo-title, #222330);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .airo-preview__response-body p {
