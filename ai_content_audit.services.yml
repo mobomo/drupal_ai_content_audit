@@ -52,13 +52,6 @@ services:
       - '@module_handler'
       - '@config.factory'
 
-  ai_content_audit.layout_builder_preview_source:
-    class: Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource
-    arguments:
-      - '@plugin.manager.layout_builder.section_storage'
-      - '@context.repository'
-      - '@entity_type.manager'
-
   ai_content_audit.html_fetch:
     class: Drupal\ai_content_audit\Service\HtmlFetchService
     arguments:
