@@ -195,13 +195,13 @@ JSON;
     // 3. Centrally configured 'content_audit' default in ai.settings
     // 4. Centrally configured generic 'chat' default in ai.settings.
     $module_provider = $config->get('default_provider') ?: NULL;
-    $module_model    = $config->get('default_model') ?: NULL;
+    $module_model = $config->get('default_model') ?: NULL;
 
     $central = $this->aiProvider->getDefaultProviderForOperationType('content_audit')
       ?? $this->aiProvider->getDefaultProviderForOperationType('chat');
 
     $provider_id = $options['provider_id'] ?? $module_provider ?? $central['provider_id'] ?? '';
-    $model_id    = $options['model_id'] ?? $module_model ?? $central['model_id'] ?? '';
+    $model_id = $options['model_id'] ?? $module_model ?? $central['model_id'] ?? '';
 
     if (empty($provider_id)) {
       $message = 'Could not resolve an AI provider ID.';
