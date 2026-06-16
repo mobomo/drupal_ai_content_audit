@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Service;
 
 use Drupal\ai\AiProviderPluginManager;
-use Drupal\ai\Entity\AiPromptInterface;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
 use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
@@ -30,8 +27,7 @@ final class AiroPreviewChat {
     protected ContentExtractorManager $contentExtractorManager,
     protected ProviderModelChoices $providerModelChoices,
     protected PrivateTempStoreFactory $tempStoreFactory,
-    protected ConfigFactoryInterface $configFactory,
-    protected EntityTypeManagerInterface $entityTypeManager,
+    protected AiContentAuditPromptResolver $promptResolver,
     protected AccountInterface $currentUser,
     protected LoggerChannelInterface $logger,
   ) {}
@@ -69,11 +65,21 @@ final class AiroPreviewChat {
     }
 
     $nodeContent = $this->extractRenderedNodeContext($node);
-    $userPromptHeader = "PAGE CONTENT:\n---\n{$nodeContent}\n---\n\n"
-      . "VISITOR QUESTION: {$question}\n\n";
-
-    ['system_prompt' => $systemPrompt, 'user_prompt' => $userPrompt] = $this->getConfiguredPrompts();
-    $userPrompt = $userPromptHeader . $userPrompt;
+    try {
+      ['system_prompt' => $systemPrompt, 'user_prompt' => $userPrompt] = $this->promptResolver->resolvePreviewPrompts([
+        'PAGE_CONTENT' => $nodeContent,
+        'VISITOR_QUESTION' => $question,
+      ]);
+    }
+    catch (\RuntimeException $e) {
+      $this->logger->error('Preview prompt resolution failed: @message', [
+        '@message' => $e->getMessage(),
+      ]);
+      return new JsonResponse([
+        'error' => 'The AI preview prompts are not configured correctly.',
+        'detail' => $e->getMessage(),
+      ], 500);
+    }
 
     $labelMap = array_column(
       $this->providerModelChoices->forOperationType('chat'),
@@ -121,55 +127,6 @@ final class AiroPreviewChat {
     $response->addCacheableDependency($cacheability);
 
     return $response;
-  }
-
-  /**
-   * Defines default prompts if the configured prompt entities are unavailable.
-   *
-   * @return array{system_prompt: string, user_prompt: string}
-   *   The system and user prompts.
-   */
-  protected static function fallbackPrompts(): array {
-    return [
-      'system_prompt' => 'You are acting as a real website visitor or potential customer reading this company page. '
-      . 'Answer the user question naturally, as a person would after reading the page. '
-      . 'Use only the information found in the provided page content. '
-      . 'Do not mention Drupal, Layout Builder, structured content, fields, or that you are simulating an AI system. '
-      . 'If the page does not provide enough information, say what is not clear or what information is missing. '
-      . 'Keep the answer helpful, direct, and conversational. '
-      . 'If the question is about the company, describe what the company appears to do based on the page content only.',
-      'user_prompt' => 'Answer as a helpful person who just read the page, based only on the content above.'
-      . 'Tone: natural, human, helpful, lightly conversational, not salesy, not corporate, not technical.',
-    ];
-  }
-
-  /**
-   * Gets configured prompt entity text.
-   *
-   * @return array{system_prompt: string, user_prompt: string}
-   *   Prompt text keyed by prompt role.
-   */
-  private function getConfiguredPrompts(): array {
-    $config = $this->configFactory->get('ai_content_audit.settings');
-    $systemPromptId = $config->get('prompts.system_prompt');
-    $userPromptId = $config->get('prompts.user_prompt');
-
-    if (empty($systemPromptId) || empty($userPromptId)) {
-      return static::fallbackPrompts();
-    }
-
-    $storage = $this->entityTypeManager->getStorage('ai_prompt');
-    $systemPromptEntity = $storage->load($systemPromptId);
-    $userPromptEntity = $storage->load($userPromptId);
-
-    if (!$systemPromptEntity instanceof AiPromptInterface || !$userPromptEntity instanceof AiPromptInterface) {
-      return static::fallbackPrompts();
-    }
-
-    return [
-      'system_prompt' => $systemPromptEntity->getPrompt(),
-      'user_prompt' => $userPromptEntity->getPrompt(),
-    ];
   }
 
   /**

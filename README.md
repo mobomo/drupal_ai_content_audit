@@ -190,6 +190,24 @@ have the relevant Drupal node access for the node being analyzed. The
 `AI Assessment History` tab is read-only and only requires access to view the
 node plus permission to view assessments.
 
+### Prompt Management
+
+AI Content Auditor stores production prompts as Drupal AI Prompt configuration
+entities. The module settings store only the selected prompt entity IDs:
+
+| Setting | Prompt type | Used by |
+|---|---|---|
+| `prompts.assessment_system_prompt` | `content_audit_assessment_system` | Saved AI readiness assessments |
+| `prompts.assessment_user_prompt` | `content_audit_assessment_user` | Saved AI readiness assessments |
+| `prompts.preview_system_prompt` | `content_audit_preview_system` | AIRO Preview chat |
+| `prompts.preview_user_prompt` | `content_audit_preview_user` | AIRO Preview chat |
+
+`AiContentAuditPromptResolver` centralizes prompt loading, required variable
+replacement, and missing-prompt errors. Prompt managers can change the selected
+Prompt Entities with `manage content audit prompts`; they do not need full
+module administration unless they also manage providers or global audit
+settings.
+
 ### Optional Gin Integration
 
 AIRO is designed to work with any admin theme. When Gin and Gin Layout Builder

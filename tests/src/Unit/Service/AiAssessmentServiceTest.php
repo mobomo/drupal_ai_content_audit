@@ -9,6 +9,7 @@ use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
 use Drupal\ai_content_audit\Service\AiAssessmentService;
+use Drupal\ai_content_audit\Service\AiContentAuditPromptResolver;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -58,6 +59,11 @@ class AiAssessmentServiceTest extends TestCase {
   protected ConfigFactoryInterface $configFactory;
 
   /**
+   * Prompt resolver mock.
+   */
+  protected AiContentAuditPromptResolver $promptResolver;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -85,6 +91,11 @@ class AiAssessmentServiceTest extends TestCase {
     $this->configFactory->method('get')->willReturn($config);
 
     $entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
+    $this->promptResolver = $this->createMock(AiContentAuditPromptResolver::class);
+    $this->promptResolver->method('resolveAssessmentPrompts')->willReturn([
+      'system_prompt' => 'Assessment system prompt.',
+      'user_prompt' => 'Assessment user prompt.',
+    ]);
 
     $this->service = new AiAssessmentService(
       $this->aiProvider,
@@ -92,6 +103,7 @@ class AiAssessmentServiceTest extends TestCase {
       $this->loggerFactory,
       $this->configFactory,
       $entityTypeManager,
+      $this->promptResolver,
     );
   }
 
@@ -257,6 +269,19 @@ class AiAssessmentServiceTest extends TestCase {
     // Entity type manager mock: getStorage() returns the storage mock.
     $mockEntityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $mockEntityTypeManager->method('getStorage')->willReturn($mockStorage);
+    $promptResolver = $this->createMock(AiContentAuditPromptResolver::class);
+    $promptResolver->expects($this->once())
+      ->method('resolveAssessmentPrompts')
+      ->with($this->callback(static fn(array $variables): bool => isset(
+        $variables['DETERMINISTIC_SIGNALS'],
+        $variables['SEO_SIGNALS'],
+        $variables['CONTENT'],
+        $variables['RESPONSE_SCHEMA']
+      )))
+      ->willReturn([
+        'system_prompt' => 'Assessment system prompt.',
+        'user_prompt' => 'Assessment user prompt.',
+      ]);
 
     // Node under assessment.
     $node = $this->createMock(NodeInterface::class);
@@ -270,6 +295,7 @@ class AiAssessmentServiceTest extends TestCase {
       $loggerFactory,
       $configFactory,
       $mockEntityTypeManager,
+      $promptResolver,
     );
 
     $result = $service->assessNode($node);

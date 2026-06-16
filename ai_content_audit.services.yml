@@ -23,6 +23,13 @@ services:
       - '@logger.factory'
       - '@config.factory'
       - '@entity_type.manager'
+      - '@ai_content_audit.prompt_resolver'
+
+  ai_content_audit.prompt_resolver:
+    class: Drupal\ai_content_audit\Service\AiContentAuditPromptResolver
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'
 
   ai_content_audit.technical_audit:
     class: Drupal\ai_content_audit\Service\TechnicalAuditService
@@ -139,8 +146,7 @@ services:
       - '@ai_content_audit.extractor_manager'
       - '@ai_content_audit.provider_model_choices'
       - '@tempstore.private'
-      - '@config.factory'
-      - '@entity_type.manager'
+      - '@ai_content_audit.prompt_resolver'
       - '@current_user'
       - '@logger.channel.ai_content_audit'
 
