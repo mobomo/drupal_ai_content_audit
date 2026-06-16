@@ -5,6 +5,8 @@
   "license": "GPL-2.0-or-later",
   "version": "0.0.1",
   "require": {
+    "php": ">=8.3",
+    "drupal/core": "^11.1",
     "drupal/ai": "^1.0"
   },
   "autoload": {

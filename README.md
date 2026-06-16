@@ -29,14 +29,18 @@ entity so score history is preserved per node over time.
 
 | Requirement | Version |
 |---|---|
-| Drupal core | `^10.3 \|\| ^11` |
-| PHP | `^8.1` |
+| Drupal core | `^11.1` |
+| PHP | `>=8.3` |
 | Composer | `^2.0` |
 | [drupal/ai](https://www.drupal.org/project/ai) | `^1.0` (must be configured with at least one provider) |
 
 An AI provider sub-module must also be enabled and configured — for example
 `drupal/ai_provider_openai`, `drupal/ai_provider_ollama`, or another
 `drupal/ai`-compatible integration.
+
+This module uses Drupal's OOP hook discovery with `#[Hook]` attributes and
+therefore requires Drupal 11.1 or newer. Drupal 10 is not supported by this
+pre-release branch.
 
 ---
 
