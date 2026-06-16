@@ -152,6 +152,7 @@ JSON;
     protected ConfigFactoryInterface $configFactory,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected AiContentAuditPromptResolver $promptResolver,
+    protected ProviderModelChoices $providerModelChoices,
   ) {}
 
   /**
@@ -195,17 +196,45 @@ JSON;
     // 2. Module-level defaults stored in ai_content_audit.settings
     // 3. Centrally configured 'content_audit' default in ai.settings
     // 4. Centrally configured generic 'chat' default in ai.settings.
-    $module_provider = $config->get('default_provider') ?: NULL;
-    $module_model    = $config->get('default_model') ?: NULL;
+    $provider_id = '';
+    $model_id = '';
+    $proxy = NULL;
+    if (!empty($options['provider_id'])) {
+      $provider_id = (string) $options['provider_id'];
+      $model_id = (string) ($options['model_id'] ?? '');
+      try {
+        $proxy = $this->aiProvider->createInstance($provider_id);
+      }
+      catch (\Throwable $e) {
+        $message = 'The selected AI provider is not available: ' . $e->getMessage();
+        $logger->error($message);
+        return ['success' => FALSE, 'error' => $message, 'raw_output' => '', 'parsed' => NULL];
+      }
+    }
+    elseif ($config->get('default_provider_model')) {
+      $default_provider_model = (string) $config->get('default_provider_model');
+      [$proxy, $model_id] = $this->providerModelChoices->loadFromKey($default_provider_model);
+      [$provider_id] = $this->providerModelChoices->parseKey($default_provider_model);
+    }
+    else {
+      $central = $this->aiProvider->getDefaultProviderForOperationType('content_audit')
+        ?? $this->aiProvider->getDefaultProviderForOperationType('chat');
+      $provider_id = (string) ($central['provider_id'] ?? '');
+      $model_id = (string) ($central['model_id'] ?? '');
+      if ($provider_id !== '') {
+        try {
+          $proxy = $this->aiProvider->createInstance($provider_id);
+        }
+        catch (\Throwable $e) {
+          $message = 'The default AI provider is not available: ' . $e->getMessage();
+          $logger->error($message);
+          return ['success' => FALSE, 'error' => $message, 'raw_output' => '', 'parsed' => NULL];
+        }
+      }
+    }
 
-    $central = $this->aiProvider->getDefaultProviderForOperationType('content_audit')
-      ?? $this->aiProvider->getDefaultProviderForOperationType('chat');
-
-    $provider_id = $options['provider_id'] ?? $module_provider ?? $central['provider_id'] ?? '';
-    $model_id    = $options['model_id'] ?? $module_model ?? $central['model_id'] ?? '';
-
-    if (empty($provider_id)) {
-      $message = 'Could not resolve an AI provider ID.';
+    if ($proxy === NULL || $provider_id === '' || $model_id === '') {
+      $message = 'Could not resolve an available AI provider/model for chat.';
       $logger->error($message);
       return ['success' => FALSE, 'error' => $message, 'raw_output' => '', 'parsed' => NULL];
     }
@@ -249,7 +278,6 @@ JSON;
 
     // Call the provider.
     try {
-      $proxy = $this->aiProvider->createInstance($provider_id);
       $output = $proxy->chat($chat_input, $model_id, ['ai_content_audit', 'assess']);
       $raw_text = $output->getNormalized()->getText();
     }

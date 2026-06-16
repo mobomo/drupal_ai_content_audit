@@ -25,12 +25,9 @@ ai_content_audit.settings:
     render_mode:
       type: string
       label: 'Content render mode'
-    default_provider:
+    default_provider_model:
       type: string
-      label: 'Default AI provider plugin ID'
-    default_model:
-      type: string
-      label: 'Default AI model ID'
+      label: 'Default AI provider/model simple option'
     prompts:
       type: mapping
       label: 'Prompts settings'

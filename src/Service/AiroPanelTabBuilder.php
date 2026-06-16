@@ -246,8 +246,11 @@ final class AiroPanelTabBuilder {
     if (!$hasPermission || empty($allChoices)) {
       $central = $this->aiProviderManager->getDefaultProviderForOperationType('content_audit')
         ?? $this->aiProviderManager->getDefaultProviderForOperationType('chat');
-      if (!empty($central['provider_id'])) {
-        $key = $central['provider_id'] . '__' . ($central['model_id'] ?? '');
+      $key = $this->providerModelChoices->findKeyForProviderModel(
+        (string) ($central['provider_id'] ?? ''),
+        (string) ($central['model_id'] ?? ''),
+      );
+      if ($key !== '') {
         $label = ucwords(str_replace(['-', '_'], ' ', $central['provider_id']));
         $allChoices = [[
           'key' => $key,

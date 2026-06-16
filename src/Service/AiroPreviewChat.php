@@ -53,8 +53,12 @@ final class AiroPreviewChat {
     if (!$hasPermission || empty($requestedKeys)) {
       $central = $this->aiProviderManager->getDefaultProviderForOperationType('content_audit')
         ?? $this->aiProviderManager->getDefaultProviderForOperationType('chat');
-      if (!empty($central['provider_id'])) {
-        $requestedKeys = [$central['provider_id'] . '__' . ($central['model_id'] ?? '')];
+      $defaultKey = $this->providerModelChoices->findKeyForProviderModel(
+        (string) ($central['provider_id'] ?? ''),
+        (string) ($central['model_id'] ?? ''),
+      );
+      if ($defaultKey !== '') {
+        $requestedKeys = [$defaultKey];
       }
       else {
         return new JsonResponse([
@@ -90,13 +94,14 @@ final class AiroPreviewChat {
     $results = [];
     $successKeys = [];
     foreach ($requestedKeys as $key) {
-      [$providerId, $modelId] = $this->providerModelChoices->parseKey((string) $key);
-      if (empty($providerId)) {
+      [$provider, $modelId] = $this->providerModelChoices->loadFromKey((string) $key);
+      [$providerId] = $this->providerModelChoices->parseKey((string) $key);
+      if ($provider === NULL || $providerId === '' || $modelId === '') {
         continue;
       }
 
       $label = $labelMap[$key] ?? ucwords(str_replace(['-', '_'], ' ', $providerId));
-      $oneResult = $this->queryOneProvider($systemPrompt, $userPrompt, $providerId, $modelId);
+      $oneResult = $this->queryOneProvider($systemPrompt, $userPrompt, $provider, $providerId, $modelId);
 
       $results[] = [
         'key' => $key,
@@ -138,6 +143,7 @@ final class AiroPreviewChat {
   private function queryOneProvider(
     string $systemPrompt,
     string $userPrompt,
+    object $provider,
     string $providerId,
     string $modelId,
   ): array {
@@ -153,9 +159,7 @@ final class AiroPreviewChat {
         new ChatMessage('user', $userPrompt),
       ]);
 
-      /** @var \Drupal\ai\OperationType\Chat\ChatInterface $proxy */
-      $proxy = $this->aiProviderManager->createInstance($providerId);
-      $output = $proxy->chat($chatInput, $modelId, ['ai_content_audit', 'preview']);
+      $output = $provider->chat($chatInput, $modelId, ['ai_content_audit', 'preview']);
       $text = $output->getNormalized()->getText();
 
       return [

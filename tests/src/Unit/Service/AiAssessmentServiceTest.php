@@ -10,6 +10,7 @@ use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\AiContentAuditPromptResolver;
+use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -64,6 +65,11 @@ class AiAssessmentServiceTest extends TestCase {
   protected AiContentAuditPromptResolver $promptResolver;
 
   /**
+   * Provider/model choices helper mock.
+   */
+  protected ProviderModelChoices $providerModelChoices;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -96,6 +102,7 @@ class AiAssessmentServiceTest extends TestCase {
       'system_prompt' => 'Assessment system prompt.',
       'user_prompt' => 'Assessment user prompt.',
     ]);
+    $this->providerModelChoices = $this->createMock(ProviderModelChoices::class);
 
     $this->service = new AiAssessmentService(
       $this->aiProvider,
@@ -104,6 +111,7 @@ class AiAssessmentServiceTest extends TestCase {
       $this->configFactory,
       $entityTypeManager,
       $this->promptResolver,
+      $this->providerModelChoices,
     );
   }
 
@@ -282,6 +290,7 @@ class AiAssessmentServiceTest extends TestCase {
         'system_prompt' => 'Assessment system prompt.',
         'user_prompt' => 'Assessment user prompt.',
       ]);
+    $providerModelChoices = $this->createMock(ProviderModelChoices::class);
 
     // Node under assessment.
     $node = $this->createMock(NodeInterface::class);
@@ -296,6 +305,7 @@ class AiAssessmentServiceTest extends TestCase {
       $configFactory,
       $mockEntityTypeManager,
       $promptResolver,
+      $providerModelChoices,
     );
 
     $result = $service->assessNode($node);

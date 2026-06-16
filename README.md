@@ -208,6 +208,18 @@ Prompt Entities with `manage content audit prompts`; they do not need full
 module administration unless they also manage providers or global audit
 settings.
 
+### Provider And Model Selection
+
+AI Content Auditor stores the module-level default AI model in
+`default_provider_model` using Drupal AI's simple provider/model option value.
+Provider/model options come from `getSimpleProviderModelOptions('chat', FALSE,
+TRUE, [AiModelCapability::ChatSystemRole])` and are resolved through
+`loadProviderFromSimpleOption()` and `getModelNameFromSimpleOption()`. The module
+does not build its own provider/model key format. AIRO also isolates a small
+OpenAI compatibility filter for catalog entries that the upstream provider can
+currently leak into chat selectors, such as image, audio, realtime,
+transcription and search models.
+
 ### Optional Gin Integration
 
 AIRO is designed to work with any admin theme. When Gin and Gin Layout Builder

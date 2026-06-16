@@ -129,13 +129,11 @@ final class SettingsForm extends ConfigFormBase {
       '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
-    // Build the grouped select options from all enabled chat providers.
+    // Build Drupal AI simple provider/model options for chat.
     $provider_options = $this->providerModelChoices->getGroupedSelectOptions('chat');
 
-    // Current saved value — reconstruct the composite key.
-    $saved_provider = $config->get('default_provider') ?? '';
-    $saved_model = $config->get('default_model') ?? '';
-    $saved_key = ($saved_provider !== '' && $saved_model !== '') ? $saved_provider . '__' . $saved_model : '';
+    // Current saved value uses Drupal AI's simple provider/model option.
+    $saved_key = (string) ($config->get('default_provider_model') ?? '');
 
     if (!empty($provider_options)) {
       // Prepend a "use global default" option.
@@ -291,13 +289,6 @@ final class SettingsForm extends ConfigFormBase {
       // array_filter removes unchecked checkboxes (Drupal uses 0 when unchecked).
       $node_types = array_keys(array_filter((array) $form_state->getValue('node_types')));
 
-      // Split the composite 'provider__model' key into separate config values.
-      $provider_model_key = (string) ($form_state->getValue('default_provider_model') ?? '');
-      [
-        $default_provider,
-        $default_model,
-      ] = $this->providerModelChoices->parseKey($provider_model_key);
-
       $this->config(self::CONFIG_NAME)
         ->set('enable_on_save', (bool) $form_state->getValue('assess_on_save'))
         ->set('node_types', $node_types)
@@ -305,8 +296,7 @@ final class SettingsForm extends ConfigFormBase {
         ->set('enable_history', (bool) $form_state->getValue('enable_history'))
         ->set('max_assessments_per_node', (int) $form_state->getValue('max_assessments_per_node'))
         ->set('render_mode', $form_state->getValue('render_mode'))
-        ->set('default_provider', $default_provider)
-        ->set('default_model', $default_model)
+        ->set('default_provider_model', (string) ($form_state->getValue('default_provider_model') ?? ''))
         ->save();
     }
 

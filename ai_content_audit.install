@@ -85,3 +85,25 @@ function ai_content_audit_update_9101(): void {
     ->clear('enable_custom_user_prompt')
     ->save();
 }
+
+/**
+ * Migrates module provider/model defaults to Drupal AI simple option values.
+ */
+function ai_content_audit_update_9102(): void {
+  $config = \Drupal::configFactory()->getEditable('ai_content_audit.settings');
+  $legacy_provider = (string) ($config->get('default_provider') ?? '');
+  $legacy_model = (string) ($config->get('default_model') ?? '');
+  $default_provider_model = '';
+
+  if ($legacy_provider !== '' && $legacy_model !== '' && \Drupal::hasService('ai_content_audit.provider_model_choices')) {
+    /** @var \Drupal\ai_content_audit\Service\ProviderModelChoices $choices */
+    $choices = \Drupal::service('ai_content_audit.provider_model_choices');
+    $default_provider_model = $choices->findKeyForProviderModel($legacy_provider, $legacy_model);
+  }
+
+  $config
+    ->set('default_provider_model', $default_provider_model)
+    ->clear('default_provider')
+    ->clear('default_model')
+    ->save();
+}

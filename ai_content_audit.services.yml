@@ -24,6 +24,7 @@ services:
       - '@config.factory'
       - '@entity_type.manager'
       - '@ai_content_audit.prompt_resolver'
+      - '@ai_content_audit.provider_model_choices'
 
   ai_content_audit.prompt_resolver:
     class: Drupal\ai_content_audit\Service\AiContentAuditPromptResolver
