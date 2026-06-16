@@ -118,13 +118,43 @@ services:
   ai_content_audit.airo_panel_tab_builder:
     class: Drupal\ai_content_audit\Service\AiroPanelTabBuilder
     arguments:
-      - '@entity_type.manager'
+      - '@ai_content_audit.assessment_repository'
       - '@ai_content_audit.technical_audit'
       - '@ai.provider'
       - '@tempstore.private'
       - '@ai_content_audit.provider_model_choices'
       - '@request_stack'
       - '@current_user'
+
+  ai_content_audit.airo_node_revision_resolver:
+    class: Drupal\ai_content_audit\Service\AiroNodeRevisionResolver
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'
+
+  ai_content_audit.airo_preview_chat:
+    class: Drupal\ai_content_audit\Service\AiroPreviewChat
+    arguments:
+      - '@ai.provider'
+      - '@ai_content_audit.extractor_manager'
+      - '@ai_content_audit.provider_model_choices'
+      - '@tempstore.private'
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@logger.channel.ai_content_audit'
+
+  ai_content_audit.airo_action_item_command:
+    class: Drupal\ai_content_audit\Service\AiroActionItemCommand
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+      - '@current_user'
+      - '@datetime.time'
+
+  ai_content_audit.airo_inline_score_widget_builder:
+    class: Drupal\ai_content_audit\Service\AiroInlineScoreWidgetBuilder
+    arguments:
+      - '@ai_content_audit.assessment_repository'
 
   ai_content_audit.node_layout_builder_detector:
     class: Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector

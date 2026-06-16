@@ -6,7 +6,7 @@ namespace Drupal\ai_content_audit\Service;
 
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai_content_audit\Entity\AiContentAssessment;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 final class AiroPanelTabBuilder {
 
   public function __construct(
-    protected EntityTypeManagerInterface $entityTypeManager,
+    protected AiContentAssessmentRepository $assessmentRepository,
     protected TechnicalAuditService $technicalAuditService,
     protected AiProviderPluginManager $aiProviderManager,
     protected PrivateTempStoreFactory $tempStoreFactory,
@@ -90,31 +90,19 @@ final class AiroPanelTabBuilder {
     }
 
     // Get score history (newest 10 assessments, displayed oldest->newest).
-    $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
-    $history_ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('target_node', $node->id())
-      ->sort('created', 'DESC')
-      ->range(0, 10)
-      ->execute();
-
     $history = [];
-    if (!empty($history_ids)) {
-      /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment $history_assessments */
-      $history_assessments = $storage->loadMultiple($history_ids);
-      foreach ($history_assessments as $hist) {
-        $created = (int) $hist->get('created')->value;
-        $hist_score = (int) $hist->get('score')->value;
-        $history[] = [
-          'date' => date('M j, Y', $created),
-          'date_short' => date('M j', $created),
-          'score' => $hist_score,
-          'bar_height' => $hist_score,
-        ];
-      }
-      // Reverse so the chart displays oldest on the left, newest on the right.
-      $history = array_reverse($history);
+    foreach ($this->assessmentRepository->getAllForNode((int) $node->id(), 10) as $hist) {
+      $created = (int) $hist->get('created')->value;
+      $hist_score = (int) $hist->get('score')->value;
+      $history[] = [
+        'date' => date('M j, Y', $created),
+        'date_short' => date('M j', $created),
+        'score' => $hist_score,
+        'bar_height' => $hist_score,
+      ];
     }
+    // Reverse so the chart displays oldest on the left, newest on the right.
+    $history = array_reverse($history);
 
     return [
       '#theme' => 'ai_score_tab',
@@ -146,15 +134,7 @@ final class AiroPanelTabBuilder {
    * Builds the render array for the Action Items tab.
    */
   public function buildActionItemsTab(NodeInterface $node): array {
-    $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
-    $ids = $storage->getQuery()
-      ->accessCheck(TRUE)
-      ->condition('target_node', $node->id())
-      ->sort('created', 'DESC')
-      ->range(0, 1)
-      ->execute();
-
-    $assessment = !empty($ids) ? $storage->load(reset($ids)) : NULL;
+    $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
 
     $action_items = [];
     $action_items_status = [];
@@ -258,7 +238,8 @@ final class AiroPanelTabBuilder {
    * Builds the render array for the AI Preview tab.
    */
   public function buildPreviewTab(NodeInterface $node, bool $pageSkin = FALSE): array {
-    $hasPermission = $this->currentUser->hasPermission('use any ai provider in airo');
+    $hasPermission = $this->currentUser->hasPermission('use any ai provider in airo')
+      || $this->currentUser->hasPermission('administer ai content audit');
 
     $allChoices = $this->providerModelChoices->forOperationType('chat');
 
