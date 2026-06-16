@@ -1,12 +1,10 @@
 /**
  * @file
- * Auto-open Gin meta-sidebar on `/node/{node}/airo-analysis` (LB and Edit sin LB).
+ * Auto-open the AIRO side panel on `/node/{node}/airo-analysis`.
  */
 (function (Drupal, once) {
   'use strict';
 
-  var STORAGE_DESKTOP = 'Drupal.gin.sidebarExpanded.desktop';
-  var STORAGE_MOBILE = 'Drupal.gin.sidebarExpanded.mobile';
   var SESSION_KEY_LB = 'airo-analysis-sidebar-initialized-lb';
   var SESSION_KEY_EDIT = 'airo-analysis-sidebar-initialized-edit';
 
@@ -16,7 +14,7 @@
 
   function isLayoutBuilderSidebar() {
     return !!document.querySelector(
-      '.airo-analysis-route #gin_sidebar form.layout-builder-form'
+      '.airo-analysis-route .airo-analysis-page--layout-builder .airo-analysis-page__panel'
     );
   }
 
@@ -25,36 +23,45 @@
   }
 
   /**
-   * Opens Gin meta-sidebar once per tab (per layout mode).
+   * Sets the AIRO side panel state.
+   *
+   * @param {boolean} open
+   *   TRUE to open the AIRO side panel.
+   */
+  function setSidePanelOpen(open) {
+    document.body.setAttribute('data-meta-sidebar', open ? 'open' : 'closed');
+  }
+
+  /**
+   * Binds the Gin sidebar trigger to the AIRO side panel when Gin is present.
+   */
+  function bindGinSidebarTrigger(context) {
+    once('airo-analysis-gin-sidebar-trigger', '.meta-sidebar__trigger', context).forEach(function (trigger) {
+      trigger.addEventListener('click', function () {
+        var nextOpen = document.body.getAttribute('data-meta-sidebar') !== 'open';
+
+        window.setTimeout(function () {
+          setSidePanelOpen(nextOpen);
+        }, 0);
+        window.setTimeout(function () {
+          setSidePanelOpen(nextOpen);
+        }, 100);
+      }, true);
+    });
+  }
+
+  /**
+   * Opens the side panel once per tab (per layout mode).
    *
    * @param {string} sessionKey
    */
-  function openMetaSidebar(sessionKey) {
-    if (sessionStorage.getItem(sessionKey) === '1') {
-      return;
-    }
+  function openSidePanel(sessionKey) {
+    setSidePanelOpen(true);
 
-    try {
-      localStorage.setItem(STORAGE_DESKTOP, 'true');
-      localStorage.setItem(STORAGE_MOBILE, 'true');
-    }
-    catch (e) {
-      // localStorage may be unavailable.
-    }
-
-    document.body.setAttribute('data-meta-sidebar', 'open');
-
-    if (Drupal.ginSidebar && typeof Drupal.ginSidebar.showSidebar === 'function') {
-      Drupal.ginSidebar.showSidebar();
-    }
-    else {
-      var trigger = document.querySelector('.meta-sidebar__trigger');
-      if (trigger && !trigger.classList.contains('is-active')) {
-        trigger.click();
-      }
-    }
-
-    if (document.body.getAttribute('data-meta-sidebar') === 'open') {
+    if (
+      document.body.getAttribute('data-meta-sidebar') === 'open' &&
+      sessionStorage.getItem(sessionKey) !== '1'
+    ) {
       sessionStorage.setItem(sessionKey, '1');
     }
   }
@@ -66,16 +73,13 @@
       }
 
       once('airo-analysis-sidebar-opener', 'body', context).forEach(function () {
+        bindGinSidebarTrigger(context);
+
         if (isLayoutBuilderSidebar()) {
-          openMetaSidebar(SESSION_KEY_LB);
-          if (!document.querySelector('#edit-airo-panel-slot')) {
-            window.setTimeout(function () {
-              openMetaSidebar(SESSION_KEY_LB);
-            }, 150);
-          }
+          openSidePanel(SESSION_KEY_LB);
         }
         else if (isEditFormPanel()) {
-          openMetaSidebar(SESSION_KEY_EDIT);
+          openSidePanel(SESSION_KEY_EDIT);
         }
       });
     },

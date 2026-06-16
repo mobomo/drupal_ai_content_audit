@@ -7,8 +7,8 @@
  *   Claro active  → --color-* Claro tokens
  *   Any other     → hardcoded safe fallbacks
  *
- * Gin-specific enhancements (dark-mode backdrop, etc.) live exclusively in
- * ai-airo-panel-gin-shim.css and are only attached when Gin is active.
+ * Component rules stay within module-owned classes so the active admin theme
+ * can provide the surrounding page chrome.
  */
 
 /* ── Panel root ─────────────────────────────────────────────────────────── */

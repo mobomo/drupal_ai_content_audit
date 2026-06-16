@@ -57,19 +57,19 @@ final class AiroEntityFormController extends HtmlEntityFormController implements
     }
 
     $node = $route_match->getParameter('node');
-    if (!$node instanceof NodeInterface || $this->layoutBuilderDetector->isLayoutBuilderEnabled($node)) {
+    if (!$node instanceof NodeInterface) {
       return $form_build;
     }
 
-    // Sin LB: pestaña sin layout Gin de dos columnas; panel en aside.
     $panel = $this->panelBuilder->build($node, ['variant' => 'page']);
+    $has_layout_builder = $this->layoutBuilderDetector->isLayoutBuilderEnabled($node);
 
     $build = [
       '#theme' => 'airo_analysis_node_page',
       '#node' => $node,
       '#node_render' => $form_build,
       '#analysis_panel' => $panel,
-      '#has_layout_builder' => FALSE,
+      '#has_layout_builder' => $has_layout_builder,
       '#attached' => [
         'library' => [
           'ai_content_audit/airo-panel',

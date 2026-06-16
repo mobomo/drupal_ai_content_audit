@@ -359,8 +359,7 @@
   opacity: 1;
 }
 
-.airo-analysis-route form.glb-form.layout-builder-form .airo-preview--page-skin .airo-preview__input--landing,
-.airo-analysis-route form.layout-builder-form.glb-form .airo-preview--page-skin .airo-preview__input--landing {
+.airo-analysis-route .airo-analysis-layout-builder-form .airo-preview--page-skin .airo-preview__input--landing {
   min-height: 80px;
 }
 

@@ -9,7 +9,7 @@
  * Implements hook_module_implements_alter().
  */
 function ai_content_audit_module_implements_alter(array &$implementations, string $hook): void {
-  // Run after gin_lb so our form alters win over gin_lb's LB wrapper.
+  // Run late so AIRO form alters can adjust the final form structure.
   if (!isset($implementations['ai_content_audit'])) {
     return;
   }

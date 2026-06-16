@@ -6,6 +6,7 @@ namespace Drupal\ai_content_audit\EventSubscriber;
 
 use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -19,6 +20,7 @@ final class AiroAnalysisRouteSubscriber implements EventSubscriberInterface {
 
   public function __construct(
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
+    protected ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -74,7 +76,12 @@ final class AiroAnalysisRouteSubscriber implements EventSubscriberInterface {
     $route->setDefault('entity_type_id', 'node');
 
     $options = $route->getOptions();
-    $options['_layout_builder'] = TRUE;
+    if ($this->configFactory->get('system.theme')->get('admin') === 'gin') {
+      $options['_layout_builder'] = TRUE;
+    }
+    else {
+      unset($options['_layout_builder']);
+    }
     $parameters = $options['parameters'] ?? [];
     $parameters['section_storage'] = [
       'layout_builder_tempstore' => TRUE,

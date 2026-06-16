@@ -81,6 +81,7 @@ services:
     class: Drupal\ai_content_audit\EventSubscriber\AiroAnalysisRouteSubscriber
     arguments:
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@config.factory'
     tags:
       - { name: event_subscriber }
 
@@ -101,6 +102,7 @@ services:
       - '@ai_content_audit.node_layout_builder_detector'
       - '@layout_builder.param_converter'
       - '@layout_builder.tempstore_repository'
+      - '@config.factory'
     tags:
       - { name: route_enhancer, priority: 4900 }
 
@@ -152,6 +154,7 @@ services:
       - '@ai_content_audit.airo_analysis_panel_builder'
       - '@current_route_match'
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@config.factory'
       - '@string_translation'
 
   ai_content_audit.lifecycle:
@@ -182,9 +185,9 @@ services:
 
   Drupal\ai_content_audit\Hook\AiContentAuditPageHooks:
     arguments:
-      - '@config.factory'
       - '@current_route_match'
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@config.factory'
 
   Drupal\ai_content_audit\Hook\AiContentAuditFormHooks:
     arguments:
