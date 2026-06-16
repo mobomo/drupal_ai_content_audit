@@ -190,6 +190,19 @@ have the relevant Drupal node access for the node being analyzed. The
 `AI Assessment History` tab is read-only and only requires access to view the
 node plus permission to view assessments.
 
+### Optional Gin Integration
+
+AIRO is designed to work with any admin theme. When Gin and Gin Layout Builder
+are installed and Gin is the active admin theme, AIRO applies a small optional
+adapter path for the `/node/{node}/airo-analysis` route so the Layout Builder
+canvas and AIRO side panel use Gin Layout Builder's supported form behavior.
+
+This integration is intentionally isolated to the AIRO Analysis route and does
+not use `hook_module_implements_alter()` or global hook ordering changes. Form
+cleanup that must happen after other form alterations is scoped to the AIRO
+Analysis form via `#after_build`, so behavior is stable regardless of module
+installation order.
+
 ---
 
 ## Usage

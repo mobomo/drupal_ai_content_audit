@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Service;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -24,7 +23,7 @@ final class AiroNodeAnalysisFormAlterer {
     protected AiroAnalysisPanelBuilder $panelBuilder,
     protected RouteMatchInterface $routeMatch,
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
-    protected ConfigFactoryInterface $configFactory,
+    protected AiroGinLayoutBuilderAdapter $ginLayoutBuilderAdapter,
     TranslationInterface $string_translation,
   ) {
     $this->stringTranslation = $string_translation;
@@ -58,7 +57,7 @@ final class AiroNodeAnalysisFormAlterer {
     if ($this->layoutBuilderDetector->isLayoutBuilderEnabled($entity)
       && str_contains($form_id, 'layout_builder_form')) {
       $form['#attributes']['class'][] = 'airo-analysis-layout-builder-form';
-      $this->attachGinLayoutBuilderForm($form);
+      $this->ginLayoutBuilderAdapter->attachForm($form);
       return;
     }
 
@@ -66,41 +65,6 @@ final class AiroNodeAnalysisFormAlterer {
     $form['#attributes']['class'][] = 'airo-analysis-page__edit-form';
     NodeEditFormAlterer::stripAiroAnalysisTabSidebar($form);
     $form['#after_build'][] = [NodeEditFormAlterer::class, 'afterBuildStripSidebarPanel'];
-  }
-
-  /**
-   * Applies Gin Layout Builder form behavior when that optional module exists.
-   */
-  private function attachGinLayoutBuilderForm(array &$form): void {
-    $utility_class = '\Drupal\gin_lb\GinLayoutBuilderUtility';
-    if ($this->configFactory->get('system.theme')->get('admin') !== 'gin'
-      || !class_exists($utility_class)) {
-      return;
-    }
-
-    $form['#gin_lb_form'] = TRUE;
-    $form['#attributes']['class'][] = 'glb-form';
-    foreach ($this->getGinLayoutBuilderLibraries() as $library) {
-      $form['#attached']['library'][] = $library;
-    }
-    $utility_class::attachGinLbForm($form);
-  }
-
-  /**
-   * Returns Gin Layout Builder libraries for the optional integration path.
-   */
-  private function getGinLayoutBuilderLibraries(): array {
-    return [
-      'gin_lb/gin_lb',
-      'gin_lb/gin_lb_10',
-      'gin_lb/gin_lb_init',
-      'gin_lb/offcanvas',
-      'gin_lb/preview',
-      'gin_lb/toolbar',
-      'gin/gin_ckeditor',
-      'claro/claro.jquery.ui',
-      'claro/global-styling',
-    ];
   }
 
 }

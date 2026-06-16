@@ -4,18 +4,3 @@
  * @file
  * Procedural hooks live in Drupal\ai_content_audit\Hook\* (Drupal 11.1+).
  */
-
-/**
- * Implements hook_module_implements_alter().
- */
-function ai_content_audit_module_implements_alter(array &$implementations, string $hook): void {
-  // Run late so AIRO form alters can adjust the final form structure.
-  if (!isset($implementations['ai_content_audit'])) {
-    return;
-  }
-  if (in_array($hook, ['theme_suggestions_form_alter', 'form_alter', 'form_node_form_alter'], TRUE)) {
-    $group = $implementations['ai_content_audit'];
-    unset($implementations['ai_content_audit']);
-    $implementations['ai_content_audit'] = $group;
-  }
-}
