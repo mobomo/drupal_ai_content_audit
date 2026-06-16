@@ -168,11 +168,27 @@ Auditor**, tick the checkbox, and click **Install**.
 
 ### Permissions
 
-| Permission | Intended for |
-|---|---|
-| `view ai content assessment` | Editors — read-only access to results |
-| `run ai content assessment` | Editors — trigger assessments |
-| `administer ai content audit` | Admins — full settings access |
+AI Content Auditor uses granular permissions so assessment visibility, running
+assessments, AI provider/model selection, prompt management, and full
+administration can be delegated independently.
+
+Drupal route permissions use `+` for **OR** and `,` for **AND**. For example,
+`view ai content assessment+administer ai content audit` means a user may access
+the route with either permission. Do not replace these route requirements with
+commas unless the route intentionally requires both permissions.
+
+| Permission | Intended for | Grants |
+|---|---|---|
+| `view ai content assessment` | Editors and reviewers | Read assessment results, assessment history, report pages, and AIRO read-only panel data for nodes they can view. |
+| `run ai content assessment` | Trusted editors | Trigger assessments and update assessment action item state for nodes they can edit or access through Layout Builder. |
+| `use any ai provider in airo` | Advanced editors and QA users | Select and compare configured AI provider/model combinations in the AIRO Preview tab. Users without this permission use the site default provider/model. |
+| `manage content audit prompts` | Prompt managers | Manage the prompt configuration fields on the AI Content Audit settings form without requiring full module administration. |
+| `administer ai content audit` | Site administrators | Full module administration, including settings, defaults, assessment records, and admin override access where routes allow it. |
+
+Node access still applies. A user with AI Content Auditor permissions must also
+have the relevant Drupal node access for the node being analyzed. The
+`AI Assessment History` tab is read-only and only requires access to view the
+node plus permission to view assessments.
 
 ---
 
