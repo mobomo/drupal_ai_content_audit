@@ -113,6 +113,17 @@ services:
     factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
     arguments: ['@service_container']
 
+  ai_content_audit.airo_panel_tab_builder:
+    class: Drupal\ai_content_audit\Service\AiroPanelTabBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_content_audit.technical_audit'
+      - '@ai.provider'
+      - '@tempstore.private'
+      - '@ai_content_audit.provider_model_choices'
+      - '@request_stack'
+      - '@current_user'
+
   ai_content_audit.node_layout_builder_detector:
     class: Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector
     arguments:
@@ -122,7 +133,7 @@ services:
     class: Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder
     arguments:
       - '@ai_content_audit.assessment_repository'
-      - '@ai_content_audit.airo_panel_controller'
+      - '@ai_content_audit.airo_panel_tab_builder'
       - '@ai_content_audit.audit_check_manager'
       - '@ai_content_audit.technical_audit'
       - '@module_handler'
