@@ -38,6 +38,7 @@ ai_content_audit.panel.open:
     _title: 'AIRO Analysis'
   requirements:
     _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
     node: \d+
   options:
     _admin_route: TRUE
@@ -52,6 +53,7 @@ ai_content_audit.panel.assess:
     _title: 'Assess Node'
   requirements:
     _permission: 'run ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::runAccess'
     node: \d+
   methods: [POST]
   options:
@@ -67,6 +69,7 @@ ai_content_audit.panel.status:
     _title: 'Assessment Status'
   requirements:
     _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
     node: \d+
   options:
     _admin_route: TRUE
@@ -88,6 +91,7 @@ ai_content_audit.widget.refresh:
     _format: 'json'
   requirements:
     _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
     node: \d+
   options:
     _admin_route: TRUE
@@ -134,9 +138,13 @@ ai_content_audit.node.assessment_history:
     _title: 'AI Assessment History'
   requirements:
     _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
     node: \d+
   options:
     _admin_route: FALSE
+    parameters:
+      node:
+        type: entity:node
 
 ai_content_audit.panel.actions_toggle:
   path: '/admin/ai-content-audit/panel/{node}/action-items/{item_id}/toggle'
@@ -144,6 +152,7 @@ ai_content_audit.panel.actions_toggle:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::toggleActionItem'
   requirements:
     _permission: 'run ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::runAccess'
     node: \d+
   methods: [POST]
   options:
@@ -158,6 +167,7 @@ ai_content_audit.panel.preview_query:
     _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::submitPreviewQuery'
   requirements:
     _permission: 'run ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::runAccess'
     node: \d+
   methods: [POST]
   options:

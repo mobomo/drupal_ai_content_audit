@@ -8,8 +8,9 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessManagerInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Controller\ControllerBase;
@@ -44,9 +45,26 @@ final class AiroNodeAnalysisController extends ControllerBase {
   /**
    * Access callback: view node + update when edit/LB UI is shown.
    */
-  public function access(NodeInterface $node, AccountInterface $account): AccessResult {
-    if (!$node->access('view', $account)) {
-      return AccessResult::forbidden();
+  public function access(NodeInterface $node, AccountInterface $account): AccessResultInterface {
+    return $this->runAccess($node, $account);
+  }
+
+  /**
+   * Access callback for assessment routes that only need to read node data.
+   */
+  public function viewAccess(NodeInterface $node, AccountInterface $account): AccessResultInterface {
+    return $node->access('view', $account, TRUE)
+      ->addCacheableDependency($node)
+      ->cachePerPermissions();
+  }
+
+  /**
+   * Access callback for routes that assess or mutate node assessment state.
+   */
+  public function runAccess(NodeInterface $node, AccountInterface $account): AccessResultInterface {
+    $view_access = $this->viewAccess($node, $account);
+    if (!$view_access->isAllowed()) {
+      return $view_access;
     }
 
     if ($this->layoutBuilderDetector->isLayoutBuilderEnabled($node)) {
@@ -55,20 +73,14 @@ final class AiroNodeAnalysisController extends ControllerBase {
         ['node' => $node->id()],
         $account,
       );
-      return AccessResult::allowedIf($allowed)
+      return $view_access->andIf(AccessResult::allowedIf($allowed)
         ->addCacheableDependency($node)
-        ->cachePerPermissions();
+        ->cachePerPermissions());
     }
 
-    if (!$node->access('update', $account)) {
-      return AccessResult::forbidden()
-        ->addCacheableDependency($node)
-        ->cachePerPermissions();
-    }
-
-    return AccessResult::allowed()
+    return $view_access->andIf($node->access('update', $account, TRUE)
       ->addCacheableDependency($node)
-      ->cachePerPermissions();
+      ->cachePerPermissions());
   }
 
   /**

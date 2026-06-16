@@ -29,6 +29,7 @@ use Drupal\ai_content_audit\Service\TechnicalAuditService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Controller for the AIRO off-canvas analysis panel.
@@ -205,6 +206,9 @@ class AiroPanelController extends ControllerBase {
         'assessment_id' => $assessment_id,
       ]);
     }
+    catch (AccessDeniedHttpException $e) {
+      throw $e;
+    }
     catch (\Exception $e) {
       $this->getLogger('ai_content_audit')->error('Assessment failed: @message', [
         '@message' => $e->getMessage(),
@@ -230,6 +234,10 @@ class AiroPanelController extends ControllerBase {
    *
    * @return \Drupal\node\NodeInterface
    *   The revision to assess, or the route node when no revision is specified.
+   *
+   * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+   *   Thrown when a request explicitly targets a revision that does not belong
+   *   to the route node or that the current user cannot access.
    */
   private function resolveNodeRevisionFromRequestBody(NodeInterface $route_node, array $decoded): NodeInterface {
     if (empty($decoded['revision_id'])) {
@@ -237,15 +245,18 @@ class AiroPanelController extends ControllerBase {
     }
     $vid = (int) $decoded['revision_id'];
     if ($vid <= 0) {
-      return $route_node;
+      throw new AccessDeniedHttpException();
     }
     $storage = $this->entityTypeManager()->getStorage('node');
     $revision = $storage->loadRevision($vid);
     if (!$revision instanceof NodeInterface) {
-      return $route_node;
+      throw new AccessDeniedHttpException();
     }
     if ((int) $revision->id() !== (int) $route_node->id()) {
-      return $route_node;
+      throw new AccessDeniedHttpException();
+    }
+    if (!$revision->access('view revision', $this->currentUser())) {
+      throw new AccessDeniedHttpException();
     }
     return $revision;
   }
