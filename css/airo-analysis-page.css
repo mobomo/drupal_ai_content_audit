@@ -142,8 +142,8 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout
   height: 100%;
 }
 
-.airo-analysis-page .airo-panel--accordion,
-.airo-analysis-layout-builder-form .airo-panel--accordion {
+.airo-analysis-page .airo-panel--accordion:not(.airo-panel--page-skin),
+.airo-analysis-layout-builder-form .airo-panel--accordion:not(.airo-panel--page-skin) {
   min-height: var(--airo-panel-min-height);
   max-height: none;
 }
@@ -180,8 +180,8 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout
     visibility: visible !important;
   }
 
-  .airo-analysis-page .airo-panel--accordion,
-  .airo-analysis-layout-builder-form .airo-panel--accordion {
+  .airo-analysis-page .airo-panel--accordion:not(.airo-panel--page-skin),
+  .airo-analysis-layout-builder-form .airo-panel--accordion:not(.airo-panel--page-skin) {
     min-height: 0;
   }
 }
