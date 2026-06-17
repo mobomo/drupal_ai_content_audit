@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit\Unit\Plugin;
 
 use Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor;
-use Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Render\AttachmentsResponseProcessorInterface;
+use Drupal\Core\Render\MainContent\HtmlRenderer;
 use Drupal\Core\Render\RendererInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\Core\Theme\ActiveTheme;
+use Drupal\Core\Theme\ThemeInitializationInterface;
 
 /**
  * Unit tests for HtmlExtractor::convertHtmlToStructuredText().
@@ -59,7 +64,6 @@ class HtmlExtractorTest extends TestCase {
    *   Host name returned by the mock request (e.g. 'example.com').
    *
    * @return \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor
-   *   Extractor wired with the given request host.
    */
   private function buildExtractor(string $host): HtmlExtractor {
     $request = $this->createMock(Request::class);
@@ -68,8 +72,19 @@ class HtmlExtractorTest extends TestCase {
     $requestStack = $this->createMock(RequestStack::class);
     $requestStack->method('getCurrentRequest')->willReturn($request);
 
-    $layoutBuilderPreview = $this->createMock(LayoutBuilderPreviewSource::class);
-    $layoutBuilderPreview->method('buildSectionsRenderArray')->willReturn([]);
+    $themeManager = $this->createMock(ThemeManagerInterface::class);
+    $active_theme = $this->getMockBuilder(ActiveTheme::class)
+      ->disableOriginalConstructor()
+      ->getMock();
+    $themeManager->expects($this->any())
+      ->method('getActiveTheme')
+      ->willReturn($active_theme);
+    $themeInitialization = $this->createMock(ThemeInitializationInterface::class);
+
+    $moduleHandler = $this->createMock(ModuleHandlerInterface::class);
+    $moduleHandler->expects($this->any())
+      ->method('invokeAll')
+      ->willReturn([]);
 
     return new HtmlExtractor(
       [],
@@ -78,8 +93,12 @@ class HtmlExtractorTest extends TestCase {
       $this->createMock(EntityTypeManagerInterface::class),
       $this->createMock(RendererInterface::class),
       $this->createMock(ConfigFactoryInterface::class),
+      $themeManager,
+      $themeInitialization,
+      $this->createMock(HtmlRenderer::class),
       $requestStack,
-      $layoutBuilderPreview,
+      $this->createMock(AttachmentsResponseProcessorInterface::class),
+      $moduleHandler,
     );
   }
 
@@ -87,12 +106,10 @@ class HtmlExtractorTest extends TestCase {
    * Convenience wrapper that invokes convertHtmlToStructuredText().
    *
    * @param string $html
-   *   HTML input.
    * @param \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor|null $extractor
    *   Optional extractor override (for host-specific tests).
    *
    * @return string
-   *   Structured plain text output.
    */
   private function convert(string $html, ?HtmlExtractor $extractor = NULL): string {
     return $this->convertMethod->invoke($extractor ?? $this->extractor, $html);
@@ -255,7 +272,6 @@ class HtmlExtractorTest extends TestCase {
       $this->createMock(RendererInterface::class),
       $this->createMock(ConfigFactoryInterface::class),
       $requestStack,
-      $this->createMock(LayoutBuilderPreviewSource::class),
     );
     $html = '<p><a href="https://example.com/page">A Link</a></p>';
 
