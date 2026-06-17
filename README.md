@@ -172,11 +172,6 @@ AI Content Auditor uses granular permissions so assessment visibility, running
 assessments, AI provider/model selection, prompt management, and full
 administration can be delegated independently.
 
-Drupal route permissions use `+` for **OR** and `,` for **AND**. For example,
-`view ai content assessment+administer ai content audit` means a user may access
-the route with either permission. Do not replace these route requirements with
-commas unless the route intentionally requires both permissions.
-
 | Permission | Intended for | Grants |
 |---|---|---|
 | `view ai content assessment` | Editors and reviewers | Read assessment results, assessment history, report pages, and AIRO read-only panel data for nodes they can view. |
