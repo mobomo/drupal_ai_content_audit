@@ -29,8 +29,10 @@ jobs:
         id: ext-cache
         uses: actions/cache@v4
         with:
-          path: /usr/local/lib/php/extensions
-          key: ${{ runner.os }}-php-8.3-ext-dom-curl-xml-mbstring-zip-pdo-sqlite
+          path: |
+            /usr/local/lib/php/extensions
+            /usr/local/etc/php/conf.d
+          key: ${{ runner.os }}-php-8.3-v2-ext-dom-curl-xml-mbstring-zip-pdo-sqlite
 
       - name: Install PHP Extensions
         # Only compile if no cache.
