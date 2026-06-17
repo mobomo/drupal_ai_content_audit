@@ -28,19 +28,22 @@ jobs:
             libjpeg-dev \
             libfreetype6-dev
 
-      - name: Cache PHP Extensions
+      - name: Restore Cached PHP Extensions
         id: ext-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v5
         with:
           path: |
             /usr/local/lib/php/extensions
             /usr/local/etc/php/conf.d
-          key: ${{ runner.os }}-php-8.3-v3-ext-dom-curl-xml-mbstring-zip-pdo-sqlite-gd
+          key: ${{ runner.os }}-php-8.3-v6-${{ github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.3-v6-${{ github.base_ref }}
+            ${{ runner.os }}-php-8.3-v6-main
 
       - name: Install PHP Extensions
-        # Only compile if no cache.
         if: steps.ext-cache.outputs.cache-hit != 'true'
         run: |
+          docker-php-ext-configure gd --with-freetype --with-jpeg
           docker-php-ext-install \
             dom \
             curl \
@@ -51,10 +54,14 @@ jobs:
             pdo_sqlite \
             gd
 
-      - name: Enable PHP Extensions
-        if: steps.ext-cache.outputs.cache-hit == 'true'
-        run: |
-          docker-php-ext-enable dom curl xml mbstring zip pdo pdo_sqlite
+      - name: Save PHP Extensions to Cache
+        if: always() && steps.ext-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            /usr/local/lib/php/extensions
+            /usr/local/etc/php/conf.d
+          key: ${{ runner.os }}-php-8.3-v6-${{ github.ref_name }}
 
       - name: Install Composer
         run: |
@@ -96,6 +103,7 @@ jobs:
           composer require drupal/core-dev:^11.3 \
                            mglaman/phpstan-drupal \
                            drupal/coder \
+                           drush/drush:^13 \
                            --dev --no-interaction --no-progress
           ## Install our module.
           composer require drupal/ai_content_audit --no-interaction --no-progress
@@ -106,4 +114,5 @@ jobs:
 
       - name: Run PHPStan (Static Analysis)
         run: |
-          vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --memory-limit 1G
+          echo "::remove-matcher owner=phpstan::"
+          vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --error-format=table --memory-limit 1G 
