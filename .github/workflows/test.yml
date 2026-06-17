@@ -35,12 +35,17 @@ jobs:
           path: |
             /usr/local/lib/php/extensions
             /usr/local/etc/php/conf.d
-          key: ${{ runner.os }}-php-8.3-v3-ext-dom-curl-xml-mbstring-zip-pdo-sqlite-gd
+          # Cache key for this branch, but falls back to the exact target branch of the PR
+          key: ${{ runner.os }}-php-8.3-v5-${{ github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.3-v5-${{ github.base_ref }}
+            ${{ runner.os }}-php-8.3-v5-main
 
       - name: Install PHP Extensions
         # Only compile if no cache.
         if: steps.ext-cache.outputs.cache-hit != 'true'
         run: |
+          docker-php-ext-configure gd --with-freetype --with-jpeg
           docker-php-ext-install \
             dom \
             curl \
@@ -50,11 +55,6 @@ jobs:
             pdo \
             pdo_sqlite \
             gd
-
-      - name: Enable PHP Extensions
-        if: steps.ext-cache.outputs.cache-hit == 'true'
-        run: |
-          docker-php-ext-enable dom curl xml mbstring zip pdo pdo_sqlite
 
       - name: Install Composer
         run: |
