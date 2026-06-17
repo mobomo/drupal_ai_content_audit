@@ -40,6 +40,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-php-8.3-v5-${{ github.base_ref }}
             ${{ runner.os }}-php-8.3-v5-main
+          save-always: true
 
       - name: Install PHP Extensions
         # Only compile if there's no cache from current branch OR target base branch
