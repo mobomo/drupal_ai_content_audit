@@ -106,5 +106,5 @@ jobs:
 
       - name: Run PHPStan (Static Analysis)
         run: |
-          # echo "::remove-matcher owner=phpstan::"
+          echo "::remove-matcher owner=phpstan::"
           vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --error-format=table --memory-limit 1G 
