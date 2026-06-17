@@ -1,0 +1,72 @@
+name: Drupal AI Content Audit workflow
+on:
+  pull_request:
+    branches: [ main, drupal_ai_content_improvements ]
+  push:
+    branches: [ main, drupal_ai_content_improvements ]
+
+jobs:
+  run-checks:
+    name: PHPCS Lint + Phpstan checks.
+    runs-on: ubuntu-latest
+    container:
+      image: php:8.3-cli
+
+    steps:
+      - name: Installing System Libraries
+        run: |
+          apt-get update
+          apt-get install -y \
+            git \
+            unzip \
+            libxml2-dev \
+            libcurl4-openssl-dev \
+            libonig-dev \
+            libzip-dev \
+            libsqlite3-dev
+
+      - name: Installing PHP Extensions
+        run: |
+          docker-php-ext-install \
+            dom \
+            curl \
+            xml \
+            mbstring \
+            zip \
+            pdo \
+            pdo_sqlite
+
+      - name: Install Composer
+        run: |
+          curl -sS https://getcomposer.org | php -- --install-dir=/usr/local/bin --filename=composer
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: modules/custom/ai_content_audit
+
+      - name: Init Drupal 11
+        run: |
+          composer create-project drupal/recommended-project:^11 tmp_drupal --no-interaction --no-install
+          mv tmp_drupal/composer.json ./composer.json
+          rm -rf tmp_drupal
+          ## Composer drupal repo.
+          composer config repositories.drupal composer https://drupal.org
+          ## Composer custom repo.          
+          composer config repositories.drupal_ai_content_audit path modules/custom/ai_content_audit
+          ## Drupal dev + coder + phpstan
+          composer require drupal/core-dev:^11 \
+                           mglaman/phpstan-drupal \
+                           drupal/coder \
+                           --dev --no-interaction --no-progress
+          ## Install our module.
+          composer require drupal/ai_content_audit --no-interaction --no-progress
+
+      - name: Run PHPCS (Drupal and DrupalPractice Coding Standards)
+        run: |
+          vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
+          vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,inc,install,profile,theme,yml modules/custom/ai_content_audit
+
+      - name: Run PHPStan (Static Analysis)
+        run: |
+          vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --memory-limit 1G
