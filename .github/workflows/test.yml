@@ -81,7 +81,7 @@ jobs:
 
       - name: Init Drupal 11
         run: |
-          composer create-project drupal/recommended-project:^11 tmp_drupal --no-interaction --no-install
+          composer create-project drupal/recommended-project:^11.3 tmp_drupal --no-interaction --no-install
           mv tmp_drupal/composer.json ./composer.json
           rm -rf tmp_drupal
           ## Composer drupal repo.
