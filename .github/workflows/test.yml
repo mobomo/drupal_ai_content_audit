@@ -96,6 +96,7 @@ jobs:
           composer require drupal/core-dev:^11.3 \
                            mglaman/phpstan-drupal \
                            drupal/coder \
+                           drush/drush:^13 \
                            --dev --no-interaction --no-progress
           ## Install our module.
           composer require drupal/ai_content_audit --no-interaction --no-progress
@@ -106,5 +107,5 @@ jobs:
 
       - name: Run PHPStan (Static Analysis)
         run: |
-          # echo "::remove-matcher owner=phpstan::"
+          echo "::remove-matcher owner=phpstan::"
           vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --error-format=table --memory-limit 1G 
