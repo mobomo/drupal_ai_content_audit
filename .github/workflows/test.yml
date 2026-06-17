@@ -96,6 +96,7 @@ jobs:
           composer require drupal/core-dev:^11.3 \
                            mglaman/phpstan-drupal \
                            drupal/coder \
+                           drush/drush:^13 \
                            --dev --no-interaction --no-progress
           ## Install our module.
           composer require drupal/ai_content_audit --no-interaction --no-progress
