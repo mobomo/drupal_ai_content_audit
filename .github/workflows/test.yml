@@ -102,7 +102,6 @@ jobs:
 
       - name: Run PHPCS (Drupal and DrupalPractice Coding Standards)
         run: |
-          vendor/bin/phpcs --config-set installed_paths vendor/drupal/coder/coder_sniffer
           vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,inc,install,profile,theme,yml modules/custom/ai_content_audit
 
       - name: Run PHPStan (Static Analysis)
