@@ -856,7 +856,7 @@ class AiroPanelController extends ControllerBase {
   }
 
   /**
-   * Defines default prompts if for any reason the default config is not present.
+   * Defines default prompts if for any reason the default config isn't present.
    *
    * @return array
    *   The system and user prompts.
