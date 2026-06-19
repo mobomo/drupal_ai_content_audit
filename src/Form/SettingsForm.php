@@ -230,24 +230,6 @@ final class SettingsForm extends ConfigFormBase {
         || $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
-    $form['prompts']['assessment_system_prompt'] = [
-      '#type' => 'ai_prompt',
-      '#title' => $this->t('Assessment system prompt'),
-      '#prompt_types' => ['content_audit_assessment_system'],
-      '#config_target' => self::CONFIG_NAME . ':prompts.assessment_system_prompt',
-      '#parents' => ['prompts', 'assessment_system_prompt'],
-      '#description' => $this->t('Controls the system instructions for saved AI readiness assessments.'),
-    ];
-
-    $form['prompts']['assessment_user_prompt'] = [
-      '#type' => 'ai_prompt',
-      '#title' => $this->t('Assessment user prompt'),
-      '#prompt_types' => ['content_audit_assessment_user'],
-      '#config_target' => self::CONFIG_NAME . ':prompts.assessment_user_prompt',
-      '#parents' => ['prompts', 'assessment_user_prompt'],
-      '#description' => $this->t('Must include the required assessment variables defined by its prompt type.'),
-    ];
-
     $form['prompts']['preview_system_prompt'] = [
       '#type' => 'ai_prompt',
       '#title' => $this->t('Preview system prompt'),
@@ -264,6 +246,24 @@ final class SettingsForm extends ConfigFormBase {
       '#config_target' => self::CONFIG_NAME . ':prompts.preview_user_prompt',
       '#parents' => ['prompts', 'preview_user_prompt'],
       '#description' => $this->t('Must include the page content and visitor question variables.'),
+    ];
+
+    $form['prompts']['assessment_system_prompt'] = [
+      '#type' => 'ai_prompt',
+      '#title' => $this->t('Assessment system prompt'),
+      '#prompt_types' => ['content_audit_assessment_system'],
+      '#config_target' => self::CONFIG_NAME . ':prompts.assessment_system_prompt',
+      '#parents' => ['prompts', 'assessment_system_prompt'],
+      '#description' => $this->t('Controls the system instructions for saved AI readiness assessments.'),
+    ];
+
+    $form['prompts']['assessment_user_prompt'] = [
+      '#type' => 'ai_prompt',
+      '#title' => $this->t('Assessment user prompt'),
+      '#prompt_types' => ['content_audit_assessment_user'],
+      '#config_target' => self::CONFIG_NAME . ':prompts.assessment_user_prompt',
+      '#parents' => ['prompts', 'assessment_user_prompt'],
+      '#description' => $this->t('Must include the required assessment variables defined by its prompt type.'),
     ];
 
     return parent::buildForm($form, $form_state);
