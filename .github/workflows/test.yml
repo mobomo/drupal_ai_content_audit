@@ -92,19 +92,20 @@ jobs:
 
       - name: Init Drupal 11
         run: |
-          composer create-project drupal/recommended-project:^11.3 tmp_drupal --no-interaction --no-install
-          mv tmp_drupal/composer.json ./composer.json
+          composer create-project drupal/recommended-project:~11.3.0 tmp_drupal --no-interaction --no-install
+          cp tmp_drupal/composer.json ./composer.json
           rm -rf tmp_drupal
           ## Composer drupal repo.
           composer config repositories.drupal composer https://packages.drupal.org/8
           ## Composer custom repo.
           composer config repositories.drupal_ai_content_audit path modules/custom/ai_content_audit
           ## Drupal dev + coder + phpstan
-          composer require drupal/core-dev:^11.3 \
+          composer require drupal/core-recommended:~11.3.0 \
+                           drupal/core-dev:~11.3.0 \
                            mglaman/phpstan-drupal \
                            drupal/coder \
                            drush/drush:^13 \
-                           --dev --no-interaction --no-progress
+                           --dev --no-interaction --no-progress -W
           ## Install our module.
           composer require drupal/ai_content_audit --no-interaction --no-progress
 
