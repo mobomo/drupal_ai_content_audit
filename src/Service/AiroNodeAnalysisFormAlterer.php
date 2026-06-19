@@ -8,7 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\gin_lb\GinLayoutBuilderUtility;
 use Drupal\node\NodeInterface;
 
 /**
@@ -24,6 +23,7 @@ final class AiroNodeAnalysisFormAlterer {
     protected AiroAnalysisPanelBuilder $panelBuilder,
     protected RouteMatchInterface $routeMatch,
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
+    protected AiroGinLayoutBuilderAdapter $ginLayoutBuilderAdapter,
     TranslationInterface $string_translation,
   ) {
     $this->stringTranslation = $string_translation;
@@ -56,16 +56,12 @@ final class AiroNodeAnalysisFormAlterer {
 
     if ($this->layoutBuilderDetector->isLayoutBuilderEnabled($entity)
       && str_contains($form_id, 'layout_builder_form')) {
-      $form['#gin_lb_form'] = TRUE;
-      $form['#attributes']['class'][] = 'glb-form';
-      GinLayoutBuilderUtility::attachGinLbForm($form);
-      // Step 1: inject panel as first form child (gin_lb sidebar slot).
-      $form['airo_panel_slot'] = $panel;
-      $form['airo_panel_slot']['#weight'] = -10000;
+      $form['#attributes']['class'][] = 'airo-analysis-layout-builder-form';
+      $this->ginLayoutBuilderAdapter->attachForm($form);
       return;
     }
 
-    // Sin LB: panel in aside; strip Gin entity-meta duplicate at page bottom.
+    // Non-Layout Builder forms render the panel in the page aside.
     $form['#attributes']['class'][] = 'airo-analysis-page__edit-form';
     NodeEditFormAlterer::stripAiroAnalysisTabSidebar($form);
     $form['#after_build'][] = [NodeEditFormAlterer::class, 'afterBuildStripSidebarPanel'];

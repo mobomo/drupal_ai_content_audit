@@ -1,20 +1,6 @@
 # Library architecture:
 # - design-tokens (css.base) loads before all css.component libraries.
 # - All --airo-* tokens in component CSS resolve through design-tokens.css.
-# - No library declares a gin: dependency — theme coupling is handled at
-#   runtime via hook_page_attachments_alter() which conditionally attaches
-#   ai_content_audit/airo-panel-gin-shim only when Gin is the active admin theme.
-
-# Gin-exclusive shim — only attached conditionally via hook_page_attachments_alter()
-# when Gin is the active admin theme. The base airo-panel library is fully
-# theme-agnostic and does NOT depend on this library.
-airo-panel-gin-shim:
-  version: 1.x
-  css:
-    component:
-      css/ai-airo-panel-gin-shim.css: {}
-  dependencies:
-    - ai_content_audit/design-tokens
 
 assessment-panel:
   version: 1.x
@@ -45,12 +31,6 @@ inline-widget:
     - core/once
     - ai_content_audit/design-tokens
 
-# G10: G4 sticky footer CSS is appended to ai-airo-panel.css — no new library.
-# TAB CSS NOTE: The tab bar (`<ul class="tabs tabs--primary">`) is styled by the GIN theme's
-# `gin/tabs` library (`dist/css/components/tabs.css`). That library is automatically loaded on
-# every admin page via `gin/base` → `gin/tabs` when GIN is the active admin theme. No explicit
-# dependency on `gin/tabs` is added here to avoid a hard module→theme coupling; the off-canvas
-# drawer is always rendered inside the admin context where `gin/base` is attached.
 airo-panel:
   version: 1.x
   css:

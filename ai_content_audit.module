@@ -2,20 +2,5 @@
 
 /**
  * @file
- * Procedural hooks live in Drupal\ai_content_audit\Hook\* (Drupal 11).
+ * Procedural hooks live in Drupal\ai_content_audit\Hook\* (Drupal 11.1+).
  */
-
-/**
- * Implements hook_module_implements_alter().
- */
-function ai_content_audit_module_implements_alter(array &$implementations, string $hook): void {
-  // Run after gin_lb so our form alters win over gin_lb's LB wrapper.
-  if (!isset($implementations['ai_content_audit'])) {
-    return;
-  }
-  if (in_array($hook, ['theme_suggestions_form_alter', 'form_alter', 'form_node_form_alter'], TRUE)) {
-    $group = $implementations['ai_content_audit'];
-    unset($implementations['ai_content_audit']);
-    $implementations['ai_content_audit'] = $group;
-  }
-}

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Service;
 
-use Drupal\ai_content_audit\Controller\AiroPanelController;
 use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -31,7 +30,7 @@ final class AiroAnalysisPanelBuilder {
 
   public function __construct(
     protected AiContentAssessmentRepository $assessmentRepository,
-    protected AiroPanelController $airoPanelController,
+    protected AiroPanelTabBuilder $tabBuilder,
     protected AuditCheckManager $auditCheckManager,
     protected TechnicalAuditService $technicalAuditService,
     protected ModuleHandlerInterface $moduleHandler,
@@ -121,7 +120,7 @@ final class AiroAnalysisPanelBuilder {
    *   Tab pane render arrays keyed by tab ID.
    */
   public function buildTabPanes(NodeInterface $node, bool $pageSkin = FALSE): array {
-    $preview = $this->airoPanelController->buildPreviewTab($node, $pageSkin);
+    $preview = $this->tabBuilder->buildPreviewTab($node, $pageSkin);
     if ($pageSkin) {
       return ['preview-tab' => $preview];
     }
@@ -130,9 +129,9 @@ final class AiroAnalysisPanelBuilder {
 
     return [
       'preview-tab' => $preview,
-      'score-tab' => $this->airoPanelController->buildScoreTab($node, $assessment),
-      'action-items-tab' => $this->airoPanelController->buildActionItemsTab($node),
-      'technical-audit-tab' => $this->airoPanelController->buildTechnicalAuditTab($node),
+      'score-tab' => $this->tabBuilder->buildScoreTab($node, $assessment),
+      'action-items-tab' => $this->tabBuilder->buildActionItemsTab($node),
+      'technical-audit-tab' => $this->tabBuilder->buildTechnicalAuditTab($node),
     ];
   }
 

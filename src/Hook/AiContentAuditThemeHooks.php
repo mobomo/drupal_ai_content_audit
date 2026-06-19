@@ -213,10 +213,6 @@ final class AiContentAuditThemeHooks {
         ],
         'template' => 'airo-analysis-node-page',
       ],
-      'form__layout_builder_form__gin_lb__airo_analysis' => [
-        'render element' => 'element',
-        'template' => 'form--layout-builder-form--gin-lb--airo-analysis',
-      ],
     ];
   }
 
