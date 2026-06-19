@@ -170,14 +170,6 @@ services:
       - '@ai_content_audit.technical_audit'
       - '@module_handler'
 
-  ai_content_audit.node_edit_form_alterer:
-    class: Drupal\ai_content_audit\Service\NodeEditFormAlterer
-    arguments:
-      - '@ai_content_audit.airo_analysis_panel_builder'
-      - '@ai_content_audit.assessment_repository'
-      - '@current_route_match'
-      - '@string_translation'
-
   ai_content_audit.airo_node_analysis_form_alterer:
     class: Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer
     arguments:
@@ -200,11 +192,6 @@ services:
       - '@queue'
       - '@database'
       - '@logger.channel.ai_content_audit'
-
-  # OOP hook classes: explicit services so the container injects constructors (see
-  # Drupal\Core\Hook\HookCollectorPass::writeImplementationsToContainer).
-  Drupal\ai_content_audit\Hook\AiContentAuditNodeFormHooks:
-    arguments: ['@ai_content_audit.node_edit_form_alterer']
 
   Drupal\ai_content_audit\Hook\AiContentAuditThemeHooks:
     arguments:

@@ -63,8 +63,7 @@ final class AiroNodeAnalysisFormAlterer {
 
     // Non-Layout Builder forms render the panel in the page aside.
     $form['#attributes']['class'][] = 'airo-analysis-page__edit-form';
-    NodeEditFormAlterer::stripAiroAnalysisTabSidebar($form);
-    $form['#after_build'][] = [NodeEditFormAlterer::class, 'afterBuildStripSidebarPanel'];
+
   }
 
 }

@@ -130,22 +130,6 @@ ai_content_audit.node.airo_analysis_panel_refresh:
       node:
         type: entity:node
 
-# Node assessment history tab — local task on node canonical.
-ai_content_audit.node.assessment_history:
-  path: '/node/{node}/ai-assessment'
-  defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiAssessmentController::history'
-    _title: 'AI Assessment History'
-  requirements:
-    _permission: 'view ai content assessment+administer ai content audit'
-    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
-    node: \d+
-  options:
-    _admin_route: FALSE
-    parameters:
-      node:
-        type: entity:node
-
 ai_content_audit.panel.actions_toggle:
   path: '/admin/ai-content-audit/panel/{node}/action-items/{item_id}/toggle'
   defaults:
