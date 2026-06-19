@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - ai_content_audit
+id: content_audit_assessment_user
+label: 'AI Content Audit assessment user prompt'
+variables:
+  -
+    name: DETERMINISTIC_SIGNALS
+    help_text: 'Deterministic content structure signals computed from extracted page markers.'
+    required: 1
+  -
+    name: SEO_SIGNALS
+    help_text: 'Deterministic SEO signals computed from Drupal node metadata.'
+    required: 1
+  -
+    name: CONTENT
+    help_text: 'Extracted Drupal node content to assess.'
+    required: 1
+  -
+    name: RESPONSE_SCHEMA
+    help_text: 'Required JSON response schema for the assessment result.'
+    required: 1
+tokens: {  }

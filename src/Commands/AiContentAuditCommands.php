@@ -114,18 +114,16 @@ final class AiContentAuditCommands extends DrushCommands {
     }
 
     $this->io()->table(
-      ['Provider ID', 'Model ID', 'Label', 'Composite key (provider__model)'],
+      ['Provider ID', 'Model ID', 'Label', 'Drupal AI simple option'],
       $rows,
     );
 
     // Print the currently configured module-level default.
-    $config       = $this->configFactory->get('ai_content_audit.settings');
-    $def_provider = $config->get('default_provider') ?: '(global default)';
-    $def_model    = $config->get('default_model') ?: '(global default)';
+    $config = $this->configFactory->get('ai_content_audit.settings');
+    $default_provider_model = $config->get('default_provider_model') ?: '(global default)';
     $this->io()->note(sprintf(
-      'Module default → provider: %s | model: %s',
-      $def_provider,
-      $def_model,
+      'Module default provider/model option: %s',
+      $default_provider_model,
     ));
   }
 

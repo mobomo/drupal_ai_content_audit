@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - ai_content_audit
+id: content_audit_preview_user
+label: 'AI Content Audit preview user prompt'
+variables:
+  -
+    name: PAGE_CONTENT
+    help_text: 'Rendered Drupal page content used as preview context.'
+    required: 1
+  -
+    name: VISITOR_QUESTION
+    help_text: 'The question submitted by the user in the AIRO preview chat.'
+    required: 1
+tokens: {  }

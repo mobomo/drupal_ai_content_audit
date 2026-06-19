@@ -1,0 +1,36 @@
+langcode: en
+dependencies:
+  config:
+    - ai.ai_prompt_type.content_audit_assessment_user
+  enforced:
+    module:
+      - ai_content_audit
+id: content_audit_assessment_user__content_audit_assessment_user_default
+label: 'Default assessment user prompt.'
+type: content_audit_assessment_user
+prompt: |
+  Analyze the following Drupal page content for quality and AI-readiness.
+  Consider readability, SEO signal presence, content completeness, tone
+  consistency, and overall quality.
+
+  DETERMINISTIC STRUCTURE SIGNALS (ground truth from parsed markers):
+  {DETERMINISTIC_SIGNALS}
+
+  DETERMINISTIC SEO SIGNALS (ground truth from node metadata):
+  {SEO_SIGNALS}
+
+  When these signals indicate heading markers are present, do not report missing
+  H1 or H2 marker checkpoints. Use these values as canonical for heading-marker
+  presence checks. When SEO signals show meta description or schema are present,
+  do not report them as missing.
+
+  CONTENT:
+  ---
+  {CONTENT}
+  ---
+
+  Return a JSON object exactly matching this schema:
+  {RESPONSE_SCHEMA}
+
+  Return only the JSON object. Set unknown fields to null or empty arrays. Do
+  not include explanatory text, markdown, or code fences.

@@ -129,13 +129,11 @@ final class SettingsForm extends ConfigFormBase {
       '#access' => $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
-    // Build the grouped select options from all enabled chat providers.
+    // Build Drupal AI simple provider/model options for chat.
     $provider_options = $this->providerModelChoices->getGroupedSelectOptions('chat');
 
-    // Current saved value — reconstruct the composite key.
-    $saved_provider = $config->get('default_provider') ?? '';
-    $saved_model = $config->get('default_model') ?? '';
-    $saved_key = ($saved_provider !== '' && $saved_model !== '') ? $saved_provider . '__' . $saved_model : '';
+    // Current saved value uses Drupal AI's simple provider/model option.
+    $saved_key = (string) ($config->get('default_provider_model') ?? '');
 
     if (!empty($provider_options)) {
       // Prepend a "use global default" option.
@@ -225,50 +223,47 @@ final class SettingsForm extends ConfigFormBase {
 
     $form['prompts'] = [
       '#type' => 'details',
-      '#title' => $this->t('AI Content Audit prompts.'),
+      '#title' => $this->t('AI Content Audit prompts'),
       '#open' => TRUE,
       '#tree' => TRUE,
-      '#access' => $this->currentUser->hasPermission('manage content audit prompts'),
+      '#access' => $this->currentUser->hasPermission('manage content audit prompts')
+        || $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
-    $form['prompts']['enable_custom_system_prompt'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable custom system prompt'),
-      '#description' => $this->t('Enable this to add a custom system prompt instead of the default/recommended.'),
-      '#default_value' => $config->get('enable_custom_system_prompt') ?? FALSE,
-    ];
-
-    $form['prompts']['system_prompt'] = [
+    $form['prompts']['preview_system_prompt'] = [
       '#type' => 'ai_prompt',
-      '#title' => $this->t('Custom System Prompt Selection'),
-      '#prompt_types' => ['content_audit_system'],
-      '#config_target' => self::CONFIG_NAME . ':prompts.system_prompt',
-      '#parents' => ['prompts', 'system_prompt'],
-      '#states' => [
-        'visible' => [
-          ':input[name="prompts[enable_custom_system_prompt]"]' => ['checked' => TRUE],
-        ],
-      ],
+      '#title' => $this->t('Preview system prompt'),
+      '#prompt_types' => ['content_audit_preview_system'],
+      '#config_target' => self::CONFIG_NAME . ':prompts.preview_system_prompt',
+      '#parents' => ['prompts', 'preview_system_prompt'],
+      '#description' => $this->t('Controls the AIRO Preview chat system behavior.'),
     ];
 
-    $form['prompts']['enable_custom_user_prompt'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable custom user prompt'),
-      '#description' => $this->t('Enable this to add a custom user prompt instead of the default/recommended.'),
-      '#default_value' => $config->get('enable_custom_user_prompt') ?? FALSE,
-    ];
-
-    $form['prompts']['user_prompt'] = [
+    $form['prompts']['preview_user_prompt'] = [
       '#type' => 'ai_prompt',
-      '#title' => $this->t('Custom User Prompt Selection'),
-      '#prompt_types' => ['content_audit_user'],
-      '#config_target' => self::CONFIG_NAME . ':prompts.user_prompt',
-      '#parents' => ['prompts', 'user_prompt'],
-      '#states' => [
-        'visible' => [
-          ':input[name="prompts[enable_custom_user_prompt]"]' => ['checked' => TRUE],
-        ],
-      ],
+      '#title' => $this->t('Preview user prompt'),
+      '#prompt_types' => ['content_audit_preview_user'],
+      '#config_target' => self::CONFIG_NAME . ':prompts.preview_user_prompt',
+      '#parents' => ['prompts', 'preview_user_prompt'],
+      '#description' => $this->t('Must include the page content and visitor question variables.'),
+    ];
+
+    $form['prompts']['assessment_system_prompt'] = [
+      '#type' => 'ai_prompt',
+      '#title' => $this->t('Assessment system prompt'),
+      '#prompt_types' => ['content_audit_assessment_system'],
+      '#config_target' => self::CONFIG_NAME . ':prompts.assessment_system_prompt',
+      '#parents' => ['prompts', 'assessment_system_prompt'],
+      '#description' => $this->t('Controls the system instructions for saved AI readiness assessments.'),
+    ];
+
+    $form['prompts']['assessment_user_prompt'] = [
+      '#type' => 'ai_prompt',
+      '#title' => $this->t('Assessment user prompt'),
+      '#prompt_types' => ['content_audit_assessment_user'],
+      '#config_target' => self::CONFIG_NAME . ':prompts.assessment_user_prompt',
+      '#parents' => ['prompts', 'assessment_user_prompt'],
+      '#description' => $this->t('Must include the required assessment variables defined by its prompt type.'),
     ];
 
     return parent::buildForm($form, $form_state);
@@ -290,34 +285,20 @@ final class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
-    // array_filter removes unchecked checkboxes (Drupal uses 0 when unchecked).
-    $node_types = array_keys(array_filter($form_state->getValue('node_types')));
+    if ($this->currentUser->hasPermission('administer ai content audit')) {
+      // array_filter removes unchecked checkboxes (Drupal uses 0 when unchecked).
+      $node_types = array_keys(array_filter((array) $form_state->getValue('node_types')));
 
-    // Split the composite 'provider__model' key into separate config values.
-    $provider_model_key = (string) ($form_state->getValue('default_provider_model') ?? '');
-    [
-      $default_provider,
-      $default_model,
-    ] = $this->providerModelChoices->parseKey($provider_model_key);
-
-    $this->config(self::CONFIG_NAME)
-      ->set('enable_on_save', (bool) $form_state->getValue('assess_on_save'))
-      ->set('node_types', $node_types)
-      ->set('max_chars_per_request', (int) $form_state->getValue('max_chars_per_request'))
-      ->set('enable_history', (bool) $form_state->getValue('enable_history'))
-      ->set('max_assessments_per_node', (int) $form_state->getValue('max_assessments_per_node'))
-      ->set('render_mode', $form_state->getValue('render_mode'))
-      ->set('default_provider', $default_provider)
-      ->set('default_model', $default_model)
-      ->set('enable_custom_system_prompt', (bool) $form_state->getValue([
-        'prompts',
-        'enable_custom_system_prompt',
-      ]))
-      ->set('enable_custom_user_prompt', (bool) $form_state->getValue([
-        'prompts',
-        'enable_custom_user_prompt',
-      ]))
-      ->save();
+      $this->config(self::CONFIG_NAME)
+        ->set('enable_on_save', (bool) $form_state->getValue('assess_on_save'))
+        ->set('node_types', $node_types)
+        ->set('max_chars_per_request', (int) $form_state->getValue('max_chars_per_request'))
+        ->set('enable_history', (bool) $form_state->getValue('enable_history'))
+        ->set('max_assessments_per_node', (int) $form_state->getValue('max_assessments_per_node'))
+        ->set('render_mode', $form_state->getValue('render_mode'))
+        ->set('default_provider_model', (string) ($form_state->getValue('default_provider_model') ?? ''))
+        ->save();
+    }
 
     parent::submitForm($form, $form_state);
   }

@@ -6,6 +6,7 @@ namespace Drupal\ai_content_audit\Routing;
 
 use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\EnhancerInterface;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
@@ -24,6 +25,7 @@ final class AiroAnalysisLayoutRouteEnhancer implements EnhancerInterface {
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
     protected LayoutSectionStorageParamConverter $sectionStorageParamConverter,
     protected LayoutTempstoreRepositoryInterface $layoutTempstoreRepository,
+    protected ConfigFactoryInterface $configFactory,
   ) {}
 
   /**
@@ -75,7 +77,12 @@ final class AiroAnalysisLayoutRouteEnhancer implements EnhancerInterface {
     $route->setDefault('_entity_form', 'node.layout_builder');
 
     $options = $route->getOptions();
-    $options['_layout_builder'] = TRUE;
+    if ($this->configFactory->get('system.theme')->get('admin') === 'gin') {
+      $options['_layout_builder'] = TRUE;
+    }
+    else {
+      unset($options['_layout_builder']);
+    }
     $parameters = $options['parameters'] ?? [];
     $parameters['section_storage'] = [
       'layout_builder_tempstore' => TRUE,

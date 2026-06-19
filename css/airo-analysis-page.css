@@ -1,203 +1,197 @@
 /**
  * @file
- * AIRO Analysis tab — LB uses #gin_sidebar; Edit (no LB) mirrors it via fixed panel.
+ * Theme-neutral AIRO Analysis tab layout.
  */
-
-.airo-analysis-route .meta-sidebar__overlay {
-  display: none !important;
-}
 
 body.airo-analysis-route {
-  --airo-sidebar-top-nudge: 10px;
   --airo-panel-max-width: 373px;
-  /*
-   * Altura mínima del panel = viewport menos barras Gin (respaldo si % no resuelve).
-   * El sidebar ya usa height: calc(100% - …); el panel usa 100% de ese contenedor.
-   */
-  --airo-panel-min-height: calc(
-    100dvh - var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) -
-      var(--gin-toolbar-secondary-height, 0px)
-  );
+  --airo-edit-form-panel-top-offset: 117px;
+  --airo-panel-min-height: calc(100dvh - var(--drupal-displace-offset-top, 0px));
 }
 
-body.airo-analysis-route.gin--horizontal-toolbar {
-  --airo-panel-min-height: calc(
-    100dvh - var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) -
-      var(--gin-toolbar-secondary-height, 0px) - 53px
-  );
-}
-
-/* ── Shared panel width (LB sidebar + Edit aside) ─────────────────────────── */
-
-/*
- * Ancho 373px solo con sidebar abierto. Al cerrar (data-meta-sidebar !== open)
- * colapsar por completo — LB #gin_sidebar y panel fijo sin LB.
- */
-body.airo-analysis-route[data-meta-sidebar="open"] #gin_sidebar.glb-sidebar,
-body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
-  width: var(--airo-panel-max-width) !important;
-  max-width: var(--airo-panel-max-width) !important;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-body.airo-analysis-route:not([data-meta-sidebar="open"]) #gin_sidebar.glb-sidebar,
-body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  overflow: hidden !important;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* ── Layout Builder: #gin_sidebar (gin_lb) ─────────────────────────────────── */
-
-body.airo-analysis-route.gin--horizontal-toolbar #gin_sidebar.glb-sidebar,
-body.airo-analysis-route.gin--horizontal-toolbar .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
-  top: calc(var(--gin-toolbar-secondary-height) + 1px) !important;
-  margin-top: 53px;
-  height: calc(100% - var(--drupal-displace-offset-top, var(--gin-toolbar-height, 0px)) - var(--gin-toolbar-secondary-height, 0px) + var(--airo-sidebar-top-nudge)) !important;
-}
-
-body.airo-analysis-route.gin--vertical-toolbar #gin_sidebar.glb-sidebar,
-body.airo-analysis-route.gin--vertical-toolbar .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
-  top: calc(var(--gin-toolbar-secondary-height, 0px) - var(--airo-sidebar-top-nudge)) !important;
-  margin-top: 0 !important;
-  height: calc(100% - var(--gin-toolbar-secondary-height, 0px) + var(--airo-sidebar-top-nudge)) !important;
-}
-
-.airo-analysis-route #gin_sidebar .glb-sidebar__titlebar {
-  display: none !important;
-}
-
-.airo-analysis-route #gin_sidebar .glb-sidebar__content,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel .glb-sidebar__content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  padding: 0;
-  overflow: hidden;
-}
-
-.airo-analysis-route #gin_sidebar form.layout-builder-form > *:not(#edit-airo-panel-slot) {
-  display: none !important;
-}
-
-.airo-analysis-route #gin_sidebar #edit-airo-panel-slot,
-.airo-analysis-route #gin_sidebar .airo-analysis-panel--page,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-panel--page {
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: none;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-}
-
-.airo-analysis-route .airo-panel--page-skin {
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 100%;
-}
-
-/*
- * Panel accordion en AIRO Analysis: llena el sidebar hasta abajo (azul en landing).
- * min-height en dvh como respaldo; height 100% cuando el padre ya tiene altura fija.
- */
-.airo-analysis-route .airo-panel--accordion.airo-panel--page-skin {
-  min-height: 100%;
-  min-height: var(--airo-panel-min-height);
-  height: 100%;
-  max-height: none;
-}
-
-.airo-analysis-route #gin_sidebar form.layout-builder-form,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel form.airo-analysis-panel-host {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-  margin-right: 0;
-  max-width: 100%;
-}
-
-/* ── Edit sin LB: panel fijo, misma geometría que #gin_sidebar ─────────────── */
-
-.airo-analysis-route .airo-analysis-page--edit-form {
-  display: block;
+.airo-analysis-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, var(--airo-panel-max-width));
+  gap: 1rem;
+  align-items: start;
   margin-block: 1rem;
 }
 
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main {
+body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.airo-analysis-page__main {
   min-width: 0;
 }
 
-body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__main {
-  margin-right: var(--airo-panel-max-width);
+.airo-analysis-page--layout-builder {
+  display: block;
+  margin-block-start: 0;
 }
 
-body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__main {
-  margin-right: 0;
+.airo-analysis-page--edit-form {
+  display: block;
 }
 
-/*
- * Sin LB: Gin renders entity-meta (accordion sidebar) at the bottom of the main
- * column — hide it; the panel lives only in .airo-analysis-page__panel.
- */
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .entity-meta,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .layout-region--node-secondary,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .layout-region-node-secondary,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main #edit-airo-analysis,
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main details.accordion__item:has(.airo-panel--page-skin),
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .entity-meta__header.accordion__item:has(.airo-panel),
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__main .airo-analysis-panel--page {
-  display: none !important;
+.airo-analysis-page--layout-builder .airo-analysis-page__main,
+.airo-analysis-page--edit-form .airo-analysis-page__main {
+  transition: margin-inline-end 0.2s ease;
 }
 
-.airo-analysis-route .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
-  position: fixed;
-  right: 0;
-  z-index: 101;
+body.airo-analysis-route:not([data-meta-sidebar="closed"]) .airo-analysis-page--layout-builder .airo-analysis-page__main {
+  margin-inline-end: var(--airo-panel-max-width);
+}
+
+body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout-builder .airo-analysis-page__main {
+  margin-inline-end: 0;
+}
+
+body.airo-analysis-route:not([data-meta-sidebar="closed"]) .airo-analysis-page--edit-form .airo-analysis-page__main {
+  margin-inline-end: var(--airo-panel-max-width);
+}
+
+body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--edit-form .airo-analysis-page__main {
+  margin-inline-end: 0;
+}
+
+body.airo-analysis-route:not([data-meta-sidebar="closed"]) .airo-analysis-page--layout-builder .layout-builder.layout-builder--overrides {
+  padding-inline-end: 1rem !important;
+  transition: padding-inline-end 0.2s ease;
+}
+
+body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout-builder .layout-builder.layout-builder--overrides {
+  padding-inline-end: 0 !important;
+  transition: padding-inline-end 0.2s ease;
+}
+
+.airo-analysis-page__panel {
+  position: sticky;
+  top: calc(var(--drupal-displace-offset-top, 0px) + 1rem);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  margin-top: 117px !important;
-}
-
-.airo-analysis-route .airo-analysis-page--edit-form .airo-panel--page-skin .airo-panel__brand-header {
-  border-radius: 0;
-}
-
-.airo-analysis-panel--page .airo-panel--accordion {
-  max-height: none;
-  min-height: 100%;
   min-height: var(--airo-panel-min-height);
 }
 
+body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--edit-form .airo-analysis-page__panel {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(100%);
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    visibility 0s linear 0.2s;
+  visibility: hidden;
+}
+
+.airo-analysis-page--layout-builder .airo-analysis-page__panel,
+.airo-analysis-page--edit-form .airo-analysis-page__panel {
+  position: fixed;
+  right: 0;
+  top: var(--drupal-displace-offset-top, 0px);
+  z-index: 101;
+  width: var(--airo-panel-max-width);
+  height: calc(100dvh - var(--drupal-displace-offset-top, 0px));
+  min-height: 0;
+  margin-block-start: 0;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    visibility 0s linear 0s;
+  visibility: visible;
+}
+
+.airo-analysis-page--edit-form .airo-analysis-page__panel {
+  top: calc(var(--drupal-displace-offset-top, 0px) + var(--airo-edit-form-panel-top-offset));
+  height: calc(100dvh - var(--drupal-displace-offset-top, 0px) - var(--airo-edit-form-panel-top-offset));
+}
+
+body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout-builder .airo-analysis-page__panel {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(100%);
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    visibility 0s linear 0.2s;
+  visibility: hidden;
+}
+
+.airo-analysis-page__panel-content,
+.airo-analysis-page__panel form.airo-analysis-panel-host {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.airo-analysis-page__panel .airo-analysis-panel--page,
+.airo-analysis-layout-builder-form .airo-analysis-panel--page {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.airo-analysis-page .airo-panel--page-skin,
+.airo-analysis-layout-builder-form .airo-panel--page-skin {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.airo-analysis-page .airo-panel--accordion:not(.airo-panel--page-skin),
+.airo-analysis-layout-builder-form .airo-panel--accordion:not(.airo-panel--page-skin) {
+  min-height: var(--airo-panel-min-height);
+  max-height: none;
+}
+
+.airo-analysis-page--layout-builder .airo-analysis-page__main > .layout-region:not(.glb-region-sticky),
+.airo-analysis-page--layout-builder .layout-builder__add-section,
+.airo-analysis-page--layout-builder .layout-builder__add-block,
+.airo-analysis-page--layout-builder .layout-builder__link,
+.airo-analysis-page--layout-builder .layout-builder__region-label,
+.airo-analysis-page--layout-builder .layout-builder .contextual {
+  display: none !important;
+}
+
+.airo-analysis-page--edit-form .airo-analysis-page__main .entity-meta,
+.airo-analysis-page--edit-form .airo-analysis-page__main .layout-region--node-secondary,
+.airo-analysis-page--edit-form .airo-analysis-page__main .layout-region-node-secondary,
+.airo-analysis-page--edit-form .airo-analysis-page__main #edit-airo-analysis,
+.airo-analysis-page--edit-form .airo-analysis-page__main .airo-analysis-panel--page {
+  display: none !important;
+}
+
 @media (max-width: 960px) {
-  body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__main,
-  body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__main {
-    margin-right: 0;
+  .airo-analysis-page {
+    display: block;
   }
 
-  body.airo-analysis-route[data-meta-sidebar="open"] .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
+  .airo-analysis-page__panel {
     position: static;
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;
-    margin-top: 0;
-    visibility: visible;
+    opacity: 1 !important;
+    min-height: 0;
+    margin-top: 1rem;
     pointer-events: auto;
+    transform: none !important;
+    visibility: visible !important;
   }
 
-  body.airo-analysis-route:not([data-meta-sidebar="open"]) .airo-analysis-page--edit-form .airo-analysis-page__panel.glb-sidebar {
-    display: none !important;
+  .airo-analysis-page .airo-panel--accordion:not(.airo-panel--page-skin),
+  .airo-analysis-layout-builder-form .airo-panel--accordion:not(.airo-panel--page-skin) {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .airo-analysis-page--layout-builder .airo-analysis-page__main,
+  .airo-analysis-page--edit-form .airo-analysis-page__main,
+  .airo-analysis-page--layout-builder .layout-builder.layout-builder--overrides,
+  .airo-analysis-page--layout-builder .airo-analysis-page__panel,
+  .airo-analysis-page--edit-form .airo-analysis-page__panel {
+    transition: none !important;
   }
 }

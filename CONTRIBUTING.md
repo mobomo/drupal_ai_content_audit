@@ -17,7 +17,7 @@ reviews predictable for a Drupal contrib project.
 
 ## Local development
 
-- Install the module on a Drupal 10 or 11 site with **Drupal AI** and at least
+- Install the module on a Drupal 11.1+ site with **Drupal AI** and at least
   one chat provider configured.
 - Enable **Layout Builder** if you work on HTML extraction or LB-related code
   paths (`layout_builder` is a declared dependency).

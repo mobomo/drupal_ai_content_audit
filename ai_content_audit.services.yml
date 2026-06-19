@@ -23,6 +23,14 @@ services:
       - '@logger.factory'
       - '@config.factory'
       - '@entity_type.manager'
+      - '@ai_content_audit.prompt_resolver'
+      - '@ai_content_audit.provider_model_choices'
+
+  ai_content_audit.prompt_resolver:
+    class: Drupal\ai_content_audit\Service\AiContentAuditPromptResolver
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'
 
   ai_content_audit.technical_audit:
     class: Drupal\ai_content_audit\Service\TechnicalAuditService
@@ -74,6 +82,7 @@ services:
     class: Drupal\ai_content_audit\EventSubscriber\AiroAnalysisRouteSubscriber
     arguments:
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@config.factory'
     tags:
       - { name: event_subscriber }
 
@@ -94,6 +103,7 @@ services:
       - '@ai_content_audit.node_layout_builder_detector'
       - '@layout_builder.param_converter'
       - '@layout_builder.tempstore_repository'
+      - '@config.factory'
     tags:
       - { name: route_enhancer, priority: 4900 }
 
@@ -106,6 +116,46 @@ services:
     factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
     arguments: ['@service_container']
 
+  ai_content_audit.airo_panel_tab_builder:
+    class: Drupal\ai_content_audit\Service\AiroPanelTabBuilder
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+      - '@ai_content_audit.technical_audit'
+      - '@ai.provider'
+      - '@tempstore.private'
+      - '@ai_content_audit.provider_model_choices'
+      - '@request_stack'
+      - '@current_user'
+
+  ai_content_audit.airo_node_revision_resolver:
+    class: Drupal\ai_content_audit\Service\AiroNodeRevisionResolver
+    arguments:
+      - '@entity_type.manager'
+      - '@current_user'
+
+  ai_content_audit.airo_preview_chat:
+    class: Drupal\ai_content_audit\Service\AiroPreviewChat
+    arguments:
+      - '@ai.provider'
+      - '@ai_content_audit.extractor_manager'
+      - '@ai_content_audit.provider_model_choices'
+      - '@tempstore.private'
+      - '@ai_content_audit.prompt_resolver'
+      - '@current_user'
+      - '@logger.channel.ai_content_audit'
+
+  ai_content_audit.airo_action_item_command:
+    class: Drupal\ai_content_audit\Service\AiroActionItemCommand
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+      - '@current_user'
+      - '@datetime.time'
+
+  ai_content_audit.airo_inline_score_widget_builder:
+    class: Drupal\ai_content_audit\Service\AiroInlineScoreWidgetBuilder
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+
   ai_content_audit.node_layout_builder_detector:
     class: Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector
     arguments:
@@ -115,7 +165,7 @@ services:
     class: Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder
     arguments:
       - '@ai_content_audit.assessment_repository'
-      - '@ai_content_audit.airo_panel_controller'
+      - '@ai_content_audit.airo_panel_tab_builder'
       - '@ai_content_audit.audit_check_manager'
       - '@ai_content_audit.technical_audit'
       - '@module_handler'
@@ -134,7 +184,13 @@ services:
       - '@ai_content_audit.airo_analysis_panel_builder'
       - '@current_route_match'
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@ai_content_audit.airo_gin_layout_builder_adapter'
       - '@string_translation'
+
+  ai_content_audit.airo_gin_layout_builder_adapter:
+    class: Drupal\ai_content_audit\Service\AiroGinLayoutBuilderAdapter
+    arguments:
+      - '@config.factory'
 
   ai_content_audit.lifecycle:
     class: Drupal\ai_content_audit\Service\AiContentAuditLifecycle
@@ -164,9 +220,9 @@ services:
 
   Drupal\ai_content_audit\Hook\AiContentAuditPageHooks:
     arguments:
-      - '@config.factory'
       - '@current_route_match'
       - '@ai_content_audit.node_layout_builder_detector'
+      - '@config.factory'
 
   Drupal\ai_content_audit\Hook\AiContentAuditFormHooks:
     arguments:

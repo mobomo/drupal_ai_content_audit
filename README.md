@@ -29,14 +29,18 @@ entity so score history is preserved per node over time.
 
 | Requirement | Version |
 |---|---|
-| Drupal core | `^10.3 \|\| ^11` |
-| PHP | `^8.1` |
+| Drupal core | `^11.1` |
+| PHP | `>=8.3` |
 | Composer | `^2.0` |
 | [drupal/ai](https://www.drupal.org/project/ai) | `^1.0` (must be configured with at least one provider) |
 
 An AI provider sub-module must also be enabled and configured — for example
 `drupal/ai_provider_openai`, `drupal/ai_provider_ollama`, or another
 `drupal/ai`-compatible integration.
+
+This module uses Drupal's OOP hook discovery with `#[Hook]` attributes and
+therefore requires Drupal 11.1 or newer. Drupal 10 is not supported by this
+pre-release branch.
 
 ---
 
@@ -164,11 +168,65 @@ Auditor**, tick the checkbox, and click **Install**.
 
 ### Permissions
 
-| Permission | Intended for |
-|---|---|
-| `view ai content assessment` | Editors — read-only access to results |
-| `run ai content assessment` | Editors — trigger assessments |
-| `administer ai content audit` | Admins — full settings access |
+AI Content Auditor uses granular permissions so assessment visibility, running
+assessments, AI provider/model selection, prompt management, and full
+administration can be delegated independently.
+
+| Permission | Intended for | Grants |
+|---|---|---|
+| `view ai content assessment` | Editors and reviewers | Read assessment results, assessment history, report pages, and AIRO read-only panel data for nodes they can view. |
+| `run ai content assessment` | Trusted editors | Trigger assessments and update assessment action item state for nodes they can edit or access through Layout Builder. |
+| `use any ai provider in airo` | Advanced editors and QA users | Select and compare configured AI provider/model combinations in the AIRO Preview tab. Users without this permission use the site default provider/model. |
+| `manage content audit prompts` | Prompt managers | Manage the prompt configuration fields on the AI Content Audit settings form without requiring full module administration. |
+| `administer ai content audit` | Site administrators | Full module administration, including settings, defaults, assessment records, and admin override access where routes allow it. |
+
+Node access still applies. A user with AI Content Auditor permissions must also
+have the relevant Drupal node access for the node being analyzed. The
+`AI Assessment History` tab is read-only and only requires access to view the
+node plus permission to view assessments.
+
+### Prompt Management
+
+AI Content Auditor stores production prompts as Drupal AI Prompt configuration
+entities. The module settings store only the selected prompt entity IDs:
+
+| Setting | Prompt type | Used by |
+|---|---|---|
+| `prompts.assessment_system_prompt` | `content_audit_assessment_system` | Saved AI readiness assessments |
+| `prompts.assessment_user_prompt` | `content_audit_assessment_user` | Saved AI readiness assessments |
+| `prompts.preview_system_prompt` | `content_audit_preview_system` | AIRO Preview chat |
+| `prompts.preview_user_prompt` | `content_audit_preview_user` | AIRO Preview chat |
+
+`AiContentAuditPromptResolver` centralizes prompt loading, required variable
+replacement, and missing-prompt errors. Prompt managers can change the selected
+Prompt Entities with `manage content audit prompts`; they do not need full
+module administration unless they also manage providers or global audit
+settings.
+
+### Provider And Model Selection
+
+AI Content Auditor stores the module-level default AI model in
+`default_provider_model` using Drupal AI's simple provider/model option value.
+Provider/model options come from `getSimpleProviderModelOptions('chat', FALSE,
+TRUE, [AiModelCapability::ChatSystemRole])` and are resolved through
+`loadProviderFromSimpleOption()` and `getModelNameFromSimpleOption()`. The module
+does not build its own provider/model key format. AIRO also isolates a small
+OpenAI compatibility filter for catalog entries that the upstream provider can
+currently leak into chat selectors, such as image, audio, realtime,
+transcription and search models.
+
+### Optional Gin Integration
+
+AIRO is designed to work with any admin theme. When Gin and Gin Layout Builder
+are installed and Gin is the active admin theme, AIRO applies a small optional
+adapter path for the `/node/{node}/airo-analysis` route so the Layout Builder
+canvas and AIRO side panel use Gin Layout Builder's supported form behavior.
+
+This integration is intentionally isolated to the AIRO Analysis route and does
+not use `hook_module_implements_alter()` or global hook ordering changes. Form
+cleanup that must happen after other form alterations is scoped to the AIRO
+Analysis form via `#after_build`, so behavior is stable regardless of module
+installation order.
 
 ---
 

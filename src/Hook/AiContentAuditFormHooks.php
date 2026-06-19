@@ -28,26 +28,6 @@ final class AiContentAuditFormHooks {
   }
 
   /**
-   * Adds a Gin LB sidebar theme suggestion on the AIRO Analysis route.
-   */
-  #[Hook('theme_suggestions_form_alter')]
-  public function themeSuggestionsFormAlter(array &$suggestions, array $variables): void {
-    if ($this->routeMatch->getRouteName() !== AiroNodeAnalysisFormAlterer::ROUTE_NAME) {
-      return;
-    }
-
-    if (!str_contains($variables['element']['#form_id'] ?? '', 'layout_builder_form')) {
-      return;
-    }
-
-    $suggestions = array_values(array_filter(
-      $suggestions,
-      static fn(string $suggestion): bool => $suggestion !== 'form__layout_builder_form__gin_lb',
-    ));
-    $suggestions[] = 'form__layout_builder_form__gin_lb__airo_analysis';
-  }
-
-  /**
    * Exposes the AIRO panel render array to the sidebar template.
    */
   #[Hook('preprocess_form')]
@@ -56,17 +36,6 @@ final class AiContentAuditFormHooks {
       return;
     }
 
-    $element = $variables['element'] ?? [];
-    if (isset($element['#airo_analysis_panel'])) {
-      $variables['airo_panel'] = $element['#airo_analysis_panel'];
-    }
-  }
-
-  /**
-   * Ensures the AIRO panel variable is set for the LB sidebar form template.
-   */
-  #[Hook('preprocess_form__layout_builder_form__gin_lb__airo_analysis')]
-  public function preprocessAiroAnalysisLayoutForm(array &$variables): void {
     $element = $variables['element'] ?? [];
     if (isset($element['#airo_analysis_panel'])) {
       $variables['airo_panel'] = $element['#airo_analysis_panel'];

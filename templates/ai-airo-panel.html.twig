@@ -27,7 +27,7 @@
     </div>
   {% endif %}
 
-  {# Tab Bar — Drupal .tabs--primary structure; picks up GIN styles via gin/tabs (loaded by gin/base). #}
+  {# Tab Bar — Drupal .tabs--primary structure, styled by the active admin theme. #}
   <nav class="tabs-wrapper is-horizontal" aria-label="{{ 'Analysis sections'|t }}">
     <ul class="tabs tabs--primary is-horizontal clearfix" role="tablist">
       <li class="tabs__tab{% if active_tab == 'preview-tab' %} is-active{% endif %}">
@@ -93,12 +93,7 @@
     </div>
   {% endfor %}
 
-  {#
-    Sticky Footer — GIN .gin-sticky-form-actions pattern.
-    Token: background-color: var(--gin-bg-app) | border-top: var(--gin-border-color-layer)
-    Shadow: var(--gin-shadow-l2) for the sticky footer elevation.
-  #}
-  <footer class="airo-panel__footer gin-sticky-form-actions">
+  <footer class="airo-panel__footer">
     {% if full_report_url %}
       <a href="{{ full_report_url }}"
         class="button button--primary button--small airo-panel__footer__action"

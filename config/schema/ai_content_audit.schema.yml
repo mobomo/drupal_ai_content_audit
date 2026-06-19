@@ -25,31 +25,34 @@ ai_content_audit.settings:
     render_mode:
       type: string
       label: 'Content render mode'
-    default_provider:
+    default_provider_model:
       type: string
-      label: 'Default AI provider plugin ID'
-    default_model:
-      type: string
-      label: 'Default AI model ID'
-    enable_custom_system_prompt:
-      type: boolean
-      label: 'Toggle custom system prompt override'
-    enable_custom_user_prompt:
-      type: boolean
-      label: 'Toggle custom user prompt override'
+      label: 'Default AI provider/model simple option'
     prompts:
       type: mapping
       label: 'Prompts settings'
       mapping:
-        system_prompt:
+        assessment_system_prompt:
           type: string
-          label: 'System prompt'
+          label: 'Assessment system prompt'
           constraints:
             ConfigExists:
               prefix: 'ai.ai_prompt.'
-        user_prompt:
+        assessment_user_prompt:
           type: string
-          label: 'User prompt'
+          label: 'Assessment user prompt'
+          constraints:
+            ConfigExists:
+              prefix: 'ai.ai_prompt.'
+        preview_system_prompt:
+          type: string
+          label: 'Preview system prompt'
+          constraints:
+            ConfigExists:
+              prefix: 'ai.ai_prompt.'
+        preview_user_prompt:
+          type: string
+          label: 'Preview user prompt'
           constraints:
             ConfigExists:
               prefix: 'ai.ai_prompt.'

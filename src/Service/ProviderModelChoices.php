@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Service;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\Enum\AiModelCapability;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * Enumerates all configured provider+model pairs for a given operation type.
- *
- * Uses each provider's getConfiguredModels() for short model labels and the
- * plugin definition label for provider names. Key format:
- * <provider_id>__<model_id> (double-underscore separator).
+ * Wraps Drupal AI simple provider/model option helpers for chat models.
  */
 class ProviderModelChoices {
 
@@ -22,112 +19,154 @@ class ProviderModelChoices {
   ) {}
 
   /**
-   * Returns all configured provider+model pairs for an operation type.
+   * Returns configured provider/model pairs for an operation type.
    *
-   * @param string $op_type
-   *   The AI operation type to filter by.  Defaults to 'chat'.
-   *
-   * @return array
-   *   An indexed array of associative arrays, each containing:
-   *   - key (string): composite '<provider_id>__<model_id>' key.
-   *   - label (string): short model label from the provider (e.g. "GPT-4o").
-   *   - provider_label (string): human-readable provider name (e.g. "OpenAI").
-   *   - provider_id (string): provider plugin ID.
-   *   - model_id (string): model identifier.
+   * @return array<int, array<string, string>>
+   *   Choice rows keyed for AIRO UI usage.
    */
   public function forOperationType(string $op_type = 'chat'): array {
-    try {
-      $providers = $this->aiProvider->getProvidersForOperationType($op_type, TRUE);
-    }
-    catch (\Exception) {
-      return [];
-    }
-
     $choices = [];
-    foreach ($providers as $provider_id => $definition) {
-      try {
-        $provider = $this->aiProvider->createInstance($provider_id);
-        $models = $provider->getConfiguredModels($op_type);
+    foreach ($this->getFlatSelectOptions($op_type) as $key => $label) {
+      [$provider_id, $model_id] = $this->parseKey((string) $key);
+      if ($provider_id === '' || $model_id === '') {
+        continue;
       }
-      catch (\Exception) {
+      if (!$this->isUsableForOperationType($provider_id, $model_id, $op_type)) {
         continue;
       }
 
-      $provider_label = $this->renderLabel($definition['label'] ?? $provider_id);
-      foreach ($models as $model_id => $model_name) {
-        if ($op_type === 'chat' && $this->isNonChatModelId((string) $model_id)) {
-          continue;
-        }
-
-        $choices[] = [
-          'key'            => $provider_id . '__' . $model_id,
-          'label'          => $this->formatModelLabel(
-            $this->renderLabel($model_name),
-            (string) $model_id,
-          ),
-          'provider_label' => $provider_label,
-          'provider_id'    => $provider_id,
-          'model_id'       => (string) $model_id,
-        ];
-      }
+      $choices[] = [
+        'key' => (string) $key,
+        'label' => $this->renderModelLabel($label, $provider_id),
+        'provider_label' => $provider_id,
+        'provider_id' => $provider_id,
+        'model_id' => $model_id,
+      ];
     }
-
     return $choices;
   }
 
   /**
-   * Returns a flat options array suitable for a Form API #type => 'select'.
+   * Returns Drupal AI simple provider/model options.
    *
-   * Keys are '<provider_id>__<model_id>'; values are model labels.
-   * An empty-option entry is NOT prepended — add your own '- Select -' entry
-   * in the form if desired.
-   *
-   * @param string $op_type
-   *   The AI operation type to filter by. Defaults to 'chat'.
-   *
-   * @return array<string, string>
-   *   Flat options array keyed by provider__model.
+   * @return array<string, mixed>
+   *   Options keyed by Drupal AI's supported simple option value.
    */
   public function getSelectOptions(string $op_type = 'chat'): array {
-    $options = [];
-    foreach ($this->forOperationType($op_type) as $choice) {
-      $options[$choice['key']] = $choice['label'];
-    }
-    return $options;
+    return $this->getFlatSelectOptions($op_type);
   }
 
   /**
-   * Returns an optgroup-style options array keyed by provider label.
+   * Returns options suitable for a Form API select.
    *
-   * Suitable for a Form API #type => 'select' with #options containing nested
-   * arrays (Drupal renders these as <optgroup> elements).
+   * Drupal AI may return either flat options or provider optgroups; both are
+   * valid for Form API select elements.
    *
-   * @param string $op_type
-   *   The AI operation type to filter by. Defaults to 'chat'.
-   *
-   * @return array<string, array<string, string>>
-   *   Grouped options, e.g.:
-   *   ['OpenAI' => ['openai__gpt-4o' => 'GPT-4o', ...],
-   *    'Anthropic' => ['anthropic__claude-3-5-sonnet' => 'Claude 3.5 ...']].
+   * @return array<string, mixed>
+   *   Options keyed by Drupal AI's supported simple option value, possibly
+   *   grouped by provider label.
    */
   public function getGroupedSelectOptions(string $op_type = 'chat'): array {
-    $choices = $this->forOperationType($op_type);
-    $grouped = [];
-    foreach ($choices as $choice) {
-      $provider_label = $choice['provider_label'] ?? $choice['provider_id'];
-      $grouped[$provider_label][$choice['key']] = $choice['label'];
+    try {
+      return $this->filterSelectOptions(
+        $this->aiProvider->getSimpleProviderModelOptions(
+          $op_type,
+          FALSE,
+          TRUE,
+          $this->getCapabilities($op_type),
+        ) ?: [],
+        $op_type,
+      );
     }
-    return $grouped;
+    catch (\Throwable) {
+      return [];
+    }
+  }
+
+  /**
+   * Parses a Drupal AI simple option into provider and model IDs.
+   *
+   * @return array{0: string, 1: string}
+   *   Provider plugin ID and model ID. Empty strings mean the option is invalid
+   *   or no longer available.
+   */
+  public function parseKey(string $key): array {
+    if ($key === '') {
+      return ['', ''];
+    }
+
+    try {
+      $provider = $this->aiProvider->loadProviderFromSimpleOption($key);
+      $model = (string) $this->aiProvider->getModelNameFromSimpleOption($key);
+    }
+    catch (\Throwable) {
+      return ['', ''];
+    }
+
+    $provider_id = $this->getProviderId($provider, $key);
+    if ($provider_id === '' || $model === '') {
+      return ['', ''];
+    }
+
+    return [$provider_id, $model];
+  }
+
+  /**
+   * Loads a provider/model pair from a Drupal AI simple option.
+   *
+   * @return array{0: object|null, 1: string}
+   *   Provider plugin instance and model ID.
+   */
+  public function loadFromKey(string $key): array {
+    if ($key === '') {
+      return [NULL, ''];
+    }
+
+    try {
+      $provider = $this->aiProvider->loadProviderFromSimpleOption($key);
+      $model = (string) $this->aiProvider->getModelNameFromSimpleOption($key);
+    }
+    catch (\Throwable) {
+      return [NULL, ''];
+    }
+
+    return [$provider, $model];
+  }
+
+  /**
+   * Finds the Drupal AI simple option for a legacy provider/model pair.
+   */
+  public function findKeyForProviderModel(string $provider_id, string $model_id, string $op_type = 'chat'): string {
+    if ($provider_id === '' || $model_id === '') {
+      return '';
+    }
+
+    foreach (array_keys($this->getFlatSelectOptions($op_type)) as $key) {
+      [$candidate_provider_id, $candidate_model_id] = $this->parseKey((string) $key);
+      if ($candidate_provider_id === $provider_id && $candidate_model_id === $model_id) {
+        return (string) $key;
+      }
+    }
+
+    return '';
+  }
+
+  /**
+   * Returns model capability filters for a Drupal AI operation type.
+   *
+   * AIRO sends a system message in both assessment and preview chat calls, so
+   * prefer models that declare system-role support when providers expose that
+   * metadata through Drupal AI.
+   *
+   * @return array<int, \Drupal\ai\Enum\AiModelCapability>
+   *   Capability filters passed to Drupal AI provider/model helpers.
+   */
+  private function getCapabilities(string $op_type): array {
+    return $op_type === 'chat' ? [AiModelCapability::ChatSystemRole] : [];
   }
 
   /**
    * Renders a label value from the AI module to a plain string.
-   *
-   * @param mixed $label
-   *   Label value from a provider plugin or model list.
-   *
-   * @return string
-   *   Plain-text label.
    */
   private function renderLabel(mixed $label): string {
     if ($label instanceof TranslatableMarkup || $label instanceof FormattableMarkup) {
@@ -138,82 +177,112 @@ class ProviderModelChoices {
   }
 
   /**
-   * Whether a model ID should be hidden from content-audit chat pickers.
-   *
-   * Providers may expose embeddings, audio, image, moderation, or legacy
-   * completion models alongside chat models (OpenAI "text-*" IDs are common).
-   *
-   * @param string $model_id
-   *   Model identifier.
-   *
-   * @return bool
-   *   TRUE when the model is not suitable for page content Q&A.
+   * Renders a simple model label without the provider prefix.
    */
-  private function isNonChatModelId(string $model_id): bool {
-    static $patterns = [
-      // Moderation, speech, image gen, TTS.
-      '/moderation/i',
-      '/whisper/i',
-      '/dall-e|dalle/i',
-      '/^tts|tts-/i',
-      '/clip/i',
-      '/gpt-image/i',
-      '/sora/i',
-      // Embeddings and similarity/search helpers.
-      '/embedding/i',
-      '/similarity/i',
-      '/search/i',
-      // Legacy completion / edit / instruct APIs.
-      '/instruct/i',
-      '/\-edit-/i',
-      '/text-(ada|babbage|curie|davinci)/i',
-      // Realtime / audio pipelines.
-      '/realtime/i',
-      '/audio/i',
-      '/transcribe/i',
-      // Code-only models.
-      '/codex/i',
-    ];
+  private function renderModelLabel(mixed $label, string $provider_id): string {
+    $text = $this->renderLabel($label);
+    $provider_prefix = preg_quote($provider_id, '/');
+    $text = preg_replace('/^' . $provider_prefix . '\s+-\s+/i', '', $text) ?? $text;
+    $text = preg_replace('/^[^-]+?\s+-\s+/', '', $text, 1) ?? $text;
 
-    foreach ($patterns as $pattern) {
-      if (preg_match($pattern, $model_id)) {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-  /**
-   * Normalizes model labels for display (e.g. "gpt-4o" → "GPT-4o").
-   *
-   * @param string $label
-   *   Human-readable model label from the provider.
-   * @param string $model_id
-   *   Model identifier used when the label is empty.
-   *
-   * @return string
-   *   Display label with GPT in uppercase.
-   */
-  private function formatModelLabel(string $label, string $model_id): string {
-    $text = $label !== '' ? $label : $model_id;
     return preg_replace('/\bgpt\b/i', 'GPT', $text) ?? $text;
   }
 
   /**
-   * Parses a composite provider__model key into its components.
-   *
-   * @param string $key
-   *   A key of the form '<provider_id>__<model_id>',
-   *   e.g. 'openai__gpt-4o-mini'.
-   *
-   * @return array
-   *   A two-element array: [$provider_id, $model_id].  Either element may be
-   *   an empty string if the key is malformed.
+   * Resolves a provider plugin ID from a simple option provider instance.
    */
-  public function parseKey(string $key): array {
-    $parts = explode('__', $key, 2);
-    return [$parts[0] ?? '', $parts[1] ?? ''];
+  private function getProviderId(mixed $provider, string $key): string {
+    if (is_object($provider) && method_exists($provider, 'getPluginId')) {
+      return (string) $provider->getPluginId();
+    }
+
+    $parts = preg_split('/__|[:|;]/', $key, 2);
+    return (string) ($parts[0] ?? '');
+  }
+
+  /**
+   * Returns Drupal AI simple provider/model options as a flat array.
+   *
+   * @return array<string, mixed>
+   *   Flat options keyed by Drupal AI's supported simple option value.
+   */
+  private function getFlatSelectOptions(string $op_type): array {
+    $options = $this->getGroupedSelectOptions($op_type);
+    $flat = [];
+
+    foreach ($options as $key => $label) {
+      if (is_array($label)) {
+        foreach ($label as $nested_key => $nested_label) {
+          $flat[(string) $nested_key] = $nested_label;
+        }
+        continue;
+      }
+
+      $flat[(string) $key] = $label;
+    }
+
+    return $flat;
+  }
+
+  /**
+   * Filters select options to the models AIRO can safely call.
+   *
+   * Drupal AI's OpenAI provider currently treats every model ID beginning with
+   * GPT as a chat model. That leaks image, audio, realtime, transcription and
+   * search catalog entries into chat selectors. Keep that provider-specific
+   * compatibility cleanup here, after the Drupal AI helper has produced the
+   * supported simple option values.
+   */
+  private function filterSelectOptions(array $options, string $op_type): array {
+    $filtered = [];
+    foreach ($options as $key => $label) {
+      if (is_array($label)) {
+        $nested = $this->filterSelectOptions($label, $op_type);
+        if ($nested !== []) {
+          $filtered[$key] = $nested;
+        }
+        continue;
+      }
+
+      [$provider_id, $model_id] = $this->parseKey((string) $key);
+      if ($provider_id !== '' && $model_id !== '' && $this->isUsableForOperationType($provider_id, $model_id, $op_type)) {
+        $filtered[$key] = $this->renderModelLabel($label, $provider_id);
+      }
+    }
+
+    return $filtered;
+  }
+
+  /**
+   * Whether a resolved provider/model pair is usable for an operation type.
+   */
+  private function isUsableForOperationType(string $provider_id, string $model_id, string $op_type): bool {
+    if ($op_type !== 'chat') {
+      return TRUE;
+    }
+
+    if ($provider_id !== 'openai') {
+      return TRUE;
+    }
+
+    $blocked_fragments = [
+      'audio',
+      'codex',
+      'image',
+      'instruct',
+      'realtime',
+      'search',
+      'transcribe',
+      'tts',
+    ];
+    $normalized = strtolower($model_id);
+    foreach ($blocked_fragments as $fragment) {
+      if (str_contains($normalized, $fragment)) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
 }
