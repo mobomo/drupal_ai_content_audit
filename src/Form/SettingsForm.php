@@ -226,8 +226,7 @@ final class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('AI Content Audit prompts'),
       '#open' => TRUE,
       '#tree' => TRUE,
-      '#access' => $this->currentUser->hasPermission('manage content audit prompts')
-        || $this->currentUser->hasPermission('administer ai content audit'),
+      '#access' => $this->currentUser->hasPermission('manage content audit prompts') || $this->currentUser->hasPermission('administer ai content audit'),
     ];
 
     $form['prompts']['preview_system_prompt'] = [
@@ -286,7 +285,6 @@ final class SettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     if ($this->currentUser->hasPermission('administer ai content audit')) {
-      // array_filter removes unchecked checkboxes (Drupal uses 0 when unchecked).
       $node_types = array_keys(array_filter((array) $form_state->getValue('node_types')));
 
       $this->config(self::CONFIG_NAME)
