@@ -99,6 +99,8 @@ jobs:
           composer config repositories.drupal composer https://packages.drupal.org/8
           ## Composer custom repo.
           composer config repositories.drupal_ai_content_audit path modules/custom/ai_content_audit
+          ## Install our module.
+          composer require drupal/ai_content_audit --no-interaction --no-progress --no-update
           ## Drupal dev + coder + phpstan
           composer require drupal/core-recommended:~11.3.0 \
                            drupal/core-dev:~11.3.0 \
@@ -106,8 +108,6 @@ jobs:
                            drupal/coder \
                            drush/drush:^13 \
                            --dev --no-interaction --no-progress -W
-          ## Install our module.
-          composer require drupal/ai_content_audit --no-interaction --no-progress
 
       - name: Run PHPCS (Drupal and DrupalPractice Coding Standards)
         run: |
