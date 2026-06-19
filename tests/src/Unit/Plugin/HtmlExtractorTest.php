@@ -64,6 +64,7 @@ class HtmlExtractorTest extends TestCase {
    *   Host name returned by the mock request (e.g. 'example.com').
    *
    * @return \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor
+   *   The HtmlExtractor plugin mock.
    */
   private function buildExtractor(string $host): HtmlExtractor {
     $request = $this->createMock(Request::class);
@@ -106,10 +107,12 @@ class HtmlExtractorTest extends TestCase {
    * Convenience wrapper that invokes convertHtmlToStructuredText().
    *
    * @param string $html
+   *   The rendered HTML string to convert.
    * @param \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor|null $extractor
    *   Optional extractor override (for host-specific tests).
    *
    * @return string
+   *   Structured plain text with whitespace normalised, or an empty string.
    */
   private function convert(string $html, ?HtmlExtractor $extractor = NULL): string {
     return $this->convertMethod->invoke($extractor ?? $this->extractor, $html);

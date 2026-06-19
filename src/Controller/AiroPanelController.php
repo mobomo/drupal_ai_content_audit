@@ -208,6 +208,7 @@ class AiroPanelController extends ControllerBase {
   public function submitPreviewQuery(NodeInterface $node): JsonResponse {
     $body = $this->getJsonRequestBody();
     $node = $this->revisionResolver->resolveFromRequestBody($node, $body);
+
     return $this->previewChat->submit($node, $body);
   }
 

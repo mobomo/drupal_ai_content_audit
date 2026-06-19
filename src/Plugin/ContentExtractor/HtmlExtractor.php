@@ -90,7 +90,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler.
    * @param \Drupal\metatag\MetatagManagerInterface|null $metatagManager
-   * The Metatag manager service.
+   *   The Metatag manager service.
    */
   public function __construct(
     array $configuration,
@@ -483,6 +483,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    */
   protected function convertImages(\DOMXPath $xpath): void {
     $nodes = iterator_to_array($xpath->query('//img') ?: [], FALSE);
+    /** @var \DOMElement $node */
     foreach ($nodes as $node) {
       $alt = trim($node->getAttribute('alt'));
       $marker = $alt !== '' ? " [Image: {$alt}] " : ' [Image: no alt text] ';
@@ -512,6 +513,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    */
   protected function convertLinks(\DOMXPath $xpath, string $siteHost): void {
     $nodes = iterator_to_array($xpath->query('//a[@href]') ?: [], FALSE);
+    /** @var \DOMElement $node */
     foreach ($nodes as $node) {
       $href = trim($node->getAttribute('href'));
       $text = trim($node->textContent);
@@ -652,7 +654,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    */
   protected function getSiteHost(): string {
     $request = $this->currentRequest;
-    return $request !== NULL ? $request->getHost() : '';
+    return $request->getHost() ?: '';
   }
 
 }

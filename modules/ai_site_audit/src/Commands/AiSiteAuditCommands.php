@@ -8,7 +8,6 @@ use Drupal\ai_site_audit\Service\AnalysisOrchestrator;
 use Drupal\ai_site_audit\Service\SiteAggregationService;
 use Drupal\ai_site_audit\Service\SiteRollupService;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\State\StateInterface;
 use Drush\Attributes\Command;
 use Drush\Attributes\Help;
 use Drush\Attributes\Option;
@@ -25,7 +24,6 @@ final class AiSiteAuditCommands extends DrushCommands {
     private readonly SiteAggregationService $aggregationService,
     private readonly SiteRollupService $rollupService,
     private readonly ConfigFactoryInterface $configFactory,
-    private readonly StateInterface $state,
   ) {
     parent::__construct();
   }
