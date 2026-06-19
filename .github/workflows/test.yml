@@ -1,0 +1,118 @@
+name: Drupal AI Content Audit workflow
+on:
+  pull_request:
+    branches: [ main, drupal_ai_content_improvements ]
+  push:
+    branches: [ main, drupal_ai_content_improvements ]
+
+jobs:
+  run-checks:
+    name: PHPCS Lint + Phpstan checks.
+    runs-on: ubuntu-latest
+    container:
+      image: php:8.3-cli
+
+    steps:
+      - name: Installing System Libraries
+        run: |
+          apt-get update
+          apt-get install -y \
+            git \
+            unzip \
+            libxml2-dev \
+            libcurl4-openssl-dev \
+            libonig-dev \
+            libzip-dev \
+            libsqlite3-dev \
+            libpng-dev \
+            libjpeg-dev \
+            libfreetype6-dev
+
+      - name: Restore Cached PHP Extensions
+        id: ext-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            /usr/local/lib/php/extensions
+            /usr/local/etc/php/conf.d
+          key: ${{ runner.os }}-php-8.3-v6-${{ github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.3-v6-${{ github.base_ref }}
+            ${{ runner.os }}-php-8.3-v6-main
+
+      - name: Install PHP Extensions
+        if: steps.ext-cache.outputs.cache-hit != 'true'
+        run: |
+          docker-php-ext-configure gd --with-freetype --with-jpeg
+          docker-php-ext-install \
+            dom \
+            curl \
+            xml \
+            mbstring \
+            zip \
+            pdo \
+            pdo_sqlite \
+            gd
+
+      - name: Save PHP Extensions to Cache
+        if: always() && steps.ext-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            /usr/local/lib/php/extensions
+            /usr/local/etc/php/conf.d
+          key: ${{ runner.os }}-php-8.3-v6-${{ github.ref_name }}
+
+      - name: Install Composer
+        run: |
+          EXPECTED_CHECKSUM="$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");')"
+          php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+          ACTUAL_CHECKSUM="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+          if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]
+          then
+              >&2 echo 'ERROR: Invalid installer checksum'
+              rm composer-setup.php
+              exit 1
+          fi
+          php composer-setup.php --quiet
+          RESULT=$?
+          rm composer-setup.php
+          chmod +x composer.phar
+          mv composer.phar /usr/local/bin/composer
+
+          # Explicitly add /usr/local/bin to the GitHub Actions path variable for subsequent steps
+          echo "/usr/local/bin" >> $GITHUB_PATH
+          exit $RESULT
+        shell: sh
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: modules/custom/ai_content_audit
+
+      - name: Init Drupal 11
+        run: |
+          composer create-project drupal/recommended-project:^11.3 tmp_drupal --no-interaction --no-install
+          mv tmp_drupal/composer.json ./composer.json
+          rm -rf tmp_drupal
+          ## Composer drupal repo.
+          composer config repositories.drupal composer https://packages.drupal.org/8
+          ## Composer custom repo.
+          composer config repositories.drupal_ai_content_audit path modules/custom/ai_content_audit
+          ## Drupal dev + coder + phpstan
+          composer require drupal/core-dev:^11.3 \
+                           mglaman/phpstan-drupal \
+                           drupal/coder \
+                           drush/drush:^13 \
+                           --dev --no-interaction --no-progress
+          ## Install our module.
+          composer require drupal/ai_content_audit --no-interaction --no-progress
+
+      - name: Run PHPCS (Drupal and DrupalPractice Coding Standards)
+        run: |
+          vendor/bin/phpcs --standard=Drupal,DrupalPractice --extensions=php,module,inc,install,profile,theme,yml modules/custom/ai_content_audit
+
+      - name: Run PHPStan (Static Analysis)
+        run: |
+          echo "::remove-matcher owner=phpstan::"
+          vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --error-format=table --memory-limit 1G 

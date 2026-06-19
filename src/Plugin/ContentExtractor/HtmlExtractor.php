@@ -6,19 +6,24 @@ namespace Drupal\ai_content_audit\Plugin\ContentExtractor;
 
 use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\ai_content_audit\Extractor\EntityContextTrait;
-use Drupal\ai_content_audit\Service\HtmlFetchService;
-use Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\Core\Render\AttachmentsResponseProcessorInterface;
+use Drupal\Core\Render\HtmlResponse;
+use Drupal\Core\Render\MainContent\HtmlRenderer;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Theme\ThemeInitializationInterface;
 use Drupal\Core\Theme\ThemeManagerInterface;
+use Drupal\metatag\MetatagManagerInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Route;
 
 /**
  * Extracts node content, rendering its HTML and converting to structured text.
@@ -72,16 +77,20 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    *   The renderer.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
-   *   The request stack.
-   * @param \Drupal\ai_content_audit\Service\LayoutBuilderPreviewSource $layoutBuilderPreviewSource
-   *   The Layout Builder preview source.
-   * @param \Drupal\ai_content_audit\Service\HtmlFetchService $htmlFetchService
-   *   The HTML fetch service.
    * @param \Drupal\Core\Theme\ThemeManagerInterface $themeManager
    *   The theme manager.
    * @param \Drupal\Core\Theme\ThemeInitializationInterface $themeInitialization
    *   The theme initialization.
+   * @param \Drupal\Core\Render\MainContent\HtmlRenderer $mainContentHtmlRenderer
+   *   The HTML renderer service.
+   * @param \Symfony\Component\HttpFoundation\Request $currentRequest
+   *   The Request object.
+   * @param \Drupal\Core\Render\AttachmentsResponseProcessorInterface $attachmentsProcessor
+   *   The HTML response attachments processor service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler.
+   * @param \Drupal\metatag\MetatagManagerInterface|null $metatagManager
+   * The Metatag manager service.
    */
   public function __construct(
     array $configuration,
@@ -90,11 +99,13 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     protected EntityTypeManagerInterface $entityTypeManager,
     protected RendererInterface $renderer,
     protected ConfigFactoryInterface $configFactory,
-    protected RequestStack $requestStack,
-    protected LayoutBuilderPreviewSource $layoutBuilderPreviewSource,
-    protected HtmlFetchService $htmlFetchService,
     protected ThemeManagerInterface $themeManager,
     protected ThemeInitializationInterface $themeInitialization,
+    protected HtmlRenderer $mainContentHtmlRenderer,
+    protected Request $currentRequest,
+    protected AttachmentsResponseProcessorInterface $attachmentsProcessor,
+    protected readonly ModuleHandlerInterface $moduleHandler,
+    protected readonly ?MetatagManagerInterface $metatagManager = NULL,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -110,11 +121,13 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       $container->get('entity_type.manager'),
       $container->get('renderer'),
       $container->get('config.factory'),
-      $container->get('request_stack'),
-      $container->get('ai_content_audit.layout_builder_preview_source'),
-      $container->get('ai_content_audit.html_fetch'),
       $container->get('theme.manager'),
       $container->get('theme.initialization'),
+      $container->get('main_content_renderer.html'),
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('html_response.attachments_processor'),
+      $container->get('module_handler'),
+      $container->has('metatag.manager') ? $container->get('metatag.manager') : NULL,
     );
   }
 
@@ -149,35 +162,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     $metadata = $this->buildContentMetadataBlock($node);
     $entityContext = $this->buildEntityContextBlock($node);
 
-    // Get the frontend theme set as the default.
-    // This is the theme we want to use to render the node, so markup matches.
-    $default_fe_theme = $this->configFactory->get('system.theme')->get('default');
-    // Get the 'current' active theme, since the extractor runs on the backend,
-    // we need to switch back to this one, once we've got the rendered HTML.
-    $admin_active_theme = $this->themeManager->getActiveTheme();
-    // Temporary set the active frontend theme before rendering the node, so the
-    // extracted HTML matches the markup editors are viewing.
-    $frontend_theme = $this->themeInitialization->getActiveThemeByName($default_fe_theme);
-    $this->themeManager->setActiveTheme($frontend_theme);
-
-    try {
-      // Render the node to HTML using an isolated render context to prevent
-      // "leaked render context" errors that occur when render calls are nested
-      // outside an active render context.
-      $viewBuilder = $this->entityTypeManager->getViewBuilder('node');
-      $renderArray = $viewBuilder->view($node, 'full');
-
-      $html = (string) $this->renderer->executeInRenderContext(
-        new RenderContext(),
-        function () use (&$renderArray): string {
-          return (string) $this->renderer->render($renderArray);
-        }
-      );
-    }
-    finally {
-      // Switch back to the admin theme.
-      $this->themeManager->setActiveTheme($admin_active_theme);
-    }
+    $html = $this->renderFullHtmlPage($node);
 
     if (empty(trim($html))) {
       // Nothing rendered; assemble header and footer without body.
@@ -206,6 +191,120 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
   }
 
   /**
+   * Renders a node as an HTML page using the active frontend theme.
+   *
+   * Creates a fake request and route to let Drupal build the block layout
+   * and render the full frontend page structure (Header, Footer, attachments).
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to render.
+   *
+   * @return string
+   *   The fully rendered HTML page content.
+   */
+  protected function renderFullHtmlPage(NodeInterface $node): string {
+    // Get the frontend theme set as the default.
+    // This is the theme we want to use to render the node, so markup matches.
+    $default_fe_theme = $this->configFactory->get('system.theme')->get('default');
+    // Get the 'current' active theme, since the extractor runs on the backend,
+    // we need to switch back to this one, once we've got the rendered HTML.
+    $admin_active_theme = $this->themeManager->getActiveTheme();
+    // Temporary set the active frontend theme before rendering the node, so the
+    // extracted HTML matches the markup editors are viewing.
+    $frontend_theme = $this->themeInitialization->getActiveThemeByName($default_fe_theme);
+    $this->themeManager->setActiveTheme($frontend_theme);
+
+    try {
+      // Create a new Route object for the node view.
+      $route = new Route('/node/{node}', [
+        '_controller' => '\Drupal\node\Controller\NodeViewController::view',
+        '_title_callback' => '\Drupal\node\Controller\NodeViewController::title',
+      ]);
+
+      // We fake a routeMatch object for the current node, since the current
+      // routeMatch is for the backend route.
+      $fake_route_match = new RouteMatch(
+        'entity.node.canonical',
+        $route,
+        ['node' => $node],
+        ['node' => $node->id()]
+      );
+
+      // We create a fake (node) request object to pass into the renderer.
+      // Since the actual request comes from the backend the "frontend" assets
+      // (like regions, metadata, etc... are not present).
+      $fake_request = $this->currentRequest->duplicate();
+      $fake_request->attributes->set('_route_object', $route);
+      $fake_request->attributes->set('_route', 'entity.node.canonical');
+      $fake_request->attributes->set('node', $node);
+
+      // Build node render array.
+      $view_builder = $this->entityTypeManager->getViewBuilder('node');
+      $main_content = $view_builder->view($node, 'full');
+      $main_content['#title'] = $node->label();
+
+      // If metatag module is installed, we extract the metatags and attach them
+      // to the rendered node.
+      if ($this->moduleHandler->moduleExists('metatag')) {
+        $this->attachMetatags($main_content, $node);
+      }
+
+      $html_renderer = $this->mainContentHtmlRenderer;
+
+      // Finally create a new RenderContext wrapper to send the rendered node
+      // array with all attachments along with our fake request and route.
+      $render_context = new RenderContext();
+      $response = $this->renderer->executeInRenderContext(
+        $render_context, function () use ($main_content, $fake_request, $fake_route_match, $html_renderer) {
+          return $html_renderer->renderResponse($main_content, $fake_request, $fake_route_match);
+        }
+      );
+
+      // Update render context with the added metadata.
+      if (!$render_context->isEmpty()) {
+        $bubbleable_metadata = $render_context->pop();
+        if ($response instanceof HtmlResponse) {
+          $response->addCacheableDependency($bubbleable_metadata);
+        }
+      }
+      // Process the rest of attachments (coming from core).
+      if ($response instanceof HtmlResponse) {
+        $processed_response = $this->attachmentsProcessor->processAttachments($response);
+        $html_output = (string) $processed_response->getContent();
+      }
+      else {
+        $html_output = $response ? (string) $response->getContent() : '';
+      }
+
+    }
+    finally {
+      // Switch back to the admin theme.
+      $this->themeManager->setActiveTheme($admin_active_theme);
+    }
+
+    return $html_output;
+  }
+
+  /**
+   * If Metatag module is enabled, we append metatags to the rendered array.
+   *
+   * @param array &$renderArray
+   *   The target render array to attach the tags to.
+   * @param \Drupal\node\NodeInterface $node
+   *   The active node entity with the tokens.
+   */
+  protected function attachMetatags(array &$renderArray, NodeInterface $node): void {
+    // Get all metatags for this node.
+    $metatags = $this->metatagManager->tagsFromEntityWithDefaults($node);
+    // Convert tokens.
+    $metatagAttachments = $this->metatagManager->generateElements($metatags, $node);
+    // Merge the attachments in the render array.
+    if (!empty($metatagAttachments)) {
+      $renderArray = array_merge_recursive($renderArray, $metatagAttachments);
+    }
+  }
+
+  /**
    * Converts HTML to structured plain text (headings, lists, tables, links).
    *
    * @param string $html
@@ -229,6 +328,9 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     libxml_clear_errors();
 
     $xpath = new \DOMXPath($doc);
+
+    // Meta values live in attributes, not text nodes; collect before stripping.
+    $metaLines = $this->extractMetaTags($xpath);
 
     // Strip navigation chrome, scripts, styles, and hidden elements first so
     // they do not contribute text to the output.
@@ -256,7 +358,57 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
     // Collapse runs of three or more consecutive newlines to at most two.
     $text = (string) preg_replace('/\n{3,}/', "\n\n", $text);
 
+    if (!empty($metaLines)) {
+      $metaBlock = "--- Page Meta Tags ---\n" . implode("\n", $metaLines);
+      $text = $metaBlock . "\n\n" . $text;
+    }
+
     return trim($text);
+  }
+
+  /**
+   * Extracts meta tag values from the document head.
+   *
+   * Uses the name, property, or http-equiv attribute as the label and the
+   * content attribute as the value. Formatted as "Meta {label}: {value}".
+   *
+   * @param \DOMXPath $xpath
+   *   The XPath object for the current document.
+   *
+   * @return string[]
+   *   The formatted meta tag lines.
+   */
+  protected function extractMetaTags(\DOMXPath $xpath): array {
+    $lines = [];
+    $seen = [];
+
+    $nodes = iterator_to_array($xpath->query('//meta') ?: [], FALSE);
+    foreach ($nodes as $node) {
+      if (!$node instanceof \DOMElement) {
+        continue;
+      }
+      // Resolve the label: name > property > http-equiv.
+      $label = $node->getAttribute('name') ?: $node->getAttribute('property') ?: $node->getAttribute('http-equiv');
+      $label = trim($label);
+      $value = trim($node->getAttribute('content'));
+
+      if ($label === '' || $value === '') {
+        continue;
+      }
+
+      // Skip common non-content metas.
+      if (in_array(strtolower($label), ['viewport', 'charset', 'generator'], TRUE)) {
+        continue;
+      }
+      // Deduplicate by label (keep first occurrence).
+      if (isset($seen[$label])) {
+        continue;
+      }
+      $seen[$label] = TRUE;
+      $lines[] = 'Meta ' . $label . ': ' . $value;
+    }
+
+    return $lines;
   }
 
   /**
@@ -275,8 +427,6 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       '//script',
       '//style',
       '//nav',
-      '//header',
-      '//footer',
       '//*[contains(concat(" ",normalize-space(@class)," ")," visually-hidden ")]',
       '//*[contains(concat(" ",normalize-space(@class)," ")," hidden ")]',
     ];
@@ -501,7 +651,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    *   The hostname, or an empty string when there is no current request.
    */
   protected function getSiteHost(): string {
-    $request = $this->requestStack->getCurrentRequest();
+    $request = $this->currentRequest;
     return $request !== NULL ? $request->getHost() : '';
   }
 
