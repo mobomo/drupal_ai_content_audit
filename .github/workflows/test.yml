@@ -99,6 +99,8 @@ jobs:
           composer config repositories.drupal composer https://packages.drupal.org/8
           ## Composer custom repo.
           composer config repositories.drupal_ai_content_audit path modules/custom/ai_content_audit
+          ## Set security advidory to false so we can install our dependencies.
+          composer config policy.advisories.block false
           ## Install our module.
           composer require drupal/ai_content_audit --no-interaction --no-progress --no-update
           ## Drupal dev + coder + phpstan
