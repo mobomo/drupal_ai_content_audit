@@ -1,9 +1,9 @@
 name: Drupal AI Content Audit workflow
 on:
   pull_request:
-    branches: [ main, drupal_ai_content_improvements ]
+    branches: [ main, drupal_ai_content_improvements, drupal-org-pre-release ]
   push:
-    branches: [ main, drupal_ai_content_improvements ]
+    branches: [ main, drupal_ai_content_improvements, drupal-org-pre-release ]
 
 jobs:
   run-checks:
@@ -118,4 +118,4 @@ jobs:
       - name: Run PHPStan (Static Analysis)
         run: |
           echo "::remove-matcher owner=phpstan::"
-          vendor/bin/phpstan analyze modules/custom/ai_content_audit --no-progress --error-format=table --memory-limit 1G -c phpstan.neon
+          vendor/bin/phpstan analyze --no-progress --error-format=table --memory-limit 1G -c modules/custom/ai_content_audit/phpstan.neon modules/custom/ai_content_audit
