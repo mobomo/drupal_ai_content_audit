@@ -1,9 +1,9 @@
 name: Drupal AI Content Audit workflow
 on:
   pull_request:
-    branches: [ main, drupal_ai_content_improvements ]
+    branches: [ main, drupal_ai_content_improvements, drupal-org-pre-release ]
   push:
-    branches: [ main, drupal_ai_content_improvements ]
+    branches: [ main, drupal_ai_content_improvements, drupal-org-pre-release ]
 
 jobs:
   run-checks:
@@ -92,22 +92,24 @@ jobs:
 
       - name: Init Drupal 11
         run: |
-          composer create-project drupal/recommended-project:~11.3.0 tmp_drupal --no-interaction --no-install
+          composer create-project drupal/recommended-project:~11.3.12 tmp_drupal --no-interaction --no-install
           cp tmp_drupal/composer.json ./composer.json
           rm -rf tmp_drupal
           ## Composer drupal repo.
           composer config repositories.drupal composer https://packages.drupal.org/8
           ## Composer custom repo.
           composer config repositories.drupal_ai_content_audit path modules/custom/ai_content_audit
+          ## Set security advidory to false so we can install our dependencies.
+          composer config policy.advisories.block false
+          ## Install our module.
+          composer require drupal/ai_content_audit --no-interaction --no-progress --no-update
           ## Drupal dev + coder + phpstan
-          composer require drupal/core-recommended:~11.3.0 \
-                           drupal/core-dev:~11.3.0 \
+          composer require drupal/core-recommended:~11.3.12 \
+                           drupal/core-dev:~11.3.12 \
                            mglaman/phpstan-drupal \
                            drupal/coder \
                            drush/drush:^13 \
                            --dev --no-interaction --no-progress -W
-          ## Install our module.
-          composer require drupal/ai_content_audit --no-interaction --no-progress
 
       - name: Run PHPCS (Drupal and DrupalPractice Coding Standards)
         run: |
@@ -116,4 +118,4 @@ jobs:
       - name: Run PHPStan (Static Analysis)
         run: |
           echo "::remove-matcher owner=phpstan::"
-          vendor/bin/phpstan analyze modules/custom/ai_content_audit --level=4 --no-progress --error-format=table --memory-limit 1G 
+          vendor/bin/phpstan analyze --no-progress --error-format=table --memory-limit 1G -c modules/custom/ai_content_audit/phpstan.neon modules/custom/ai_content_audit
