@@ -26,8 +26,8 @@ class ContentTypeStatsQuery extends QueryPluginBase {
    */
   public function __construct(
     array $configuration,
-          $plugin_id,
-          $plugin_definition,
+    $plugin_id,
+    $plugin_definition,
     protected SiteAggregationService $aggregationService,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);

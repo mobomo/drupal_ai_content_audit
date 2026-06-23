@@ -13,7 +13,6 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
-use Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -385,17 +384,17 @@ class AiAssessmentController extends ControllerBase {
       }
     }
 
-    catch (Exception $e) {
+    catch (\Exception $e) {
       $this->getLogger('ai_content_audit')
         ->warning('Technical audit failed in report page: @msg', ['@msg' => $e->getMessage()]);
     }
 
     $grouped = [];
     foreach ([
-               'Node Checks',
-               'Site-Level AI Signals',
-               'Infrastructure',
-             ] as $label) {
+      'Node Checks',
+      'Site-Level AI Signals',
+      'Infrastructure',
+    ] as $label) {
       if (!empty($grouped_label[$label])) {
         ksort($grouped_label[$label]);
         $grouped[] = [
@@ -453,7 +452,7 @@ class AiAssessmentController extends ControllerBase {
       }
     }
 
-    catch (Exception $e) {
+    catch (\Exception $e) {
       $this->getLogger('ai_content_audit')
         ->warning('Filesystem audit failed in report page: @msg', ['@msg' => $e->getMessage()]);
     }
