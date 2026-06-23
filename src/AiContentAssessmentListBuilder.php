@@ -137,7 +137,7 @@ class AiContentAssessmentListBuilder extends EntityListBuilder {
   /**
    * Prefetches user entities for run_by references to avoid N+1 queries.
    *
-   * @param \Drupal\Core\Entity\EntityInterface[] $entities
+   * @param \Drupal\ai_content_audit\Entity\AiContentAssessment[] $entities
    *   The loaded assessment entities.
    */
   private function prefetchRunByUsers(array $entities): void {

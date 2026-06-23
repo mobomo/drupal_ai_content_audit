@@ -91,7 +91,7 @@ class SiteAnalysisService {
         new ChatMessage('system', $systemMessage),
         new ChatMessage('user', $userMessage),
       ]);
-
+      /** @var \Drupal\ai\OperationType\Chat\ChatInterface $proxy */
       $proxy = $this->aiProvider->createInstance($providerId);
       $response = $proxy->chat($input, $modelId, ['ai_site_audit', 'analyze']);
       $rawOutput = $response->getNormalized()->getText();

@@ -7,6 +7,7 @@ namespace Drupal\ai_content_audit\EventSubscriber;
 use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\node\NodeInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -21,6 +22,7 @@ final class AiroAnalysisRouteSubscriber implements EventSubscriberInterface {
   public function __construct(
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
     protected ConfigFactoryInterface $configFactory,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
@@ -97,10 +99,11 @@ final class AiroAnalysisRouteSubscriber implements EventSubscriberInterface {
     if ($node instanceof NodeInterface) {
       return $node;
     }
-    if (is_scalar($node) && is_numeric((string) $node)) {
-      $loaded = \Drupal::entityTypeManager()->getStorage('node')->load((int) $node);
+    if (is_numeric($node)) {
+      $loaded = $this->entityTypeManager->getStorage('node')->load((int) $node);
       return $loaded instanceof NodeInterface ? $loaded : NULL;
     }
+
     return NULL;
   }
 
