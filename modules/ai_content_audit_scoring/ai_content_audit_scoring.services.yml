@@ -1,0 +1,22 @@
+services:
+  ai_content_audit_scoring.airo_panel_tab.score:
+    class: Drupal\ai_content_audit\AiroPanel\Tab\ScoreTab
+    arguments:
+      - '@ai_content_audit.airo_panel_tab_builder'
+      - '@ai_content_audit.assessment_repository'
+    tags:
+      - { name: ai_content_audit.airo_panel_tab }
+
+  ai_content_audit_scoring.airo_panel_tab.action_items:
+    class: Drupal\ai_content_audit\AiroPanel\Tab\ActionItemsTab
+    arguments:
+      - '@ai_content_audit.airo_panel_tab_builder'
+    tags:
+      - { name: ai_content_audit.airo_panel_tab }
+
+  ai_content_audit_scoring.airo_panel_tab.technical_audit:
+    class: Drupal\ai_content_audit\AiroPanel\Tab\TechnicalAuditTab
+    arguments:
+      - '@ai_content_audit.airo_panel_tab_builder'
+    tags:
+      - { name: ai_content_audit.airo_panel_tab }

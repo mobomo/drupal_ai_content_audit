@@ -10,9 +10,10 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
- * Builds the AIRO analysis side panel (score, checks, tabs) for a node.
+ * Builds the AIRO Preview side panel for a node.
  */
 final class AiroAnalysisPanelBuilder {
 
@@ -30,7 +31,7 @@ final class AiroAnalysisPanelBuilder {
 
   public function __construct(
     protected AiContentAssessmentRepository $assessmentRepository,
-    protected AiroPanelTabBuilder $tabBuilder,
+    protected AiroPanelTabManager $tabManager,
     protected AuditCheckManager $auditCheckManager,
     protected TechnicalAuditService $technicalAuditService,
     protected ModuleHandlerInterface $moduleHandler,
@@ -120,37 +121,56 @@ final class AiroAnalysisPanelBuilder {
    *   Tab pane render arrays keyed by tab ID.
    */
   public function buildTabPanes(NodeInterface $node, bool $pageSkin = FALSE): array {
-    $preview = $this->tabBuilder->buildPreviewTab($node, $pageSkin);
-    if ($pageSkin) {
-      return ['preview-tab' => $preview];
+    return $this->tabManager->buildTabPanes($node, $pageSkin);
+  }
+
+  /**
+   * Tab definitions for navigation templates.
+   *
+   * @return array<int, array{id: string, label: \Drupal\Core\StringTranslation\TranslatableMarkup}>
+   *   Template-ready tab definitions.
+   */
+  public function buildTabDefinitions(NodeInterface $node, bool $pageSkin = FALSE): array {
+    return $this->tabManager->buildTabDefinitions($node, $pageSkin);
+  }
+
+  /**
+   * Whether the active tab set includes assessment-owned tabs.
+   *
+   * @param array<string, array> $tabPanes
+   *   Tab pane render arrays keyed by tab ID.
+   */
+  public function hasAssessmentTabs(array $tabPanes): bool {
+    foreach (['score-tab', 'action-items-tab', 'technical-audit-tab'] as $tabId) {
+      if (isset($tabPanes[$tabId])) {
+        return TRUE;
+      }
     }
-
-    $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
-
-    return [
-      'preview-tab' => $preview,
-      'score-tab' => $this->tabBuilder->buildScoreTab($node, $assessment),
-      'action-items-tab' => $this->tabBuilder->buildActionItemsTab($node),
-      'technical-audit-tab' => $this->tabBuilder->buildTechnicalAuditTab($node),
-    ];
+    return FALSE;
   }
 
   /**
    * Assess and full-report URLs for the node.
    *
-   * @return array{assess_url: string, full_report_url: string|null}
+   * @return array{assess_url: string|null, full_report_url: string|null}
    *   URLs for running an assessment and viewing the full report.
    */
   public function buildActionUrls(NodeInterface $node): array {
     $nodeId = (int) $node->id();
     $assessment = $this->assessmentRepository->getLatestForNode($nodeId);
 
-    $assessUrl = Url::fromRoute('ai_content_audit.panel.assess', ['node' => $nodeId])->toString();
-    $fullReportUrl = $assessment
-      ? Url::fromRoute('ai_content_audit.assessment.report', [
-        'ai_content_assessment' => $assessment->id(),
-      ])->toString()
-      : NULL;
+    try {
+      $assessUrl = Url::fromRoute('ai_content_audit.panel.assess', ['node' => $nodeId])->toString();
+      $fullReportUrl = $assessment
+        ? Url::fromRoute('ai_content_audit.assessment.report', [
+          'ai_content_assessment' => $assessment->id(),
+        ])->toString()
+        : NULL;
+    }
+    catch (RouteNotFoundException) {
+      $assessUrl = NULL;
+      $fullReportUrl = NULL;
+    }
 
     return [
       'assess_url' => $assessUrl,
@@ -322,13 +342,17 @@ final class AiroAnalysisPanelBuilder {
   }
 
   /**
-   * Accordion panel theme (preview, score, action items, technical).
+   * Accordion panel theme.
    */
   protected function buildAiroAccordionPanel(NodeInterface $node, string $variant = 'accordion'): array {
     $nodeId = (int) $node->id();
     $assessment = $this->assessmentRepository->getLatestForNode($nodeId);
     $urls = $this->buildActionUrls($node);
     $pageSkin = $variant === 'page';
+    $tabPanes = $this->buildTabPanes($node, $pageSkin);
+    $tabDefinitions = $this->buildTabDefinitions($node, $pageSkin);
+    $activeTab = array_key_first($tabPanes) ?: 'preview-tab';
+    $showAssessmentActions = $this->hasAssessmentTabs($tabPanes);
 
     return [
       '#theme' => 'ai_airo_accordion_item',
@@ -337,20 +361,22 @@ final class AiroAnalysisPanelBuilder {
       '#score' => $assessment?->getScore(),
       '#node_title' => $node->getTitle(),
       '#is_analyzing' => FALSE,
-      '#active_tab' => 'preview-tab',
+      '#active_tab' => $activeTab,
       '#use_page_skin' => $pageSkin,
       '#close_url' => $pageSkin
         ? Url::fromRoute('entity.node.edit_form', ['node' => $nodeId])->toString()
         : NULL,
       '#logo_url' => $pageSkin ? $this->getAiroLogoUrl() : NULL,
-      '#tab_panes' => $this->buildTabPanes($node, $pageSkin),
+      '#tab_definitions' => $tabDefinitions,
+      '#tab_panes' => $tabPanes,
+      '#show_assessment_actions' => $showAssessmentActions,
       '#assess_url' => $urls['assess_url'],
       '#full_report_url' => $urls['full_report_url'],
     ];
   }
 
   /**
-   * Main AIRO tabbed workspace (preview, score, action items, technical).
+   * Main AIRO tabbed workspace.
    */
   protected function buildAiroWorkspaceSection(NodeInterface $node): array {
     return [

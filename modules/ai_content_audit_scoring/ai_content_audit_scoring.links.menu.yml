@@ -1,0 +1,6 @@
+entity.ai_content_assessment.collection:
+  title: 'AI Assessments'
+  description: 'View and manage AI content assessment records.'
+  route_name: entity.ai_content_assessment.collection
+  parent: system.admin_content
+  weight: 10

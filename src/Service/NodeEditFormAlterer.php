@@ -32,7 +32,7 @@ final class NodeEditFormAlterer {
    * Implements hook_form_node_form_alter() logic.
    */
   public function alterForm(array &$form, FormStateInterface $form_state, string $form_id): void {
-    // AIRO Analysis tab: panel in airo-analysis-node-page aside, not advanced.
+    // AIRO Preview tab: panel in airo-analysis-node-page aside, not advanced.
     if ($this->routeMatch->getRouteName() === AiroNodeAnalysisFormAlterer::ROUTE_NAME) {
       self::stripAiroAnalysisTabSidebar($form);
       return;
@@ -47,10 +47,13 @@ final class NodeEditFormAlterer {
     $nodeId = (int) $node->id();
     $urls = $this->panelBuilder->buildActionUrls($node);
     $assessment = $this->assessmentRepository->getLatestForNode($nodeId);
+    $tabPanes = $this->panelBuilder->buildTabPanes($node);
+    $activeTab = array_key_first($tabPanes) ?: 'preview-tab';
+    $showAssessmentActions = $this->panelBuilder->hasAssessmentTabs($tabPanes);
 
     $form['airo_analysis'] = [
       '#type' => 'details',
-      '#title' => $this->t('AIRO Analysis'),
+      '#title' => $this->t('AIRO Preview'),
       '#group' => 'advanced',
       '#accordion_item' => TRUE,
       '#attributes' => ['class' => ['accordion__item']],
@@ -62,8 +65,10 @@ final class NodeEditFormAlterer {
         '#score' => $assessment?->getScore(),
         '#node_title' => $node->getTitle(),
         '#is_analyzing' => FALSE,
-        '#active_tab' => 'preview-tab',
-        '#tab_panes' => $this->panelBuilder->buildTabPanes($node),
+        '#active_tab' => $activeTab,
+        '#tab_definitions' => $this->panelBuilder->buildTabDefinitions($node),
+        '#tab_panes' => $tabPanes,
+        '#show_assessment_actions' => $showAssessmentActions,
         '#assess_url' => $urls['assess_url'],
         '#full_report_url' => $urls['full_report_url'],
         '#attached' => ['library' => ['ai_content_audit/airo-panel']],
@@ -77,7 +82,7 @@ final class NodeEditFormAlterer {
   /**
    * Removes Gin entity-meta / advanced sidebar panel from the node edit form.
    *
-   * On the AIRO Analysis tab (sin LB) the panel renders in the fixed aside.
+   * On the AIRO Preview tab without LB, the panel renders in the fixed aside.
    */
   public static function stripAiroAnalysisTabSidebar(array &$form): void {
     unset($form['airo_analysis']);

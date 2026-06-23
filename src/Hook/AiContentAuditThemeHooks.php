@@ -8,6 +8,7 @@ use Drupal\ai_content_audit\Service\ScoreMetaBuilder;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Routing\UrlGeneratorInterface;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
  * Hook_theme() and preprocess implementations for AIRO templates.
@@ -54,7 +55,9 @@ final class AiContentAuditThemeHooks {
           'node_title' => NULL,
           'is_analyzing' => FALSE,
           'active_tab' => 'preview-tab',
+          'tab_definitions' => [],
           'tab_panes' => [],
+          'show_assessment_actions' => FALSE,
         ],
         'template' => 'ai-airo-panel',
       ],
@@ -66,7 +69,9 @@ final class AiContentAuditThemeHooks {
           'node_title' => NULL,
           'is_analyzing' => FALSE,
           'active_tab' => 'preview-tab',
+          'tab_definitions' => [],
           'tab_panes' => [],
+          'show_assessment_actions' => FALSE,
           'assess_url' => NULL,
           'full_report_url' => NULL,
           'use_page_skin' => FALSE,
@@ -235,10 +240,15 @@ final class AiContentAuditThemeHooks {
 
     $node_id = $variables['node_id'];
     if ($node_id) {
-      $variables['assess_url'] = $this->urlGenerator->generateFromRoute(
-        'ai_content_audit.panel.assess',
-        ['node' => $node_id]
-      );
+      try {
+        $variables['assess_url'] = $this->urlGenerator->generateFromRoute(
+          'ai_content_audit.panel.assess',
+          ['node' => $node_id]
+        );
+      }
+      catch (RouteNotFoundException) {
+        $variables['assess_url'] = '';
+      }
     }
     else {
       $variables['assess_url'] = '';

@@ -1,11 +1,5 @@
 ai_content_audit.node.airo_analysis:
   route_name: ai_content_audit.node.airo_analysis
   base_route: entity.node.canonical
-  title: 'AIRO Analysis'
+  title: 'AIRO Preview'
   weight: 12
-
-ai_content_audit.node.assessment_history:
-  route_name: ai_content_audit.node.assessment_history
-  base_route: entity.node.canonical
-  title: 'AI Assessment History'
-  weight: 14

@@ -8,6 +8,7 @@
  * - score: The overall score or null.
  * - is_analyzing: Whether analysis is in progress.
  * - active_tab: The ID of the tab that should be visible on load.
+ * - tab_definitions: Ordered tab definitions with id and label.
  * - tab_panes: Associative array keyed by tab ID, values are pre-rendered
  *   HTML strings. All panes are embedded; visibility is toggled via the
  *   HTML `hidden` attribute — no per-tab AJAX required.
@@ -30,54 +31,20 @@
   {# Tab Bar — Drupal .tabs--primary structure, styled by the active admin theme. #}
   <nav class="tabs-wrapper is-horizontal" aria-label="{{ 'Analysis sections'|t }}">
     <ul class="tabs tabs--primary is-horizontal clearfix" role="tablist">
-      <li class="tabs__tab{% if active_tab == 'preview-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="preview-tab-tab"
-          class="tabs__link{% if active_tab == 'preview-tab' %} is-active{% endif %}"
-          data-airo-tab="preview-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'preview-tab' ? 'true' : 'false' }}"
-          aria-controls="preview-tab-panel"
-          tabindex="{{ active_tab == 'preview-tab' ? '0' : '-1' }}">
-          {{ 'AI Preview'|t }}
-        </button>
-      </li>
-      <li class="tabs__tab{% if active_tab == 'score-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="score-tab-tab"
-          class="tabs__link{% if active_tab == 'score-tab' %} is-active{% endif %}"
-          data-airo-tab="score-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'score-tab' ? 'true' : 'false' }}"
-          aria-controls="score-tab-panel"
-          tabindex="{{ active_tab == 'score-tab' ? '0' : '-1' }}">
-          {{ 'AI Score'|t }}
-        </button>
-      </li>
-      <li class="tabs__tab{% if active_tab == 'action-items-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="action-items-tab-tab"
-          class="tabs__link{% if active_tab == 'action-items-tab' %} is-active{% endif %}"
-          data-airo-tab="action-items-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'action-items-tab' ? 'true' : 'false' }}"
-          aria-controls="action-items-tab-panel"
-          tabindex="{{ active_tab == 'action-items-tab' ? '0' : '-1' }}">
-          {{ 'Action Items'|t }}
-        </button>
-      </li>
-      <li class="tabs__tab{% if active_tab == 'technical-audit-tab' %} is-active{% endif %}">
-        <button type="button"
-          id="technical-audit-tab-tab"
-          class="tabs__link{% if active_tab == 'technical-audit-tab' %} is-active{% endif %}"
-          data-airo-tab="technical-audit-tab"
-          role="tab"
-          aria-selected="{{ active_tab == 'technical-audit-tab' ? 'true' : 'false' }}"
-          aria-controls="technical-audit-tab-panel"
-          tabindex="{{ active_tab == 'technical-audit-tab' ? '0' : '-1' }}">
-          {{ 'Technical Audit'|t }}
-        </button>
-      </li>
+      {% for tab in tab_definitions %}
+        <li class="tabs__tab{% if active_tab == tab.id %} is-active{% endif %}">
+          <button type="button"
+            id="{{ tab.id }}-tab"
+            class="tabs__link{% if active_tab == tab.id %} is-active{% endif %}"
+            data-airo-tab="{{ tab.id }}"
+            role="tab"
+            aria-selected="{{ active_tab == tab.id ? 'true' : 'false' }}"
+            aria-controls="{{ tab.id }}-panel"
+            tabindex="{{ active_tab == tab.id ? '0' : '-1' }}">
+            {{ tab.label }}
+          </button>
+        </li>
+      {% endfor %}
     </ul>
   </nav>
 
@@ -93,6 +60,7 @@
     </div>
   {% endfor %}
 
+  {% if show_assessment_actions %}
   <footer class="airo-panel__footer">
     {% if full_report_url %}
       <a href="{{ full_report_url }}"
@@ -111,5 +79,6 @@
       {{ 'Re-analyze'|t }}
     </button>
   </footer>
+  {% endif %}
 
 </div>

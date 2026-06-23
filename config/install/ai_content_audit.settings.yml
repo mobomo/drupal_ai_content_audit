@@ -1,12 +1,5 @@
-enable_on_save: false
 max_chars_per_request: 8000
-enable_history: true
-node_types: []
-max_assessments_per_node: 10
-render_mode: text
 default_provider_model: ''
 prompts:
-  assessment_system_prompt: 'content_audit_assessment_system__content_audit_assessment_system_default'
-  assessment_user_prompt: 'content_audit_assessment_user__content_audit_assessment_user_default'
   preview_system_prompt: 'content_audit_preview_system__content_audit_preview_system_default'
   preview_user_prompt: 'content_audit_preview_user__content_audit_preview_user_default'

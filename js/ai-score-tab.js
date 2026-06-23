@@ -28,15 +28,7 @@
           btn.disabled = true;
           btn.textContent = Drupal.t('Analyzing...');
 
-          fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: airoAssessPostBody(btn),
-          })
+          Drupal.airoContentAudit.postJson(url, airoAssessPostBody(btn))
           .then(function (response) { return response.json(); })
           .then(function (data) {
             if (data.status === 'complete') {

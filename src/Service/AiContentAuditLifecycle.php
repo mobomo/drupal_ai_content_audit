@@ -10,6 +10,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\node\NodeInterface;
 use Psr\Log\LoggerInterface;
@@ -25,12 +26,17 @@ final class AiContentAuditLifecycle {
     protected QueueFactory $queueFactory,
     protected Connection $database,
     protected LoggerInterface $logger,
+    protected ModuleHandlerInterface $moduleHandler,
   ) {}
 
   /**
    * Invalidates assessment list cache tags when an assessment entity changes.
    */
   public function invalidateListCacheForAssessment(EntityInterface $entity): void {
+    if (!$this->isScoringEnabled()) {
+      return;
+    }
+
     if ($entity instanceof AiContentAssessment) {
       $nid = (int) $entity->get('target_node')->target_id;
       if ($nid) {
@@ -43,6 +49,10 @@ final class AiContentAuditLifecycle {
    * Enqueues a node for assessment when on-save automation is enabled.
    */
   public function maybeEnqueueNode(NodeInterface $node): void {
+    if (!$this->isScoringEnabled()) {
+      return;
+    }
+
     $config = $this->configFactory->get('ai_content_audit.settings');
     if (!$config->get('enable_on_save')) {
       return;
@@ -62,6 +72,10 @@ final class AiContentAuditLifecycle {
    * Deletes assessment entities when a node is removed.
    */
   public function deleteAssessmentsForDeletedNode(NodeInterface $node): void {
+    if (!$this->isScoringEnabled()) {
+      return;
+    }
+
     $storage = $this->entityTypeManager->getStorage('ai_content_assessment');
     $ids = $storage->getQuery()
       ->condition('target_node', $node->id())
@@ -82,6 +96,10 @@ final class AiContentAuditLifecycle {
    * Enqueues excess assessments for purge according to retention settings.
    */
   public function enqueueExcessAssessmentsForPurge(): void {
+    if (!$this->isScoringEnabled()) {
+      return;
+    }
+
     $max = (int) $this->configFactory->get('ai_content_audit.settings')
       ->get('max_assessments_per_node');
 
@@ -133,6 +151,13 @@ final class AiContentAuditLifecycle {
         '@chunks' => count(array_chunk($purge_ids, 50)),
       ],
     );
+  }
+
+  /**
+   * Whether scoring side effects should run.
+   */
+  private function isScoringEnabled(): bool {
+    return $this->moduleHandler->moduleExists('ai_content_audit_scoring');
   }
 
 }

@@ -127,6 +127,21 @@ services:
       - '@request_stack'
       - '@current_user'
 
+  ai_content_audit.airo_panel_tab_manager:
+    class: Drupal\ai_content_audit\Service\AiroPanelTabManager
+    tags:
+      -
+        name: service_collector
+        tag: ai_content_audit.airo_panel_tab
+        call: addTab
+
+  ai_content_audit.airo_panel_tab.preview:
+    class: Drupal\ai_content_audit\AiroPanel\Tab\PreviewTab
+    arguments:
+      - '@ai_content_audit.airo_panel_tab_builder'
+    tags:
+      - { name: ai_content_audit.airo_panel_tab }
+
   ai_content_audit.airo_node_revision_resolver:
     class: Drupal\ai_content_audit\Service\AiroNodeRevisionResolver
     arguments:
@@ -165,7 +180,7 @@ services:
     class: Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder
     arguments:
       - '@ai_content_audit.assessment_repository'
-      - '@ai_content_audit.airo_panel_tab_builder'
+      - '@ai_content_audit.airo_panel_tab_manager'
       - '@ai_content_audit.audit_check_manager'
       - '@ai_content_audit.technical_audit'
       - '@module_handler'
@@ -200,6 +215,7 @@ services:
       - '@queue'
       - '@database'
       - '@logger.channel.ai_content_audit'
+      - '@module_handler'
 
   # OOP hook classes: explicit services so the container injects constructors (see
   # Drupal\Core\Hook\HookCollectorPass::writeImplementationsToContainer).
