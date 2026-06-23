@@ -1,0 +1,20 @@
+includes:
+  - %currentWorkingDirectory%/vendor/phpstan/phpstan/conf/bleedingEdge.neon
+parameters:
+  level: 4
+  reportUnmatchedIgnoredErrors: false
+  treatPhpDocTypesAsCertain: false
+  parallel:
+    processTimeout: 300.0
+  fileExtensions:
+      - php
+      - module
+      - install
+  paths:
+    - .
+  ignoreErrors:
+    - '#Unsafe usage of new static\(\)#'
+    - "#^Class .* extends @internal class#"
+    - identifier: missingType.iterableValue
+  scanDirectories:
+    - %currentWorkingDirectory%/vendor/drush/drush/src-symfony-compatibility
