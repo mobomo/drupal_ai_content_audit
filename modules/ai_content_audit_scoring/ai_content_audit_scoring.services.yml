@@ -1,4 +1,27 @@
 services:
+  ai_content_audit.score_meta:
+    class: Drupal\ai_content_audit\Service\ScoreMetaBuilder
+    arguments: ['@string_translation']
+
+  ai_content_audit.airo_action_item_command:
+    class: Drupal\ai_content_audit\Service\AiroActionItemCommand
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+      - '@current_user'
+      - '@datetime.time'
+
+  ai_content_audit.airo_inline_score_widget_builder:
+    class: Drupal\ai_content_audit\Service\AiroInlineScoreWidgetBuilder
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+
+  ai_content_audit.airo_panel_tab_builder:
+    class: Drupal\ai_content_audit\Service\AiroPanelTabBuilder
+    arguments:
+      - '@ai_content_audit.assessment_repository'
+      - '@ai_content_audit.technical_audit'
+      - '@request_stack'
+
   ai_content_audit_scoring.airo_panel_tab.score:
     class: Drupal\ai_content_audit\AiroPanel\Tab\ScoreTab
     arguments:
@@ -20,3 +43,10 @@ services:
       - '@ai_content_audit.airo_panel_tab_builder'
     tags:
       - { name: ai_content_audit.airo_panel_tab }
+
+  Drupal\ai_content_audit_scoring\Hook\ScoringThemeHooks:
+    arguments:
+      - '@ai_content_audit.score_meta'
+      - '@date.formatter'
+      - '@url_generator'
+      - '@module_handler'

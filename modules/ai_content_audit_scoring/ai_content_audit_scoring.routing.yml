@@ -31,7 +31,7 @@ entity.ai_content_assessment.delete_form:
 ai_content_audit.panel.assess:
   path: '/admin/ai-content-audit/panel/{node}/assess'
   defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::assessNode'
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::assessNode'
     _title: 'Assess Node'
   requirements:
     _permission: 'run ai content assessment,administer ai content audit'
@@ -48,7 +48,7 @@ ai_content_audit.panel.assess:
 ai_content_audit.panel.status:
   path: '/admin/ai-content-audit/status/{node}'
   defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::assessmentStatus'
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::assessmentStatus'
     _title: 'Assessment Status'
   requirements:
     _permission: 'view ai content assessment,administer ai content audit'
@@ -63,7 +63,7 @@ ai_content_audit.panel.status:
 ai_content_audit.widget.refresh:
   path: '/admin/ai-content-audit/widget/{node}/refresh'
   defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::refreshWidget'
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::refreshWidget'
     _title: 'Widget Refresh'
     _format: 'json'
   requirements:
@@ -94,7 +94,7 @@ ai_content_audit.node.assessment_history:
 ai_content_audit.panel.actions_toggle:
   path: '/admin/ai-content-audit/panel/{node}/action-items/{item_id}/toggle'
   defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::toggleActionItem'
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::toggleActionItem'
   requirements:
     _permission: 'run ai content assessment,administer ai content audit'
     _csrf_request_header_token: 'TRUE'
@@ -120,3 +120,13 @@ ai_content_audit.assessment.report:
     parameters:
       ai_content_assessment:
         type: entity:ai_content_assessment
+
+ai_content_audit_scoring.settings:
+  path: '/admin/config/ai/content-audit/scoring'
+  defaults:
+    _form: '\Drupal\ai_content_audit_scoring\Form\ScoringSettingsForm'
+    _title: 'AIRO Scoring settings'
+  requirements:
+    _permission: 'administer ai content audit,manage content audit prompts'
+  options:
+    _admin_route: TRUE

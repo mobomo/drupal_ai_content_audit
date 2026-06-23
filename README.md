@@ -63,6 +63,12 @@ drush en ai_content_audit_scoring -y
 drush cr
 ```
 
+Scoring settings are available at:
+
+```text
+/admin/config/ai/content-audit/scoring
+```
+
 ## Permissions
 
 | Permission | Intended role | Notes |

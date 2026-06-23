@@ -107,24 +107,17 @@ services:
     tags:
       - { name: route_enhancer, priority: 4900 }
 
-  ai_content_audit.score_meta:
-    class: Drupal\ai_content_audit\Service\ScoreMetaBuilder
-    arguments: ['@string_translation']
-
   ai_content_audit.airo_panel_controller:
     class: Drupal\ai_content_audit\Controller\AiroPanelController
     factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
     arguments: ['@service_container']
 
-  ai_content_audit.airo_panel_tab_builder:
-    class: Drupal\ai_content_audit\Service\AiroPanelTabBuilder
+  ai_content_audit.airo_preview_tab_builder:
+    class: Drupal\ai_content_audit\Service\AiroPreviewTabBuilder
     arguments:
-      - '@ai_content_audit.assessment_repository'
-      - '@ai_content_audit.technical_audit'
       - '@ai.provider'
       - '@tempstore.private'
       - '@ai_content_audit.provider_model_choices'
-      - '@request_stack'
       - '@current_user'
 
   ai_content_audit.airo_panel_tab_manager:
@@ -138,7 +131,7 @@ services:
   ai_content_audit.airo_panel_tab.preview:
     class: Drupal\ai_content_audit\AiroPanel\Tab\PreviewTab
     arguments:
-      - '@ai_content_audit.airo_panel_tab_builder'
+      - '@ai_content_audit.airo_preview_tab_builder'
     tags:
       - { name: ai_content_audit.airo_panel_tab }
 
@@ -158,18 +151,6 @@ services:
       - '@ai_content_audit.prompt_resolver'
       - '@current_user'
       - '@logger.channel.ai_content_audit'
-
-  ai_content_audit.airo_action_item_command:
-    class: Drupal\ai_content_audit\Service\AiroActionItemCommand
-    arguments:
-      - '@ai_content_audit.assessment_repository'
-      - '@current_user'
-      - '@datetime.time'
-
-  ai_content_audit.airo_inline_score_widget_builder:
-    class: Drupal\ai_content_audit\Service\AiroInlineScoreWidgetBuilder
-    arguments:
-      - '@ai_content_audit.assessment_repository'
 
   ai_content_audit.node_layout_builder_detector:
     class: Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector
@@ -221,12 +202,6 @@ services:
   # Drupal\Core\Hook\HookCollectorPass::writeImplementationsToContainer).
   Drupal\ai_content_audit\Hook\AiContentAuditNodeFormHooks:
     arguments: ['@ai_content_audit.node_edit_form_alterer']
-
-  Drupal\ai_content_audit\Hook\AiContentAuditThemeHooks:
-    arguments:
-      - '@ai_content_audit.score_meta'
-      - '@date.formatter'
-      - '@url_generator'
 
   Drupal\ai_content_audit\Hook\AiContentAuditEntityHooks:
     arguments: ['@ai_content_audit.lifecycle']

@@ -4,3 +4,10 @@ entity.ai_content_assessment.collection:
   route_name: entity.ai_content_assessment.collection
   parent: system.admin_content
   weight: 10
+
+ai_content_audit_scoring.settings:
+  title: 'AIRO Scoring settings'
+  description: 'Configure assessment automation, history, audit checks, and prompts.'
+  route_name: ai_content_audit_scoring.settings
+  parent: ai.admin_settings
+  weight: 20

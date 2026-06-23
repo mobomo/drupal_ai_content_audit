@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\AiroPanel\Tab;
 
 use Drupal\ai_content_audit\AiroPanel\AiroPanelTabInterface;
-use Drupal\ai_content_audit\Service\AiroPanelTabBuilder;
+use Drupal\ai_content_audit\Service\AiroPreviewTabBuilder;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
@@ -18,7 +18,7 @@ final class PreviewTab implements AiroPanelTabInterface {
   use StringTranslationTrait;
 
   public function __construct(
-    private readonly AiroPanelTabBuilder $tabBuilder,
+    private readonly AiroPreviewTabBuilder $tabBuilder,
   ) {}
 
   /**
@@ -53,7 +53,7 @@ final class PreviewTab implements AiroPanelTabInterface {
    * {@inheritdoc}
    */
   public function build(NodeInterface $node, bool $pageSkin = FALSE): array {
-    return $this->tabBuilder->buildPreviewTab($node, $pageSkin);
+    return $this->tabBuilder->build($node, $pageSkin);
   }
 
 }

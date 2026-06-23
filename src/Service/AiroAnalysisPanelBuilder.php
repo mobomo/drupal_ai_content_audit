@@ -92,18 +92,20 @@ final class AiroAnalysisPanelBuilder {
       ],
     ];
 
-    $build['status'] = $this->buildStatusSection($node);
-    $available = $this->buildAvailableChecksSection($node);
-    if ($available !== NULL) {
-      $build['available_checks'] = $available;
-    }
-    $results = $this->buildPluginResultsSection($node);
-    if ($results !== NULL) {
-      $build['plugin_results'] = $results;
-    }
-    $recommendations = $this->buildRecommendationsSection($node);
-    if ($recommendations !== NULL) {
-      $build['recommendations'] = $recommendations;
+    if ($this->moduleHandler->moduleExists('ai_content_audit_scoring')) {
+      $build['status'] = $this->buildStatusSection($node);
+      $available = $this->buildAvailableChecksSection($node);
+      if ($available !== NULL) {
+        $build['available_checks'] = $available;
+      }
+      $results = $this->buildPluginResultsSection($node);
+      if ($results !== NULL) {
+        $build['plugin_results'] = $results;
+      }
+      $recommendations = $this->buildRecommendationsSection($node);
+      if ($recommendations !== NULL) {
+        $build['recommendations'] = $recommendations;
+      }
     }
     $build['airo_workspace'] = $this->buildAiroWorkspaceSection($node);
 
