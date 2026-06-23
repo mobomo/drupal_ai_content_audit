@@ -5,19 +5,13 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Controller;
 
 use Drupal\ai_content_audit\Entity\AiContentAssessment;
-use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
-use Drupal\ai_content_audit\Service\AiAssessmentService;
-use Drupal\ai_content_audit\Service\AiroActionItemCommand;
-use Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder;
-use Drupal\ai_content_audit\Service\AiroInlineScoreWidgetBuilder;
 use Drupal\ai_content_audit\Service\AiroNodeRevisionResolver;
-use Drupal\ai_content_audit\Service\AiroPanelpanelBuilder;
+use Drupal\ai_content_audit\Service\AiroPanelTabManager;
 use Drupal\ai_content_audit\Service\AiroPreviewChat;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\OpenOffCanvasDialogCommand;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
@@ -27,23 +21,20 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
- * Controller for the AIRO off-canvas analysis panel.
+ * Controller for the AIRO Preview off-canvas panel.
  */
 class AiroPanelController extends ControllerBase {
 
   public function __construct(
-    protected AiAssessmentService $assessmentService,
     protected RendererInterface $renderer,
     protected RequestStack $requestStack,
     protected AiContentAssessmentRepository $assessmentRepository,
-    protected AiroAnalysisPanelBuilder $panelBuilder,
+    protected AiroPanelTabManager $tabManager,
     protected AiroNodeRevisionResolver $revisionResolver,
     protected AiroPreviewChat $previewChat,
-    protected AiroActionItemCommand $actionItemCommand,
-    protected AiroInlineScoreWidgetBuilder $inlineScoreWidgetBuilder,
     protected ProviderModelChoices $providerModelChoices,
   ) {}
 
@@ -52,25 +43,25 @@ class AiroPanelController extends ControllerBase {
    */
   public static function create(ContainerInterface $container): static {
     return new static(
-      $container->get('ai_content_audit.assessment_service'),
       $container->get('renderer'),
       $container->get('request_stack'),
       $container->get('ai_content_audit.assessment_repository'),
-      $container->get('ai_content_audit.airo_analysis_panel_builder'),
+      $container->get('ai_content_audit.airo_panel_tab_manager'),
       $container->get('ai_content_audit.airo_node_revision_resolver'),
       $container->get('ai_content_audit.airo_preview_chat'),
-      $container->get('ai_content_audit.airo_action_item_command'),
-      $container->get('ai_content_audit.airo_inline_score_widget_builder'),
       $container->get('ai_content_audit.provider_model_choices'),
     );
   }
 
   /**
-   * Opens the AIRO analysis panel in the off-canvas dialog.
+   * Opens the AIRO Preview panel in the off-canvas dialog.
    */
   public function openPanel(NodeInterface $node): AjaxResponse {
     $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
-    $paneBuilds = $this->panelBuilder->buildTabPanes($node);
+    $paneBuilds = $this->tabManager->buildTabPanes($node);
+    $tabDefinitions = $this->tabManager->buildTabDefinitions($node);
+    $activeTab = array_key_first($paneBuilds) ?: 'preview-tab';
+    $showAssessmentActions = $this->hasAssessmentTabs($paneBuilds);
 
     $tabPanesHtml = [];
     $mergedAttached = ['library' => ['ai_content_audit/airo-panel']];
@@ -88,12 +79,14 @@ class AiroPanelController extends ControllerBase {
       '#score' => $assessment?->getScore(),
       '#node_title' => $node->getTitle(),
       '#is_analyzing' => FALSE,
-      '#active_tab' => 'preview-tab',
+      '#active_tab' => $activeTab,
+      '#tab_definitions' => $tabDefinitions,
       '#tab_panes' => $tabPanesHtml,
+      '#show_assessment_actions' => $showAssessmentActions,
       '#attached' => $mergedAttached,
-      '#assess_url' => Url::fromRoute('ai_content_audit.panel.assess', [
-        'node' => $node->id(),
-      ])->toString(),
+      '#assess_url' => $showAssessmentActions
+        ? $this->buildAssessUrl($node)
+        : NULL,
       '#full_report_url' => $this->buildFullReportUrl($assessment),
     ];
 
@@ -101,7 +94,7 @@ class AiroPanelController extends ControllerBase {
 
     $response = new AjaxResponse();
     $response->addCommand(new OpenOffCanvasDialogCommand(
-      (string) $this->t('Airo analysis: @title', ['@title' => $node->label()]),
+      (string) $this->t('AIRO Preview: @title', ['@title' => $node->label()]),
       (string) $html,
       [
         'width' => 560,
@@ -115,92 +108,6 @@ class AiroPanelController extends ControllerBase {
     $response->setAttachments($mergedAttached);
 
     return $response;
-  }
-
-  /**
-   * Triggers an AI assessment for the given node via AJAX.
-   */
-  public function assessNode(NodeInterface $node): JsonResponse {
-    try {
-      $node = $this->revisionResolver->resolveFromRequestBody($node, $this->getJsonRequestBody());
-      $result = $this->assessmentService->assessNode($node, [
-        'render_mode' => RenderMode::Html->value,
-      ]);
-
-      if (!$result['success']) {
-        $this->getLogger('ai_content_audit')->error('Assessment failed: @message', [
-          '@message' => $result['error'] ?? 'Unknown error',
-        ]);
-        return new JsonResponse([
-          'status' => 'error',
-          'message' => $this->t('Assessment failed: @error', [
-            '@error' => $result['error'] ?? 'Unknown error',
-          ]),
-        ], 500);
-      }
-
-      $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
-      return new JsonResponse([
-        'status' => 'complete',
-        'score' => $assessment?->get('score')->value,
-        'assessment_id' => $assessment?->id(),
-      ]);
-    }
-    catch (AccessDeniedHttpException $e) {
-      throw $e;
-    }
-    catch (\Exception $e) {
-      $this->getLogger('ai_content_audit')->error('Assessment failed: @message', [
-        '@message' => $e->getMessage(),
-      ]);
-      return new JsonResponse([
-        'status' => 'error',
-        'message' => $this->t('Assessment failed. Please try again.'),
-      ], 500);
-    }
-  }
-
-  /**
-   * Re-renders the inline score widget and returns a Drupal AJAX command.
-   */
-  public function refreshWidget(NodeInterface $node): AjaxResponse {
-    $widgetBuild = $this->inlineScoreWidgetBuilder->build($node);
-    $html = (string) $this->renderer->renderRoot($widgetBuild);
-
-    $response = new AjaxResponse();
-    $response->addCommand(new ReplaceCommand(
-      '.airo-widget[data-node-id="' . $node->id() . '"]',
-      $html,
-    ));
-    $response->setAttachments($widgetBuild['#attached'] ?? []);
-    return $response;
-  }
-
-  /**
-   * Returns the current assessment status for polling.
-   */
-  public function assessmentStatus(NodeInterface $node): JsonResponse {
-    $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
-    if ($assessment !== NULL) {
-      return new JsonResponse([
-        'status' => 'complete',
-        'score' => $assessment->get('score')->value,
-      ]);
-    }
-
-    return new JsonResponse([
-      'status' => 'pending',
-      'score' => NULL,
-    ]);
-  }
-
-  /**
-   * Toggles the completion state of an action item.
-   */
-  public function toggleActionItem(NodeInterface $node, string $item_id): JsonResponse {
-    $body = $this->getJsonRequestBody();
-    $result = $this->actionItemCommand->toggle($node, $item_id, !empty($body['completed']));
-    return new JsonResponse($result['payload'], $result['status_code']);
   }
 
   /**
@@ -247,9 +154,43 @@ class AiroPanelController extends ControllerBase {
       return NULL;
     }
 
-    return Url::fromRoute('ai_content_audit.assessment.report', [
-      'ai_content_assessment' => $assessment->id(),
-    ])->toString();
+    try {
+      return Url::fromRoute('ai_content_audit.assessment.report', [
+        'ai_content_assessment' => $assessment->id(),
+      ])->toString();
+    }
+    catch (RouteNotFoundException) {
+      return NULL;
+    }
+  }
+
+  /**
+   * Builds the assessment trigger URL when scoring routes are enabled.
+   */
+  private function buildAssessUrl(NodeInterface $node): ?string {
+    try {
+      return Url::fromRoute('ai_content_audit.panel.assess', [
+        'node' => $node->id(),
+      ])->toString();
+    }
+    catch (RouteNotFoundException) {
+      return NULL;
+    }
+  }
+
+  /**
+   * Whether the active tab set includes assessment-owned tabs.
+   *
+   * @param array<string, array> $tabPanes
+   *   Tab pane render arrays keyed by tab ID.
+   */
+  private function hasAssessmentTabs(array $tabPanes): bool {
+    foreach (['score-tab', 'action-items-tab', 'technical-audit-tab'] as $tabId) {
+      if (isset($tabPanes[$tabId])) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
 }
