@@ -39,15 +39,7 @@
           }
 
           // Persist via AJAX
-          fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ completed: isCompleted }),
-          })
+          Drupal.airoContentAudit.postJson(url, JSON.stringify({ completed: isCompleted }))
           .then(function (response) { return response.json(); })
           .then(function (data) {
             // Update summary counts
@@ -110,15 +102,7 @@
           btn.disabled = true;
           btn.textContent = Drupal.t('Checking...');
 
-          fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: airoAssessPostBody(btn),
-          })
+          Drupal.airoContentAudit.postJson(url, airoAssessPostBody(btn))
           .then(function (response) { return response.json(); })
           .then(function (data) {
             if (data.status === 'complete') {

@@ -2,14 +2,13 @@
 
 /**
  * @file
- * Install, update, and uninstall functions for AI Content Audit module.
+ * Install and uninstall functions for AI Content Audit module.
  *
  * NOTE: No hook_schema() is needed. SqlContentEntityStorage automatically
  * creates and manages the ai_content_assessment table based on the entity's
  * baseFieldDefinitions() when the module is installed.
  */
 
-use Drupal\ai_content_audit\Service\AiContentAuditPromptResolver;
 use Drupal\Core\Url;
 
 /**
@@ -61,49 +60,4 @@ function ai_content_audit_requirements(string $phase): array {
   }
 
   return $requirements;
-}
-
-/**
- * Migrates AIRO prompts to dedicated Prompt Entities per production flow.
- */
-function ai_content_audit_update_9101(): void {
-  if (\Drupal::hasService('ai.prompt_manager')) {
-    /** @var \Drupal\ai\Service\AiPromptManager $prompt_manager */
-    $prompt_manager = \Drupal::service('ai.prompt_manager');
-    $prompt_manager->upsertFromConfigInstall('ai_content_audit');
-  }
-
-  $config = \Drupal::configFactory()->getEditable('ai_content_audit.settings');
-  $config
-    ->set('prompts.assessment_system_prompt', AiContentAuditPromptResolver::DEFAULT_ASSESSMENT_SYSTEM_PROMPT)
-    ->set('prompts.assessment_user_prompt', AiContentAuditPromptResolver::DEFAULT_ASSESSMENT_USER_PROMPT)
-    ->set('prompts.preview_system_prompt', AiContentAuditPromptResolver::DEFAULT_PREVIEW_SYSTEM_PROMPT)
-    ->set('prompts.preview_user_prompt', AiContentAuditPromptResolver::DEFAULT_PREVIEW_USER_PROMPT)
-    ->clear('prompts.system_prompt')
-    ->clear('prompts.user_prompt')
-    ->clear('enable_custom_system_prompt')
-    ->clear('enable_custom_user_prompt')
-    ->save();
-}
-
-/**
- * Migrates module provider/model defaults to Drupal AI simple option values.
- */
-function ai_content_audit_update_9102(): void {
-  $config = \Drupal::configFactory()->getEditable('ai_content_audit.settings');
-  $legacy_provider = (string) ($config->get('default_provider') ?? '');
-  $legacy_model = (string) ($config->get('default_model') ?? '');
-  $default_provider_model = '';
-
-  if ($legacy_provider !== '' && $legacy_model !== '' && \Drupal::hasService('ai_content_audit.provider_model_choices')) {
-    /** @var \Drupal\ai_content_audit\Service\ProviderModelChoices $choices */
-    $choices = \Drupal::service('ai_content_audit.provider_model_choices');
-    $default_provider_model = $choices->findKeyForProviderModel($legacy_provider, $legacy_model);
-  }
-
-  $config
-    ->set('default_provider_model', $default_provider_model)
-    ->clear('default_provider')
-    ->clear('default_model')
-    ->save();
 }

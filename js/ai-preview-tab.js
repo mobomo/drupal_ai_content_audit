@@ -606,15 +606,7 @@
       }
     }
 
-    return fetch(queryUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify(postBody),
-    })
+    return Drupal.airoContentAudit.postJson(queryUrl, JSON.stringify(postBody))
     .then(function (response) { return response.json(); })
     .then(function (data) {
       if (data.error) {

@@ -1,4 +1,4 @@
-# Contributing to AI Content Auditor (`ai_content_audit`)
+# Contributing to AIRO Preview (`ai_content_audit`)
 
 Thank you for helping improve this module. The following guidelines keep
 reviews predictable for a Drupal contrib project.

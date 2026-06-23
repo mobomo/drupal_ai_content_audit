@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_content_audit\Unit\Service;
 
-use Drupal\ai_content_audit\Service\NodeEditFormAlterer;
+use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\Core\Form\FormStateInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests AIRO node edit form cleanup helpers.
+ * Tests AIRO Analysis form cleanup helpers.
  *
  * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\NodeEditFormAlterer
+ * @coversDefaultClass \Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer
  */
-final class NodeEditFormAltererTest extends TestCase {
+final class AiroNodeAnalysisFormAltererTest extends TestCase {
 
   /**
    * Verifies after-build cleanup removes sidebar artifacts on AIRO routes.
@@ -40,7 +40,7 @@ final class NodeEditFormAltererTest extends TestCase {
       ],
     ];
 
-    $result = NodeEditFormAlterer::afterBuildStripSidebarPanel(
+    $result = AiroNodeAnalysisFormAlterer::afterBuildStripSidebarPanel(
       $form,
       $this->createMock(FormStateInterface::class)
     );
@@ -68,7 +68,7 @@ final class NodeEditFormAltererTest extends TestCase {
       ],
     ];
 
-    $result = NodeEditFormAlterer::afterBuildStripSidebarPanel(
+    $result = AiroNodeAnalysisFormAlterer::afterBuildStripSidebarPanel(
       $form,
       $this->createMock(FormStateInterface::class)
     );

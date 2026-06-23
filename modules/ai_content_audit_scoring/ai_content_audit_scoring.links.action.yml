@@ -1,4 +1,3 @@
-# Delete action on the assessment collection/canonical page.
 entity.ai_content_assessment.delete_action:
   route_name: entity.ai_content_assessment.delete_form
   title: 'Delete'

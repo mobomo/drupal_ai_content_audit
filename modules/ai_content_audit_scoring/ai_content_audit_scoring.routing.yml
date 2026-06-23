@@ -1,0 +1,132 @@
+entity.ai_content_assessment.collection:
+  path: '/admin/content/ai-assessments'
+  defaults:
+    _entity_list: 'ai_content_assessment'
+    _title: 'AI Content Assessments'
+  requirements:
+    _permission: 'view ai content assessment,administer ai content audit'
+  options:
+    _admin_route: TRUE
+
+entity.ai_content_assessment.canonical:
+  path: '/admin/content/ai-assessments/{ai_content_assessment}'
+  defaults:
+    _entity_view: 'ai_content_assessment'
+    _title_callback: '\Drupal\Core\Entity\Controller\EntityController::title'
+  requirements:
+    _entity_access: 'ai_content_assessment.view'
+  options:
+    _admin_route: TRUE
+
+entity.ai_content_assessment.delete_form:
+  path: '/admin/content/ai-assessments/{ai_content_assessment}/delete'
+  defaults:
+    _entity_form: 'ai_content_assessment.delete'
+    _title: 'Delete AI Content Assessment'
+  requirements:
+    _entity_access: 'ai_content_assessment.delete'
+  options:
+    _admin_route: TRUE
+
+ai_content_audit.panel.assess:
+  path: '/admin/ai-content-audit/panel/{node}/assess'
+  defaults:
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::assessNode'
+    _title: 'Assess Node'
+  requirements:
+    _permission: 'run ai content assessment,administer ai content audit'
+    _csrf_request_header_token: 'TRUE'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::runAccess'
+    node: \d+
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.panel.status:
+  path: '/admin/ai-content-audit/status/{node}'
+  defaults:
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::assessmentStatus'
+    _title: 'Assessment Status'
+  requirements:
+    _permission: 'view ai content assessment,administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
+    node: \d+
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.widget.refresh:
+  path: '/admin/ai-content-audit/widget/{node}/refresh'
+  defaults:
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::refreshWidget'
+    _title: 'Widget Refresh'
+    _format: 'json'
+  requirements:
+    _permission: 'view ai content assessment,administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
+    node: \d+
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.node.assessment_history:
+  path: '/node/{node}/ai-assessment'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiAssessmentController::history'
+    _title: 'AI Assessment History'
+  requirements:
+    _permission: 'view ai content assessment,administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
+    node: \d+
+  options:
+    _admin_route: FALSE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.panel.actions_toggle:
+  path: '/admin/ai-content-audit/panel/{node}/action-items/{item_id}/toggle'
+  defaults:
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::toggleActionItem'
+  requirements:
+    _permission: 'run ai content assessment,administer ai content audit'
+    _csrf_request_header_token: 'TRUE'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::runAccess'
+    node: \d+
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.assessment.report:
+  path: '/admin/ai-content-audit/assessment/{ai_content_assessment}'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiAssessmentController::report'
+    _title_callback: '\Drupal\ai_content_audit\Controller\AiAssessmentController::reportTitle'
+  requirements:
+    _entity_access: 'ai_content_assessment.view'
+    ai_content_assessment: \d+
+  options:
+    _admin_route: TRUE
+    parameters:
+      ai_content_assessment:
+        type: entity:ai_content_assessment
+
+ai_content_audit_scoring.settings:
+  path: '/admin/config/ai/content-audit/scoring'
+  defaults:
+    _form: '\Drupal\ai_content_audit_scoring\Form\ScoringSettingsForm'
+    _title: 'AIRO Scoring settings'
+  requirements:
+    _permission: 'administer ai content audit,manage content audit prompts'
+  options:
+    _admin_route: TRUE

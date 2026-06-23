@@ -29,7 +29,15 @@ inline-widget:
     - core/drupal
     - core/drupal.ajax
     - core/once
+    - ai_content_audit/airo-csrf
     - ai_content_audit/design-tokens
+
+airo-csrf:
+  version: 1.x
+  js:
+    js/airo-csrf.js: {}
+  dependencies:
+    - core/drupal
 
 airo-panel:
   version: 1.x
@@ -43,12 +51,9 @@ airo-panel:
     - core/drupal.ajax
     - core/drupal.dialog.off_canvas
     - core/once
+    - ai_content_audit/airo-csrf
     - ai_content_audit/design-tokens
-    # All four tab panes are rendered at panel-open time, so their CSS and JS
-    # must be present in the initial page load — not loaded lazily per request.
-    - ai_content_audit/score-tab
-    - ai_content_audit/action-items-tab
-    - ai_content_audit/technical-audit-tab
+    # Individual tab providers attach their own libraries.
     - ai_content_audit/preview-tab
 
 score-tab:
@@ -62,7 +67,7 @@ score-tab:
     - core/drupal
     - core/drupal.ajax
     - core/once
-    - core/once
+    - ai_content_audit/airo-csrf
     - ai_content_audit/design-tokens
 
 action-items-tab:
@@ -76,6 +81,7 @@ action-items-tab:
     - core/drupal
     - core/drupal.ajax
     - core/once
+    - ai_content_audit/airo-csrf
     - ai_content_audit/design-tokens
 
 technical-audit-tab:
@@ -113,6 +119,7 @@ preview-tab:
     - core/once
     - ai_content_audit/design-tokens
     - ai_content_audit/provider_tabs
+    - ai_content_audit/airo-csrf
 
 assessment-report:
   version: 1.x

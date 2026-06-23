@@ -35,6 +35,10 @@ final class AiroNodeRevisionResolver {
    *   The revision to assess, or the route node when no revision is specified.
    */
   public function resolveFromRequestBody(NodeInterface $routeNode, array $decoded): NodeInterface {
+    if (!$routeNode->access('view', $this->currentUser)) {
+      throw new AccessDeniedHttpException();
+    }
+
     if (empty($decoded['revision_id'])) {
       return $routeNode;
     }
@@ -51,6 +55,10 @@ final class AiroNodeRevisionResolver {
     }
 
     if ((int) $revision->id() !== (int) $routeNode->id()) {
+      throw new AccessDeniedHttpException();
+    }
+
+    if (!$revision->access('view', $this->currentUser)) {
       throw new AccessDeniedHttpException();
     }
 

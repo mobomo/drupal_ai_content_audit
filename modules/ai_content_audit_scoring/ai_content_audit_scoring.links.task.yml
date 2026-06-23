@@ -1,0 +1,5 @@
+ai_content_audit.node.assessment_history:
+  route_name: ai_content_audit.node.assessment_history
+  base_route: entity.node.canonical
+  title: 'AI Assessment History'
+  weight: 14
