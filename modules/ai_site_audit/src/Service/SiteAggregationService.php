@@ -277,7 +277,7 @@ class SiteAggregationService {
    * Invalidate all cached aggregation data.
    */
   public function invalidateCache(): void {
-    $this->cache->invalidateAll();
+    $this->cache->deleteAll();
   }
 
   /**

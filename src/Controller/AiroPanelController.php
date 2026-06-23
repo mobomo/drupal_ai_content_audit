@@ -9,9 +9,10 @@ use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\AiroActionItemCommand;
+use Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder;
 use Drupal\ai_content_audit\Service\AiroInlineScoreWidgetBuilder;
 use Drupal\ai_content_audit\Service\AiroNodeRevisionResolver;
-use Drupal\ai_content_audit\Service\AiroPanelTabBuilder;
+use Drupal\ai_content_audit\Service\AiroPanelpanelBuilder;
 use Drupal\ai_content_audit\Service\AiroPreviewChat;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use Drupal\Core\Ajax\AjaxResponse;
@@ -38,7 +39,7 @@ class AiroPanelController extends ControllerBase {
     protected RendererInterface $renderer,
     protected RequestStack $requestStack,
     protected AiContentAssessmentRepository $assessmentRepository,
-    protected AiroPanelTabBuilder $tabBuilder,
+    protected AiroAnalysisPanelBuilder $panelBuilder,
     protected AiroNodeRevisionResolver $revisionResolver,
     protected AiroPreviewChat $previewChat,
     protected AiroActionItemCommand $actionItemCommand,
@@ -55,7 +56,7 @@ class AiroPanelController extends ControllerBase {
       $container->get('renderer'),
       $container->get('request_stack'),
       $container->get('ai_content_audit.assessment_repository'),
-      $container->get('ai_content_audit.airo_panel_tab_builder'),
+      $container->get('ai_content_audit.airo_analysis_panel_builder'),
       $container->get('ai_content_audit.airo_node_revision_resolver'),
       $container->get('ai_content_audit.airo_preview_chat'),
       $container->get('ai_content_audit.airo_action_item_command'),
@@ -69,7 +70,7 @@ class AiroPanelController extends ControllerBase {
    */
   public function openPanel(NodeInterface $node): AjaxResponse {
     $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
-    $paneBuilds = $this->tabBuilder->buildTabPanes($node);
+    $paneBuilds = $this->panelBuilder->buildTabPanes($node);
 
     $tabPanesHtml = [];
     $mergedAttached = ['library' => ['ai_content_audit/airo-panel']];

@@ -68,7 +68,8 @@ class AiContentAssessment extends ContentEntityBase {
    * Returns the assessed node entity.
    */
   public function getTargetNode(): ?NodeInterface {
-    return $this->get('target_node')->entity;
+    $entity = $this->get('target_node')->entity;
+    return $entity instanceof NodeInterface ? $entity : NULL;
   }
 
   /**

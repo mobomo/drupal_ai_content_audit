@@ -373,7 +373,7 @@ class SiteRollupService {
     // Build sub-score averages.
     $subScoreAverages = [];
     foreach ($subScoreAccum as $dim => $data) {
-      $avg = $data['count'] > 0 ? round($data['total'] / $data['count'], 2) : 0;
+      $avg = round($data['total'] / $data['count'], 2);
       $pct = $data['max_possible'] > 0 ? round(($avg / $data['max_possible']) * 100, 2) : 0;
       $subScoreAverages[$dim] = [
         'label' => $data['label'],

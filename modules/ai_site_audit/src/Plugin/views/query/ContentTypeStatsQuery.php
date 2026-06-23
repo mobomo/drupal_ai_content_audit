@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Drupal\ai_site_audit\Plugin\views\query;
 
+use Drupal\ai_site_audit\Service\SiteAggregationService;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Views query plugin that returns content type audit statistics.
@@ -18,6 +20,30 @@ use Drupal\views\ViewExecutable;
  * )
  */
 class ContentTypeStatsQuery extends QueryPluginBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(
+    array $configuration,
+          $plugin_id,
+          $plugin_definition,
+    protected SiteAggregationService $aggregationService,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('ai_site_audit.aggregation'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -37,9 +63,7 @@ class ContentTypeStatsQuery extends QueryPluginBase {
    * {@inheritdoc}
    */
   public function execute(ViewExecutable $view) {
-    /** @var \Drupal\ai_site_audit\Service\SiteAggregationService $aggregation */
-    $aggregation = \Drupal::service('ai_site_audit.aggregation');
-    $breakdown = $aggregation->getContentTypeBreakdown();
+    $breakdown = $this->aggregationService->getContentTypeBreakdown();
 
     $index = 0;
     foreach ($breakdown as $item) {
@@ -56,6 +80,7 @@ class ContentTypeStatsQuery extends QueryPluginBase {
     }
 
     $view->total_rows = count($view->result);
+    // @phpstan-ignore-next-line
     $view->execute_time = 0;
   }
 
