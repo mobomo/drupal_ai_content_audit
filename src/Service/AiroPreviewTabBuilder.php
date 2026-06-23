@@ -40,12 +40,14 @@ final class AiroPreviewTabBuilder {
       );
       if ($key !== '') {
         $label = ucwords(str_replace(['-', '_'], ' ', $central['provider_id']));
-        $allChoices = [[
-          'key' => $key,
-          'label' => $label,
-          'provider_id' => $central['provider_id'],
-          'model_id' => $central['model_id'] ?? '',
-        ]];
+        $allChoices = [
+          [
+            'key' => $key,
+            'label' => $label,
+            'provider_id' => $central['provider_id'],
+            'model_id' => $central['model_id'] ?? '',
+          ],
+        ];
       }
       else {
         $allChoices = [];
