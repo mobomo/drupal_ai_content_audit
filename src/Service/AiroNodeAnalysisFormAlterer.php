@@ -18,7 +18,7 @@ final class AiroNodeAnalysisFormAlterer {
 
   use StringTranslationTrait;
 
-  public const ROUTE_NAME = 'ai_content_audit.node.airo_analysis';
+  public const string ROUTE_NAME = 'ai_content_audit.node.airo_analysis';
 
   public function __construct(
     protected AiroAnalysisPanelBuilder $panelBuilder,
