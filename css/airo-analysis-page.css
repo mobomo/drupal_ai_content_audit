@@ -39,10 +39,6 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page {
   transition: margin-inline-end 0.2s ease;
 }
 
-body.airo-analysis-route:not([data-meta-sidebar="closed"]) .airo-analysis-page--layout-builder .airo-analysis-page__main {
-  margin-inline-end: var(--airo-panel-max-width);
-}
-
 body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout-builder .airo-analysis-page__main {
   margin-inline-end: 0;
 }
@@ -146,15 +142,6 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout
 .airo-analysis-layout-builder-form .airo-panel--accordion:not(.airo-panel--page-skin) {
   min-height: var(--airo-panel-min-height);
   max-height: none;
-}
-
-.airo-analysis-page--layout-builder .airo-analysis-page__main > .layout-region:not(.glb-region-sticky),
-.airo-analysis-page--layout-builder .layout-builder__add-section,
-.airo-analysis-page--layout-builder .layout-builder__add-block,
-.airo-analysis-page--layout-builder .layout-builder__link,
-.airo-analysis-page--layout-builder .layout-builder__region-label,
-.airo-analysis-page--layout-builder .layout-builder .contextual {
-  display: none !important;
 }
 
 .airo-analysis-page--edit-form .airo-analysis-page__main .entity-meta,
