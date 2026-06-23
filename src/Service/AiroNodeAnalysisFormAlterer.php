@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Service;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -63,8 +64,49 @@ final class AiroNodeAnalysisFormAlterer {
 
     // Non-Layout Builder forms render the panel in the page aside.
     $form['#attributes']['class'][] = 'airo-analysis-page__edit-form';
-    NodeEditFormAlterer::stripAiroAnalysisTabSidebar($form);
-    $form['#after_build'][] = [NodeEditFormAlterer::class, 'afterBuildStripSidebarPanel'];
+    self::stripAiroAnalysisTabSidebar($form);
+    $form['#after_build'][] = [self::class, 'afterBuildStripSidebarPanel'];
+  }
+
+  /**
+   * Removes entity-meta / advanced sidebar panel from the AIRO Analysis form.
+   */
+  public static function stripAiroAnalysisTabSidebar(array &$form): void {
+    unset($form['airo_analysis']);
+    if (isset($form['advanced'])) {
+      $form['advanced']['#access'] = FALSE;
+    }
+    self::removeThemedPanelElements($form);
+  }
+
+  /**
+   * Strips AIRO panel render arrays nested anywhere in the form tree.
+   */
+  private static function removeThemedPanelElements(array &$element): void {
+    foreach (Element::children($element) as $key) {
+      if (!is_array($element[$key])) {
+        continue;
+      }
+      $theme = $element[$key]['#theme'] ?? NULL;
+      $panel_theme = $element[$key]['panel']['#theme'] ?? NULL;
+      if ($theme === 'ai_airo_accordion_item' || $panel_theme === 'ai_airo_accordion_item') {
+        unset($element[$key]);
+        continue;
+      }
+      self::removeThemedPanelElements($element[$key]);
+    }
+  }
+
+  /**
+   * After-build: Gin may reattach grouped fields after form_alter.
+   */
+  public static function afterBuildStripSidebarPanel(array $form, FormStateInterface $form_state): array {
+    $classes = $form['#attributes']['class'] ?? [];
+    if (!is_array($classes) || !in_array('airo-analysis-page__edit-form', $classes, TRUE)) {
+      return $form;
+    }
+    self::stripAiroAnalysisTabSidebar($form);
+    return $form;
   }
 
 }
