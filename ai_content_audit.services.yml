@@ -103,6 +103,7 @@ services:
       - '@layout_builder.param_converter'
       - '@layout_builder.tempstore_repository'
       - '@config.factory'
+      - '@entity_type.manager'
     tags:
       - { name: route_enhancer, priority: 4900 }
 

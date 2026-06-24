@@ -170,7 +170,7 @@ class ProviderModelChoices {
    */
   private function renderLabel(mixed $label): string {
     if ($label instanceof TranslatableMarkup || $label instanceof FormattableMarkup) {
-      return $label->render();
+      return (string) $label;
     }
 
     return (string) $label;

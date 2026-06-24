@@ -90,14 +90,14 @@ class AnalysisOrchestrator {
       $technicalResults = $this->technicalAuditService->runAllChecks();
       // Convert TechnicalAuditResult objects to arrays.
       $techArrays = array_map(
-        fn($r) => is_object($r) && method_exists($r, 'toArray') ? $r->toArray() : (array) $r,
+        fn($r) => $r->toArray(),
         $technicalResults
       );
 
       // Get filesystem audit results.
       $filesystemResults = $this->filesystemAuditService->runAllChecks();
       $fsArrays = array_map(
-        fn($r) => is_object($r) && method_exists($r, 'toArray') ? $r->toArray() : (array) $r,
+        fn($r) => $r->toArray(),
         $filesystemResults
       );
 
@@ -227,7 +227,7 @@ class AnalysisOrchestrator {
     try {
       $techResults = $this->technicalAuditService->runAllChecks();
       $data['technical_audit'] = array_map(
-        fn($r) => is_object($r) && method_exists($r, 'toArray') ? $r->toArray() : (array) $r,
+        fn($r) => $r->toArray(),
         $techResults
       );
     }
@@ -240,7 +240,7 @@ class AnalysisOrchestrator {
     try {
       $fsResults = $this->filesystemAuditService->runAllChecks();
       $data['filesystem_audit'] = array_map(
-        fn($r) => is_object($r) && method_exists($r, 'toArray') ? $r->toArray() : (array) $r,
+        fn($r) => $r->toArray(),
         $fsResults
       );
     }

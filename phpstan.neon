@@ -18,3 +18,5 @@ parameters:
     - identifier: missingType.iterableValue
   scanDirectories:
     - %currentWorkingDirectory%/vendor/drush/drush/src-symfony-compatibility
+  scanFiles:
+    - %currentWorkingDirectory%/vendor/drush/drush/src-symfony-compatibility/v6/Style/DrushStyle.php

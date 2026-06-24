@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Plugin\QueueWorker;
 
 use Drupal\ai_content_audit\Service\AiAssessmentService;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -37,6 +38,7 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
     private readonly AiAssessmentService $assessmentService,
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly LoggerChannelFactoryInterface $loggerFactory,
+    private readonly TimeInterface $time,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -57,6 +59,7 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
       $container->get('ai_content_audit.assessment_service'),
       $container->get('entity_type.manager'),
       $container->get('logger.factory'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -85,9 +88,9 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
   public function processItem(mixed $data): void {
     $logger = $this->loggerFactory->get('ai_content_audit');
 
-    // Support both array and stdClass queue item shapes.
-    $nid     = is_array($data) ? ($data['nid'] ?? NULL) : ($data->nid ?? NULL);
-    $options = is_array($data) ? ($data['options'] ?? []) : ($data->options ?? []);
+    $data = (array) $data;
+    $nid = $data['nid'] ?? NULL;
+    $options = isset($data['options']) && is_array($data['options']) ? $data['options'] : [];
 
     if (!$nid) {
       // Malformed item — log and discard permanently.
@@ -117,7 +120,7 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
     $recentCount = (int) $storage->getQuery()
       ->accessCheck(FALSE)
       ->condition('target_node', $nid)
-      ->condition('created', \Drupal::time()->getRequestTime() - 300, '>')
+      ->condition('created', $this->time->getRequestTime() - 300, '>')
       ->count()
       ->execute();
 

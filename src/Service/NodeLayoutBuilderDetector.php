@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\EntityViewDisplayInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\node\NodeInterface;
 
 /**

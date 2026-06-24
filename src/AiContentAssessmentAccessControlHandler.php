@@ -62,12 +62,9 @@ class AiContentAssessmentAccessControlHandler extends EntityAccessControlHandler
       return AccessResult::forbidden()->addCacheableDependency($entity);
     }
 
+    /** @var \Drupal\Core\Access\AccessResult $access */
     $access = $node->access('view', $account, TRUE);
-    if ($access instanceof AccessResult) {
-      return $access->addCacheableDependency($entity);
-    }
-
-    return $access;
+    return $access->addCacheableDependency($entity);
   }
 
 }
