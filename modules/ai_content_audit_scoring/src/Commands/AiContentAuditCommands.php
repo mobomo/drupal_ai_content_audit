@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Commands;
+namespace Drupal\ai_content_audit_scoring\Commands;
 
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
@@ -15,7 +15,6 @@ use Drush\Attributes\Help;
 use Drush\Attributes\Option;
 use Drush\Attributes\Usage;
 use Drush\Commands\DrushCommands;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Drush commands for assessments, providers, purge, and reinstall.
@@ -33,18 +32,6 @@ final class AiContentAuditCommands extends DrushCommands {
     private readonly ProviderModelChoices $providerModelChoices,
   ) {
     parent::__construct();
-  }
-
-  /**
-   * Gets the console style helper.
-   *
-   * Provides a concrete return type for static analysis.
-   *
-   * @return \Symfony\Component\Console\Style\SymfonyStyle
-   *   The console style helper.
-   */
-  private function style(): SymfonyStyle {
-    return new SymfonyStyle($this->input(), $this->output());
   }
 
   /**
@@ -90,9 +77,9 @@ final class AiContentAuditCommands extends DrushCommands {
       return;
     }
 
-    $this->style()->error('Provide --nid=<id> for a single node, or --all to enqueue all eligible nodes.');
-    $this->style()->text('Examples:');
-    $this->style()->listing([
+    $this->io()->error('Provide --nid=<id> for a single node, or --all to enqueue all eligible nodes.');
+    $this->io()->text('Examples:');
+    $this->io()->listing([
       'drush aca --nid=42',
       'drush aca --nid=42 --provider=anthropic --model=claude-3-5-sonnet-20241022',
       'drush aca --all',
@@ -111,7 +98,7 @@ final class AiContentAuditCommands extends DrushCommands {
     $choices = $this->providerModelChoices->forOperationType('chat');
 
     if (empty($choices)) {
-      $this->style()->warning('No configured AI chat providers found. Install and configure a provider module first.');
+      $this->io()->warning('No configured AI chat providers found. Install and configure a provider module first.');
       return;
     }
 
@@ -126,7 +113,7 @@ final class AiContentAuditCommands extends DrushCommands {
       ];
     }
 
-    $this->style()->table(
+    $this->io()->table(
       ['Provider ID', 'Model ID', 'Label', 'Drupal AI simple option'],
       $rows,
     );
@@ -134,7 +121,7 @@ final class AiContentAuditCommands extends DrushCommands {
     // Print the currently configured module-level default.
     $config = $this->configFactory->get('ai_content_audit.settings');
     $default_provider_model = $config->get('default_provider_model') ?: '(global default)';
-    $this->style()->note(sprintf(
+    $this->io()->note(sprintf(
       'Module default provider/model option: %s',
       $default_provider_model,
     ));
@@ -162,7 +149,7 @@ final class AiContentAuditCommands extends DrushCommands {
       // Cancelled or nothing to do — doPurge() already output the message.
       return;
     }
-    $this->style()->success(sprintf('Purged %d AI Content Assessment entity(ies).', $deleted));
+    $this->io()->success(sprintf('Purged %d AI Content Assessment entity(ies).', $deleted));
   }
 
   /**
@@ -172,26 +159,26 @@ final class AiContentAuditCommands extends DrushCommands {
   #[Help(description: 'Purge all assessments, uninstall, and re-enable ai_content_audit (dev convenience).')]
   #[Usage(name: 'drush aca:reinstall', description: 'Full purge + uninstall + reinstall of the ai_content_audit module.')]
   public function reinstall(): void {
-    $this->style()->section('Step 1/4: Purging all AI Content Assessment entities…');
+    $this->io()->section('Step 1/4: Purging all AI Content Assessment entities…');
     $deleted = $this->doPurge();
     if ($deleted === NULL) {
       // User cancelled — abort the reinstall.
       return;
     }
-    $this->style()->text(sprintf('Purged %d entity(ies).', $deleted));
+    $this->io()->text(sprintf('Purged %d entity(ies).', $deleted));
 
-    $this->style()->section('Step 2/4: Uninstalling ai_content_audit…');
+    $this->io()->section('Step 2/4: Uninstalling ai_content_audit…');
     $this->moduleInstaller->uninstall(['ai_content_audit']);
-    $this->style()->text('Module uninstalled.');
+    $this->io()->text('Module uninstalled.');
 
-    $this->style()->section('Step 3/4: Re-enabling ai_content_audit…');
+    $this->io()->section('Step 3/4: Re-enabling ai_content_audit…');
     $this->moduleInstaller->install(['ai_content_audit']);
-    $this->style()->text('Module re-enabled.');
+    $this->io()->text('Module re-enabled.');
 
-    $this->style()->section('Step 4/4: Clearing all caches…');
+    $this->io()->section('Step 4/4: Clearing all caches…');
     drupal_flush_all_caches();
 
-    $this->style()->success('ai_content_audit reinstalled successfully.');
+    $this->io()->success('ai_content_audit reinstalled successfully.');
   }
 
   /* ── Private helpers ──────────────────────────────────────────────────────── */
@@ -212,28 +199,28 @@ final class AiContentAuditCommands extends DrushCommands {
     $count = count($ids);
 
     if ($count === 0) {
-      $this->style()->success('No AI Content Assessment entities found. Nothing to purge.');
+      $this->io()->success('No AI Content Assessment entities found. Nothing to purge.');
       return NULL;
     }
 
-    if (!$this->style()->confirm(sprintf('This will delete %d assessment(s). Continue?', $count))) {
-      $this->style()->text('Purge cancelled.');
+    if (!$this->io()->confirm(sprintf('This will delete %d assessment(s). Continue?', $count))) {
+      $this->io()->text('Purge cancelled.');
       return NULL;
     }
 
     $batch_size = 50;
     $deleted = 0;
 
-    $this->style()->progressStart($count);
+    $this->io()->progressStart($count);
 
     foreach (array_chunk($ids, $batch_size) as $chunk) {
       $entities = $storage->loadMultiple($chunk);
       $storage->delete($entities);
       $deleted += count($entities);
-      $this->style()->progressAdvance(count($entities));
+      $this->io()->progressAdvance(count($entities));
     }
 
-    $this->style()->progressFinish();
+    $this->io()->progressFinish();
 
     return $deleted;
   }
@@ -251,7 +238,7 @@ final class AiContentAuditCommands extends DrushCommands {
     $node = $this->entityTypeManager->getStorage('node')->load($nid);
 
     if (!$node) {
-      $this->style()->error(sprintf('Node %d not found.', $nid));
+      $this->io()->error(sprintf('Node %d not found.', $nid));
       throw new \RuntimeException(sprintf('Node %d not found.', $nid));
     }
 
@@ -259,16 +246,16 @@ final class AiContentAuditCommands extends DrushCommands {
       ? sprintf(' [provider: %s, model: %s]', $ai_options['provider_id'], $ai_options['model_id'] ?? 'default')
       : '';
 
-    $this->style()->text(sprintf('Assessing node %d: %s%s', $nid, $node->label(), $provider_label));
+    $this->io()->text(sprintf('Assessing node %d: %s%s', $nid, $node->label(), $provider_label));
     $result = $this->assessmentService->assessNode($node, $ai_options);
 
     if ($result['success']) {
       $score = $result['parsed']['ai_readiness_score'] ?? 'N/A';
-      $this->style()->success(sprintf('Assessment complete for node %d. Score: %s/100', $nid, $score));
+      $this->io()->success(sprintf('Assessment complete for node %d. Score: %s/100', $nid, $score));
     }
     else {
       $error = $result['error'] ?? 'Unknown error';
-      $this->style()->error(sprintf('Assessment failed for node %d: %s', $nid, $error));
+      $this->io()->error(sprintf('Assessment failed for node %d: %s', $nid, $error));
       throw new \RuntimeException(sprintf('Assessment failed for node %d: %s', $nid, $error));
     }
   }
@@ -315,16 +302,16 @@ final class AiContentAuditCommands extends DrushCommands {
     }
 
     if ($total === 0) {
-      $this->style()->warning('No published nodes found for the specified type(s): ' . implode(', ', $types));
+      $this->io()->warning('No published nodes found for the specified type(s): ' . implode(', ', $types));
       throw new \RuntimeException('No published nodes found for the specified type(s): ' . implode(', ', $types));
     }
 
-    $this->style()->text(sprintf('Enqueueing %d node(s) across type(s): %s', $total, implode(', ', $types)));
+    $this->io()->text(sprintf('Enqueueing %d node(s) across type(s): %s', $total, implode(', ', $types)));
 
     $queue  = $this->queueFactory->get('ai_content_audit_assessment');
     $queued = 0;
 
-    $this->style()->progressStart($total);
+    $this->io()->progressStart($total);
 
     // Process nodes in chunks to avoid exhausting PHP memory on large sites.
     // Each iteration fetches at most $chunk_size node IDs.
@@ -347,15 +334,15 @@ final class AiContentAuditCommands extends DrushCommands {
           }
           $queue->createItem($item);
           $queued++;
-          $this->style()->progressAdvance();
+          $this->io()->progressAdvance();
         }
 
         $offset += $chunk_size;
       } while (count($nids) === $chunk_size);
     }
 
-    $this->style()->progressFinish();
-    $this->style()->success(sprintf(
+    $this->io()->progressFinish();
+    $this->io()->success(sprintf(
       '%d node(s) enqueued successfully. Process with: drush queue:run ai_content_audit_assessment',
       $queued
     ));

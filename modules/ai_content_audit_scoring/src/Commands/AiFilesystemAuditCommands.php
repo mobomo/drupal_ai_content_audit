@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Commands;
+namespace Drupal\ai_content_audit_scoring\Commands;
 
 use Symfony\Component\Yaml\Yaml;
-use Drupal\ai_content_audit\Service\FilesystemAuditService;
+use Drupal\ai_content_audit_scoring\Service\FilesystemAuditService;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Drush commands for the filesystem audit feature.
@@ -45,18 +44,6 @@ class AiFilesystemAuditCommands extends DrushCommands {
     protected FilesystemAuditService $filesystemAuditService,
   ) {
     parent::__construct();
-  }
-
-  /**
-   * Gets the console style helper.
-   *
-   * Provides a concrete return type for static analysis.
-   *
-   * @return \Symfony\Component\Console\Style\SymfonyStyle
-   *   The console style helper.
-   */
-  private function style(): SymfonyStyle {
-    return new SymfonyStyle($this->input(), $this->output());
   }
 
   /**
@@ -118,7 +105,7 @@ class AiFilesystemAuditCommands extends DrushCommands {
     }
 
     if (empty($rows)) {
-      $this->style()->success('No matching checks found.');
+      $this->io()->success('No matching checks found.');
       return self::EXIT_SUCCESS;
     }
 
@@ -157,8 +144,8 @@ class AiFilesystemAuditCommands extends DrushCommands {
     $infoCount = count(array_filter($rows, fn($r) => ($r['status'] ?? '') === 'info'));
 
     if ($format === 'table') {
-      $this->style()->newLine();
-      $this->style()->text(sprintf(
+      $this->io()->newLine();
+      $this->io()->text(sprintf(
         'Summary: <info>%d pass</info>, <error>%d fail</error>, <comment>%d warning</comment>, %d info (%d total)',
         $passCount, $failCount, $warnCount, $infoCount, count($rows)
       ));

@@ -6,7 +6,7 @@ namespace Drupal\ai_content_audit\Controller;
 
 use Drupal\ai_content_audit\Entity\AiContentAssessment;
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
-use Drupal\ai_content_audit\Service\FilesystemAuditService;
+use Drupal\ai_content_audit_scoring\Service\FilesystemAuditService;
 use Drupal\ai_content_audit\Service\TechnicalAuditService;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;

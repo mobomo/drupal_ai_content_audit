@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Hook;
 
-use Drupal\ai_content_audit\Service\ScoreMetaBuilder;
+use Drupal\ai_content_audit_scoring\Service\ScoreMetaBuilder;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Hook\Attribute\Hook;

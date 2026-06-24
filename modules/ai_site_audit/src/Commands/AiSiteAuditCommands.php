@@ -13,7 +13,6 @@ use Drush\Attributes\Help;
 use Drush\Attributes\Option;
 use Drush\Attributes\Usage;
 use Drush\Commands\DrushCommands;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Drush commands for the AI Site Audit submodule.
@@ -27,18 +26,6 @@ final class AiSiteAuditCommands extends DrushCommands {
     private readonly ConfigFactoryInterface $configFactory,
   ) {
     parent::__construct();
-  }
-
-  /**
-   * Gets the console style helper.
-   *
-   * Provides a concrete return type for static analysis.
-   *
-   * @return \Symfony\Component\Console\Style\SymfonyStyle
-   *   The console style helper.
-   */
-  private function style(): SymfonyStyle {
-    return new SymfonyStyle($this->input(), $this->output());
   }
 
   /**
@@ -71,8 +58,8 @@ final class AiSiteAuditCommands extends DrushCommands {
 
     // Display results summary.
     $stats = $result['stats'] ?? [];
-    $this->style()->section('Overall Statistics');
-    $this->style()->definitionList(
+    $this->io()->section('Overall Statistics');
+    $this->io()->definitionList(
       ['Average Score' => $stats['avg_score'] ?? 'N/A'],
       ['Total Assessed' => $stats['total_assessed'] ?? 0],
       ['AI Ready (80+)' => $stats['ai_ready'] ?? 0],
@@ -83,8 +70,8 @@ final class AiSiteAuditCommands extends DrushCommands {
     // Coverage.
     $coverage = $result['coverage'] ?? [];
     if (!empty($coverage)) {
-      $this->style()->section('Coverage');
-      $this->style()->definitionList(
+      $this->io()->section('Coverage');
+      $this->io()->definitionList(
         ['Published Nodes' => $coverage['total_published'] ?? 0],
         ['Assessed Nodes' => $coverage['total_assessed'] ?? 0],
         ['Coverage' => ($coverage['coverage_pct'] ?? 0) . '%'],
@@ -94,38 +81,38 @@ final class AiSiteAuditCommands extends DrushCommands {
     // Score distribution.
     $dist = $result['score_distribution'] ?? [];
     if (!empty($dist)) {
-      $this->style()->section('Score Distribution');
+      $this->io()->section('Score Distribution');
       $rows = [];
       foreach ($dist as $range => $count) {
         $rows[] = [$range, $count];
       }
-      $this->style()->table(['Range', 'Count'], $rows);
+      $this->io()->table(['Range', 'Count'], $rows);
     }
 
     // Rollup data if Tier 2+.
     if (isset($result['rollup']) && !empty($result['rollup']['sub_score_averages'])) {
-      $this->style()->section('Sub-Score Averages');
+      $this->io()->section('Sub-Score Averages');
       $rows = [];
       foreach ($result['rollup']['sub_score_averages'] as $dim => $data) {
         $rows[] = [$data['label'] ?? $dim, $data['avg'], $data['max_possible'], $data['pct'] . '%'];
       }
-      $this->style()->table(['Dimension', 'Average', 'Max', 'Percentage'], $rows);
+      $this->io()->table(['Dimension', 'Average', 'Max', 'Percentage'], $rows);
     }
 
     // AI insights if Tier 3.
     if (isset($result['ai_insights']) && !isset($result['ai_insights']['error'])) {
-      $this->style()->section('AI Insights');
+      $this->io()->section('AI Insights');
       $insights = $result['ai_insights'];
       if (!empty($insights['overall_grade'])) {
-        $this->style()->text(dt('Overall Grade: @grade', ['@grade' => $insights['overall_grade']]));
+        $this->io()->text(dt('Overall Grade: @grade', ['@grade' => $insights['overall_grade']]));
       }
       if (!empty($insights['executive_summary'])) {
-        $this->style()->text($insights['executive_summary']);
+        $this->io()->text($insights['executive_summary']);
       }
       if (!empty($insights['quick_wins'])) {
-        $this->style()->section('Quick Wins');
+        $this->io()->section('Quick Wins');
         foreach ($insights['quick_wins'] as $qw) {
-          $this->style()->text('• ' . ($qw['title'] ?? '') . ': ' . ($qw['description'] ?? ''));
+          $this->io()->text('• ' . ($qw['title'] ?? '') . ': ' . ($qw['description'] ?? ''));
         }
       }
     }
@@ -162,8 +149,8 @@ final class AiSiteAuditCommands extends DrushCommands {
     }
 
     // Table format.
-    $this->style()->section('Overall Statistics');
-    $this->style()->definitionList(
+    $this->io()->section('Overall Statistics');
+    $this->io()->definitionList(
       ['Average Score' => $stats['avg_score'] ?? 'N/A'],
       ['Median Score' => $stats['median_score'] ?? 'N/A'],
       ['Total Assessed' => $stats['total_assessed'] ?? 0],
@@ -174,34 +161,34 @@ final class AiSiteAuditCommands extends DrushCommands {
       ['Max Score' => $stats['max_score'] ?? 'N/A'],
     );
 
-    $this->style()->section('Coverage');
-    $this->style()->definitionList(
+    $this->io()->section('Coverage');
+    $this->io()->definitionList(
       ['Published Nodes' => $coverage['total_published'] ?? 0],
       ['Assessed Nodes' => $coverage['total_assessed'] ?? 0],
       ['Coverage' => ($coverage['coverage_pct'] ?? 0) . '%'],
       ['Unassessed' => $coverage['unassessed_count'] ?? 0],
     );
 
-    $this->style()->section('Score Distribution');
+    $this->io()->section('Score Distribution');
     $rows = [];
     foreach ($distribution as $range => $count) {
       $rows[] = [$range, $count];
     }
-    $this->style()->table(['Range', 'Count'], $rows);
+    $this->io()->table(['Range', 'Count'], $rows);
 
     if (!empty($contentTypes)) {
-      $this->style()->section('Content Type Breakdown');
+      $this->io()->section('Content Type Breakdown');
       $rows = [];
       foreach ($contentTypes as $ct) {
         $rows[] = [$ct['label'], $ct['count'], $ct['avg_score'], $ct['min_score'], $ct['max_score']];
       }
-      $this->style()->table(['Type', 'Count', 'Avg Score', 'Min', 'Max'], $rows);
+      $this->io()->table(['Type', 'Count', 'Avg Score', 'Min', 'Max'], $rows);
     }
 
     // Show analysis state.
     $analysisState = $this->orchestrator->getAnalysisState();
-    $this->style()->section('Analysis State');
-    $this->style()->definitionList(
+    $this->io()->section('Analysis State');
+    $this->io()->definitionList(
       ['Current State' => $analysisState['state'] ?? 'unknown'],
       ['Last Rollup' => $analysisState['last_rollup_time'] ? date('Y-m-d H:i:s', $analysisState['last_rollup_time']) : 'Never'],
       ['Last AI Analysis' => $analysisState['last_ai_analysis_time'] ? date('Y-m-d H:i:s', $analysisState['last_ai_analysis_time']) : 'Never'],

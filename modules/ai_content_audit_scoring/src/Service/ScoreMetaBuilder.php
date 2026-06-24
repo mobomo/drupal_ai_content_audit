@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Service;
+namespace Drupal\ai_content_audit_scoring\Service;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
