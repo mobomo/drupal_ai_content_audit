@@ -44,14 +44,6 @@ services:
       - '@entity_type.manager'
       - '@ai_content_audit.audit_check_manager'
 
-  ai_content_audit.filesystem_audit:
-    class: Drupal\ai_content_audit\Service\FilesystemAuditService
-    arguments:
-      - '@logger.channel.ai_content_audit'
-      - '@cache.data'
-      - '@ai_content_audit.audit_check_manager'
-      - '@datetime.time'
-
   ai_content_audit.audit_check_manager:
     class: Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager
     arguments:
@@ -103,6 +95,7 @@ services:
       - '@layout_builder.param_converter'
       - '@layout_builder.tempstore_repository'
       - '@config.factory'
+      - '@entity_type.manager'
     tags:
       - { name: route_enhancer, priority: 4900 }
 

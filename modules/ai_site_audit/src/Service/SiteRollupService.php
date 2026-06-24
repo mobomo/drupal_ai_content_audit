@@ -107,7 +107,7 @@ class SiteRollupService {
 
     $config = $this->configFactory->get('ai_site_audit.settings');
     $threshold = (float) ($config->get('auto_analysis_threshold') ?: 0.10);
-    $totalAssessed = $cached['total_assessed'] ?? 0;
+    $totalAssessed = (int) ($cached['total_assessed'] ?? 0);
 
     if ($totalAssessed > 0 && ($newCount / $totalAssessed) > $threshold) {
       return 'full';
@@ -183,7 +183,7 @@ class SiteRollupService {
               $newSubScores[$dim] = [
                 'total' => 0,
                 'count' => 0,
-                'max_possible' => $sub['max_score'] ?? 0,
+                'max_possible' => (int) ($sub['max_score'] ?? 0),
                 'label' => $sub['label'] ?? $dim,
               ];
             }
@@ -454,14 +454,16 @@ class SiteRollupService {
 
     // Update total assessed — incremental may re-assess the same node,
     // so this is approximate until the next full rollup.
-    $rollup['total_assessed'] = ($existing['total_assessed'] ?? 0) + $newCount;
+    $existingTotalAssessed = (int) ($existing['total_assessed'] ?? 0);
+    $rollup['total_assessed'] = $existingTotalAssessed + $newCount;
 
     // Update average score.
     if (!empty($newScores)) {
-      $existingTotal = ($existing['avg_score'] ?? 0) * ($existing['total_assessed'] ?? 0);
+      $existingTotal = (float) ($existing['avg_score'] ?? 0) * $existingTotalAssessed;
       $newTotal = array_sum($newScores);
-      $rollup['avg_score'] = $rollup['total_assessed'] > 0
-        ? round(($existingTotal + $newTotal) / $rollup['total_assessed'], 1)
+      $rollupTotalAssessed = (int) $rollup['total_assessed'];
+      $rollup['avg_score'] = $rollupTotalAssessed > 0
+        ? round(($existingTotal + $newTotal) / $rollupTotalAssessed, 1)
         : 0;
     }
 
@@ -469,21 +471,24 @@ class SiteRollupService {
     $existingSubs = $existing['sub_score_averages'] ?? [];
     foreach ($newSubScores as $dim => $data) {
       if (isset($existingSubs[$dim])) {
-        $oldTotal = $existingSubs[$dim]['avg'] * ($existing['total_assessed'] ?? 1);
-        $combined = $oldTotal + $data['total'];
-        $combinedCount = ($existing['total_assessed'] ?? 0) + $data['count'];
+        $oldTotal = (float) $existingSubs[$dim]['avg'] * max(1, $existingTotalAssessed);
+        $combined = $oldTotal + (float) $data['total'];
+        $combinedCount = $existingTotalAssessed + (int) $data['count'];
         $avg = $combinedCount > 0 ? round($combined / $combinedCount, 2) : 0;
         $rollup['sub_score_averages'][$dim]['avg'] = $avg;
-        $pct = $data['max_possible'] > 0 ? round(($avg / $data['max_possible']) * 100, 2) : 0;
+        $maxPossible = (int) $data['max_possible'];
+        $pct = $maxPossible > 0 ? round(($avg / $maxPossible) * 100, 2) : 0;
         $rollup['sub_score_averages'][$dim]['pct'] = $pct;
       }
       else {
-        $avg = $data['count'] > 0 ? round($data['total'] / $data['count'], 2) : 0;
+        $count = (int) $data['count'];
+        $maxPossible = (int) $data['max_possible'];
+        $avg = $count > 0 ? round((float) $data['total'] / $count, 2) : 0;
         $rollup['sub_score_averages'][$dim] = [
           'label' => $data['label'],
           'avg' => $avg,
-          'max_possible' => $data['max_possible'],
-          'pct' => $data['max_possible'] > 0 ? round(($avg / $data['max_possible']) * 100, 2) : 0,
+          'max_possible' => $maxPossible,
+          'pct' => $maxPossible > 0 ? round(($avg / $maxPossible) * 100, 2) : 0,
         ];
       }
     }

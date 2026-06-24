@@ -42,7 +42,7 @@ trait SchemaMarkupParserTrait {
     );
 
     $types = [];
-    foreach ($matches[1] ?? [] as $jsonText) {
+    foreach ($matches[1] as $jsonText) {
       $data = json_decode(trim($jsonText), TRUE);
       if (!is_array($data)) {
         continue;
@@ -99,7 +99,7 @@ trait SchemaMarkupParserTrait {
       $matches
     );
 
-    foreach ($matches[1] ?? [] as $jsonText) {
+    foreach ($matches[1] as $jsonText) {
       $data = json_decode(trim($jsonText), TRUE);
       if (!is_array($data)) {
         continue;
@@ -187,7 +187,7 @@ trait SchemaMarkupParserTrait {
       $html,
       $matches
     );
-    return count($matches[0] ?? []);
+    return count($matches[0]);
   }
 
 }

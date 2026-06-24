@@ -1089,7 +1089,7 @@ class TechnicalAuditService {
       $html,
       $ldMatches
     );
-    foreach ($ldMatches[1] ?? [] as $jsonText) {
+    foreach ($ldMatches[1] as $jsonText) {
       $data = json_decode(trim($jsonText), TRUE);
       if (!is_array($data)) {
         continue;
@@ -1352,7 +1352,7 @@ class TechnicalAuditService {
     );
 
     $types = [];
-    foreach ($matches[1] ?? [] as $jsonText) {
+    foreach ($matches[1] as $jsonText) {
       $data = json_decode(trim($jsonText), TRUE);
       if (!is_array($data)) {
         continue;
@@ -1409,7 +1409,7 @@ class TechnicalAuditService {
       $matches
     );
 
-    foreach ($matches[1] ?? [] as $jsonText) {
+    foreach ($matches[1] as $jsonText) {
       $data = json_decode(trim($jsonText), TRUE);
       if (!is_array($data)) {
         continue;
@@ -1496,7 +1496,7 @@ class TechnicalAuditService {
       $html,
       $matches
     );
-    return count($matches[0] ?? []);
+    return count($matches[0]);
   }
 
   /**

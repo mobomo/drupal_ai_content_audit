@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Service;
+namespace Drupal\ai_content_audit_scoring\Service;
 
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
 use Drupal\node\NodeInterface;

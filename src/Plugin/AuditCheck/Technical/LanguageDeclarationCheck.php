@@ -11,7 +11,6 @@ use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -31,7 +30,6 @@ class LanguageDeclarationCheck extends AuditCheckBase implements ContainerFactor
     string $plugin_id,
     mixed $plugin_definition,
     private readonly HtmlFetchService $htmlFetch,
-    private readonly LoggerInterface $logger,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -45,7 +43,6 @@ class LanguageDeclarationCheck extends AuditCheckBase implements ContainerFactor
       $plugin_id,
       $plugin_definition,
       $container->get('ai_content_audit.html_fetch'),
-      $container->get('logger.factory')->get('ai_content_audit'),
     );
   }
 

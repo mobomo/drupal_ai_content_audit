@@ -367,6 +367,9 @@ JSON;
         'result_json' => json_encode($parsed),
         'raw_output'  => $raw_text,
       ]);
+      if (!$assessment instanceof AiContentAssessment) {
+        throw new \UnexpectedValueException('Assessment storage created an unexpected entity type.');
+      }
 
       // Populate v2 fields when present in the response; leave NULL otherwise
       // so that existing records are not broken.
@@ -434,9 +437,8 @@ JSON;
       return NULL;
     }
 
-    /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment $entity */
     $entity = $storage->load(reset($ids));
-    return $entity;
+    return $entity instanceof AiContentAssessment ? $entity : NULL;
   }
 
   /**

@@ -91,7 +91,7 @@ class SiteAnalysisService {
         new ChatMessage('system', $systemMessage),
         new ChatMessage('user', $userMessage),
       ]);
-      /** @var \Drupal\ai\OperationType\Chat\ChatInterface $proxy */
+      /** @var \Drupal\ai\Plugin\ProviderProxy&\Drupal\ai\OperationType\Chat\ChatInterface $proxy */
       $proxy = $this->aiProvider->createInstance($providerId);
       $response = $proxy->chat($input, $modelId, ['ai_site_audit', 'analyze']);
       $rawOutput = $response->getNormalized()->getText();
@@ -321,11 +321,14 @@ PROMPT;
     // Checkpoint totals.
     if (!empty($statistics['checkpoint_status_totals'])) {
       $t = $statistics['checkpoint_status_totals'];
-      $total = $t['pass'] + $t['fail'] + $t['warning'];
       $parts[] = "\n## Checkpoint Status Totals";
-      $parts[] = sprintf("- Pass: %d (%.1f%%)", $t['pass'], $total > 0 ? ($t['pass'] / $total) * 100 : 0);
-      $parts[] = sprintf("- Fail: %d (%.1f%%)", $t['fail'], $total > 0 ? ($t['fail'] / $total) * 100 : 0);
-      $parts[] = sprintf("- Warning: %d (%.1f%%)", $t['warning'], $total > 0 ? ($t['warning'] / $total) * 100 : 0);
+      $pass = (int) ($t['pass'] ?? 0);
+      $fail = (int) ($t['fail'] ?? 0);
+      $warning = (int) ($t['warning'] ?? 0);
+      $total = $pass + $fail + $warning;
+      $parts[] = sprintf("- Pass: %d (%.1f%%)", $pass, $total > 0 ? ($pass / $total) * 100 : 0);
+      $parts[] = sprintf("- Fail: %d (%.1f%%)", $fail, $total > 0 ? ($fail / $total) * 100 : 0);
+      $parts[] = sprintf("- Warning: %d (%.1f%%)", $warning, $total > 0 ? ($warning / $total) * 100 : 0);
     }
 
     // Technical audit results.
