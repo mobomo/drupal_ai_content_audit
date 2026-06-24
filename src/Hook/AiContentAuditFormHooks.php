@@ -8,6 +8,7 @@ use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Form and theme hooks for the AIRO Analysis native Layout/Edit pages.
@@ -15,6 +16,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 final class AiContentAuditFormHooks {
 
   public function __construct(
+    #[Autowire(service: 'ai_content_audit.airo_node_analysis_form_alterer')]
     protected AiroNodeAnalysisFormAlterer $formAlterer,
     protected RouteMatchInterface $routeMatch,
   ) {}

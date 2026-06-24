@@ -99,15 +99,7 @@
             '</div>';
 
           // POST to assess endpoint.
-          fetch(assessUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: airoAssessPostBody(this),
-          })
+          Drupal.airoContentAudit.postJson(assessUrl, airoAssessPostBody(this))
             .then(function (response) {
               return response.json().then(function (data) {
                 return { response: response, data: data };

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Service;
+namespace Drupal\ai_content_audit_scoring\Service;
 
 use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
 use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
@@ -19,7 +19,7 @@ use Psr\Log\LoggerInterface;
 final class FilesystemAuditService {
 
   protected const CACHE_TTL = 900;
-  protected const CACHE_ID = 'ai_content_audit:filesystem_audit';
+  protected const CACHE_ID = 'ai_content_audit_scoring:filesystem_audit';
 
   public function __construct(
     private readonly LoggerInterface $logger,

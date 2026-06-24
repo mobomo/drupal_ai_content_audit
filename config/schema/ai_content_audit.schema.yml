@@ -9,7 +9,7 @@ ai_content_audit.settings:
       label: 'Assess on node save'
     max_chars_per_request:
       type: integer
-      label: 'Max characters per assessment request'
+      label: 'Max characters per preview request'
     enable_history:
       type: boolean
       label: 'Enable assessment history'
@@ -28,6 +28,12 @@ ai_content_audit.settings:
     default_provider_model:
       type: string
       label: 'Default AI provider/model simple option'
+    disabled_checks:
+      type: sequence
+      label: 'Disabled audit check plugin IDs'
+      sequence:
+        type: string
+        label: 'Audit check plugin ID'
     prompts:
       type: mapping
       label: 'Prompts settings'

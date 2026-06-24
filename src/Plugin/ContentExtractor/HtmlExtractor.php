@@ -270,10 +270,10 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
       // Process the rest of attachments (coming from core).
       if ($response instanceof HtmlResponse) {
         $processed_response = $this->attachmentsProcessor->processAttachments($response);
-        $html_output = (string) $processed_response->getContent();
+        $html_output = $processed_response instanceof HtmlResponse ? (string) $processed_response->getContent() : '';
       }
       else {
-        $html_output = $response ? (string) $response->getContent() : '';
+        $html_output = '';
       }
 
     }

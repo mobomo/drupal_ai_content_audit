@@ -43,7 +43,7 @@ class AiContentAssessmentAccessControlHandler extends EntityAccessControlHandler
   /**
    * {@inheritdoc}
    */
-  protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL): AccessResultInterface {
+  protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL): AccessResult {
     return AccessResult::allowedIfHasPermission($account, 'run ai content assessment')
       ->orIf(AccessResult::allowedIfHasPermission($account, 'administer ai content audit'))
       ->cachePerPermissions();
@@ -52,20 +52,19 @@ class AiContentAssessmentAccessControlHandler extends EntityAccessControlHandler
   /**
    * Checks access to the node an assessment belongs to.
    */
-  private function targetNodeViewAccess(EntityInterface $entity, AccountInterface $account): AccessResultInterface {
+  private function targetNodeViewAccess(EntityInterface $entity, AccountInterface $account): AccessResult {
     if (!$entity instanceof AiContentAssessment) {
-      return AccessResult::forbidden()
-        ->addCacheableDependency($entity);
+      return AccessResult::forbidden()->addCacheableDependency($entity);
     }
 
     $node = $entity->getTargetNode();
     if ($node === NULL) {
-      return AccessResult::forbidden()
-        ->addCacheableDependency($entity);
+      return AccessResult::forbidden()->addCacheableDependency($entity);
     }
 
-    return $node->access('view', $account, TRUE)
-      ->addCacheableDependency($entity);
+    /** @var \Drupal\Core\Access\AccessResult $access */
+    $access = $node->access('view', $account, TRUE);
+    return $access->addCacheableDependency($entity);
   }
 
 }

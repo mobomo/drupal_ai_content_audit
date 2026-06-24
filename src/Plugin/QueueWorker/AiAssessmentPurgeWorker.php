@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Plugin\QueueWorker;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\Attribute\QueueWorker;
 use Drupal\Core\Queue\QueueWorkerBase;
@@ -37,12 +38,15 @@ class AiAssessmentPurgeWorker extends QueueWorkerBase implements ContainerFactor
    *   Plugin definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger channel factory.
    */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
     protected EntityTypeManagerInterface $entityTypeManager,
+    protected LoggerChannelFactoryInterface $loggerFactory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
@@ -56,6 +60,7 @@ class AiAssessmentPurgeWorker extends QueueWorkerBase implements ContainerFactor
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
+      $container->get('logger.factory'),
     );
   }
 
@@ -79,7 +84,7 @@ class AiAssessmentPurgeWorker extends QueueWorkerBase implements ContainerFactor
     }
 
     $storage->delete($entities);
-    \Drupal::logger('ai_content_audit')->info(
+    $this->loggerFactory->get('ai_content_audit')->info(
       'Purge queue worker deleted @count excess assessment(s).',
       ['@count' => count($entities)],
     );

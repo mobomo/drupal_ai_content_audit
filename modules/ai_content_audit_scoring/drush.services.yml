@@ -1,6 +1,6 @@
 services:
-  ai_content_audit.commands:
-    class: Drupal\ai_content_audit\Commands\AiContentAuditCommands
+  ai_content_audit_scoring.commands:
+    class: Drupal\ai_content_audit_scoring\Commands\AiContentAuditCommands
     arguments:
       - '@ai_content_audit.assessment_service'
       - '@entity_type.manager'
@@ -11,9 +11,9 @@ services:
     tags:
       - { name: drush.command }
 
-  ai_content_audit.commands.filesystem_audit:
-    class: Drupal\ai_content_audit\Commands\AiFilesystemAuditCommands
+  ai_content_audit_scoring.commands.filesystem_audit:
+    class: Drupal\ai_content_audit_scoring\Commands\AiFilesystemAuditCommands
     arguments:
-      - '@ai_content_audit.filesystem_audit'
+      - '@ai_content_audit_scoring.filesystem_audit'
     tags:
       - { name: drush.command }

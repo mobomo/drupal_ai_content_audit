@@ -6,7 +6,7 @@ namespace Drupal\ai_content_audit\Controller;
 
 use Drupal\ai_content_audit\Entity\AiContentAssessment;
 use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
-use Drupal\ai_content_audit\Service\FilesystemAuditService;
+use Drupal\ai_content_audit_scoring\Service\FilesystemAuditService;
 use Drupal\ai_content_audit\Service\TechnicalAuditService;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Datetime\DateFormatterInterface;
@@ -184,8 +184,8 @@ class AiAssessmentController extends ControllerBase {
     $run_by = NULL;
     if (!$assessment->get('run_by')->isEmpty()) {
       /** @var \Drupal\user\UserInterface $user */
-      $user   = $assessment->get('run_by')->entity;
-      $run_by = $user?->getDisplayName();
+      $user = $assessment->get('run_by')->entity;
+      $run_by = $user->getDisplayName();
     }
 
     // Sub-scores with percentage calculations.
@@ -319,7 +319,7 @@ class AiAssessmentController extends ControllerBase {
     }
 
     $storage = $this->entityTypeManager()->getStorage('ai_content_assessment');
-    $ids     = $storage->getQuery()
+    $ids = $storage->getQuery()
       ->accessCheck(TRUE)
       ->condition('target_node', $node->id())
       ->sort('created', 'ASC')
@@ -327,23 +327,22 @@ class AiAssessmentController extends ControllerBase {
 
     $history = [];
     if (!empty($ids)) {
+      /** @var \Drupal\ai_content_audit\Entity\AiContentAssessment $hist */
       foreach ($storage->loadMultiple($ids) as $hist) {
         $hist_created = (int) $hist->get('created')->value;
-        $hist_score   = (int) ($hist->get('score')->value ?? 0);
-        $history[]    = [
-          'id'         => $hist->id(),
-          'date'       => $this->dateFormatter->format($hist_created, 'short'),
-          'date_full'  => $this->dateFormatter->format($hist_created, 'long'),
-          'score'      => $hist_score,
+        $hist_score = (int) ($hist->get('score')->value ?? 0);
+        $history[] = [
+          'id' => $hist->id(),
+          'date' => $this->dateFormatter->format($hist_created, 'short'),
+          'date_full' => $this->dateFormatter->format($hist_created, 'long'),
+          'score' => $hist_score,
           'bar_height' => round(($hist_score / 100) * 100),
-          'delta'      => $hist->getScoreTrendDelta(),
-          'provider'   => $hist->get('provider_id')->value ?? '',
-          'model'      => $hist->get('model_id')->value ?? '',
+          'delta' => $hist->getScoreTrendDelta(),
+          'provider' => $hist->get('provider_id')->value ?? '',
+          'model' => $hist->get('model_id')->value ?? '',
           'is_current' => ((int) $hist->id() === $current_id),
-          'url'        => Url::fromRoute(
-            'ai_content_audit.assessment.report',
-            ['ai_content_assessment' => $hist->id()],
-          )->toString(),
+          'url' => Url::fromRoute('ai_content_audit.assessment.report', ['ai_content_assessment' => $hist->id()])
+            ->toString(),
         ];
       }
     }
@@ -361,15 +360,15 @@ class AiAssessmentController extends ControllerBase {
    *   Three-element array: [flat checks, grouped checks, pass count].
    */
   private function buildTechnicalAudit(NodeInterface $node): array {
-    $all_checks    = [];
+    $all_checks = [];
     $grouped_label = [];
-    $unmapped      = [];
-    $pass_count    = 0;
+    $unmapped = [];
+    $pass_count = 0;
 
     try {
       $results = $this->technicalAuditService->runAllChecks($node, FALSE);
       foreach ($results as $result) {
-        $arr          = $result->toArray();
+        $arr = $result->toArray();
         $all_checks[] = $arr;
         if ($result->status === 'pass') {
           $pass_count++;
@@ -384,19 +383,22 @@ class AiAssessmentController extends ControllerBase {
         }
       }
     }
+
     catch (\Exception $e) {
-      $this->getLogger('ai_content_audit')->warning(
-        'Technical audit failed in report page: @msg',
-        ['@msg' => $e->getMessage()]
-      );
+      $this->getLogger('ai_content_audit')
+        ->warning('Technical audit failed in report page: @msg', ['@msg' => $e->getMessage()]);
     }
 
     $grouped = [];
-    foreach (['Node Checks', 'Site-Level AI Signals', 'Infrastructure'] as $label) {
+    foreach ([
+      'Node Checks',
+      'Site-Level AI Signals',
+      'Infrastructure',
+    ] as $label) {
       if (!empty($grouped_label[$label])) {
         ksort($grouped_label[$label]);
         $grouped[] = [
-          'label'  => $label,
+          'label' => $label,
           'checks' => array_values($grouped_label[$label]),
         ];
       }
@@ -417,17 +419,17 @@ class AiAssessmentController extends ControllerBase {
   private function buildFilesystemAudit(): array {
     $categories = [];
     $summary    = [
-      'pass_count'    => 0,
-      'fail_count'    => 0,
+      'pass_count' => 0,
+      'fail_count' => 0,
       'warning_count' => 0,
-      'info_count'    => 0,
-      'total_count'   => 0,
+      'info_count' => 0,
+      'total_count' => 0,
     ];
 
     try {
       $results = $this->filesystemAuditService->runAllChecks();
       foreach ($results as $r) {
-        $check    = is_object($r) && method_exists($r, 'toArray') ? $r->toArray() : (array) $r;
+        $check = is_object($r) && method_exists($r, 'toArray') ? $r->toArray() : (array) $r;
         $check_id = $check['check'] ?? '';
         $category = 'Other';
         foreach (self::FS_PREFIX_MAP as $prefix => $cat) {
@@ -440,20 +442,19 @@ class AiAssessmentController extends ControllerBase {
 
         $status = $check['status'] ?? 'info';
         match ($status) {
-          'pass'    => $summary['pass_count']++,
-          'fail'    => $summary['fail_count']++,
+          'pass' => $summary['pass_count']++,
+          'fail' => $summary['fail_count']++,
           'warning' => $summary['warning_count']++,
-          'info'    => $summary['info_count']++,
-          default   => NULL,
+          'info' => $summary['info_count']++,
+          default => NULL,
         };
         $summary['total_count']++;
       }
     }
+
     catch (\Exception $e) {
-      $this->getLogger('ai_content_audit')->warning(
-        'Filesystem audit failed in report page: @msg',
-        ['@msg' => $e->getMessage()]
-      );
+      $this->getLogger('ai_content_audit')
+        ->warning('Filesystem audit failed in report page: @msg', ['@msg' => $e->getMessage()]);
     }
 
     return [$categories, $summary];

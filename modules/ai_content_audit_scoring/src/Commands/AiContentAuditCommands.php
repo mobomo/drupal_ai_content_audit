@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Commands;
+namespace Drupal\ai_content_audit_scoring\Commands;
 
 use Drupal\ai_content_audit\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;

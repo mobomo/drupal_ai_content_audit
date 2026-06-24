@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ai_content_audit\Commands;
+namespace Drupal\ai_content_audit_scoring\Commands;
 
 use Symfony\Component\Yaml\Yaml;
-use Drupal\ai_content_audit\Service\FilesystemAuditService;
+use Drupal\ai_content_audit_scoring\Service\FilesystemAuditService;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\Console\Helper\Table;

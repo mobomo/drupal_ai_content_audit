@@ -4,7 +4,7 @@ dependencies:
     - ai.ai_prompt_type.content_audit_assessment_system
   enforced:
     module:
-      - ai_content_audit
+      - ai_content_audit_scoring
 id: content_audit_assessment_system__content_audit_assessment_system_default
 label: 'Default assessment system prompt.'
 type: content_audit_assessment_system

@@ -7,6 +7,7 @@ namespace Drupal\ai_content_audit\Routing;
 use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\EnhancerInterface;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
@@ -26,6 +27,7 @@ final class AiroAnalysisLayoutRouteEnhancer implements EnhancerInterface {
     protected LayoutSectionStorageParamConverter $sectionStorageParamConverter,
     protected LayoutTempstoreRepositoryInterface $layoutTempstoreRepository,
     protected ConfigFactoryInterface $configFactory,
+    protected EntityTypeManagerInterface $entityTypeManager,
   ) {}
 
   /**
@@ -98,8 +100,8 @@ final class AiroAnalysisLayoutRouteEnhancer implements EnhancerInterface {
     if ($node instanceof NodeInterface) {
       return $node;
     }
-    if (is_scalar($node) && is_numeric((string) $node)) {
-      $loaded = \Drupal::entityTypeManager()->getStorage('node')->load((int) $node);
+    if (is_numeric($node)) {
+      $loaded = $this->entityTypeManager->getStorage('node')->load((int) $node);
       return $loaded instanceof NodeInterface ? $loaded : NULL;
     }
     return NULL;

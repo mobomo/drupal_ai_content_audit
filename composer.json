@@ -1,6 +1,6 @@
 {
   "name": "drupal/ai_content_audit",
-  "description": "Assesses Drupal node content quality and AI-readiness using the Drupal AI module.",
+  "description": "Adds an AIRO Preview chat panel for Drupal node content using the Drupal AI module.",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "version": "0.0.1",

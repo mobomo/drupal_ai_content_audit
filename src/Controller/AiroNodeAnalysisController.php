@@ -53,9 +53,12 @@ final class AiroNodeAnalysisController extends ControllerBase {
    * Access callback for assessment routes that only need to read node data.
    */
   public function viewAccess(NodeInterface $node, AccountInterface $account): AccessResultInterface {
-    return $node->access('view', $account, TRUE)
-      ->addCacheableDependency($node)
-      ->cachePerPermissions();
+    $access = $node->access('view', $account, TRUE);
+    if ($access instanceof AccessResult) {
+      return $access->addCacheableDependency($node)->cachePerPermissions();
+    }
+
+    return $access;
   }
 
   /**
@@ -78,7 +81,10 @@ final class AiroNodeAnalysisController extends ControllerBase {
         ->cachePerPermissions());
     }
 
-    return $view_access->andIf($node->access('update', $account, TRUE)
+    /** @var \Drupal\Core\Access\AccessResult $update_access */
+    $update_access = $node->access('update', $account, TRUE);
+
+    return $view_access->andIf($update_access
       ->addCacheableDependency($node)
       ->cachePerPermissions());
   }

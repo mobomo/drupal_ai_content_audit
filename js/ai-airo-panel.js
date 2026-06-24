@@ -128,15 +128,7 @@
               '</div>' +
             '</div>';
 
-          fetch(assessUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: airoAssessPostBody(this),
-          })
+          Drupal.airoContentAudit.postJson(assessUrl, airoAssessPostBody(this))
           .then(function (response) { return response.json(); })
           .then(function () {
             airoRefreshAfterAssess(panel);
@@ -179,15 +171,7 @@
             return;
           }
           btn.disabled = true;
-          fetch(assessUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            body: airoAssessPostBody(btn),
-          })
+          Drupal.airoContentAudit.postJson(assessUrl, airoAssessPostBody(btn))
             .then(function (response) { return response.json(); })
             .then(function () {
               window.location.reload();

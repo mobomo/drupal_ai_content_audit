@@ -29,9 +29,7 @@ trait EntityContextTrait {
       $url = '/node/' . $node->id();
     }
 
-    // Resolve the human-readable bundle label.
-    $bundleEntity = $node->type->entity;
-    $contentType = $bundleEntity ? (string) $bundleEntity->label() : $node->bundle();
+    $contentType = $node->bundle();
 
     return implode("\n", [
       '--- Content Metadata ---',

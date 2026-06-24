@@ -67,7 +67,18 @@ class AiContentAssessmentRepository {
       ->accessCheck(TRUE);
 
     $ids = $query->execute();
-    return $ids ? $storage->loadMultiple($ids) : [];
+    if (!$ids) {
+      return [];
+    }
+
+    $assessments = [];
+    foreach ($storage->loadMultiple($ids) as $entity) {
+      if ($entity instanceof AiContentAssessment) {
+        $assessments[] = $entity;
+      }
+    }
+
+    return $assessments;
   }
 
   /**
@@ -79,7 +90,8 @@ class AiContentAssessmentRepository {
       return NULL;
     }
 
-    return $storage->load(reset($ids));
+    $entity = $storage->load(reset($ids));
+    return $entity instanceof AiContentAssessment ? $entity : NULL;
   }
 
 }

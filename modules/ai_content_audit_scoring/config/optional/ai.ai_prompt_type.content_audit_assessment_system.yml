@@ -3,7 +3,7 @@ status: true
 dependencies:
   enforced:
     module:
-      - ai_content_audit
+      - ai_content_audit_scoring
 id: content_audit_assessment_system
 label: 'AI Content Audit assessment system prompt'
 variables: {  }

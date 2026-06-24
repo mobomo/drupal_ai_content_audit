@@ -1,6 +1,6 @@
-name: 'AI Content Auditor'
+name: 'AIRO Preview'
 type: module
-description: 'Assesses node content quality and AI-readiness using the Drupal AI module.'
+description: 'Adds an AIRO Preview chat panel for Drupal node content using the Drupal AI module.'
 package: 'AI'
 core_version_requirement: ^11.1
 dependencies:

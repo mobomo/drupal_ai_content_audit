@@ -1,0 +1,7 @@
+view ai content assessment:
+  title: 'View AI content assessments'
+  description: 'Read assessment results and scoring panel data.'
+run ai content assessment:
+  title: 'Run AI content assessment'
+  description: 'Trigger assessments and update assessment action item state.'
+  restrict access: true

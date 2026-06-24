@@ -8,6 +8,7 @@ use Drupal\ai_content_audit\Service\AiContentAuditLifecycle;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Entity and node lifecycle hooks.
@@ -15,6 +16,7 @@ use Drupal\node\NodeInterface;
 final class AiContentAuditEntityHooks {
 
   public function __construct(
+    #[Autowire(service: 'ai_content_audit.lifecycle')]
     protected AiContentAuditLifecycle $lifecycle,
   ) {}
 
