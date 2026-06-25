@@ -78,7 +78,7 @@ class AiAssessmentController extends ControllerBase {
       $container->get('date.formatter'),
       $container->get('ai_content_audit.assessment_repository'),
       $container->get('ai_content_audit.technical_audit'),
-      $container->get('ai_content_audit.filesystem_audit'),
+      $container->get('ai_content_audit_scoring.filesystem_audit'),
     );
   }
 
