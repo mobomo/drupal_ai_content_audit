@@ -14,7 +14,6 @@ parameters:
     - .
   ignoreErrors:
     - '#Unsafe usage of new static\(\)#'
-    - "#^Class .* extends @internal class#"
     - identifier: missingType.iterableValue
   scanDirectories:
     - %currentWorkingDirectory%/vendor/drush/drush/src-symfony-compatibility
