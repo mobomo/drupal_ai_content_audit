@@ -49,16 +49,22 @@ class TechnicalAuditServiceTest extends TestCase {
 
   /**
    * Mock HTTP client.
+   *
+   * @var \GuzzleHttp\ClientInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected ClientInterface $httpClient;
 
   /**
    * Mock module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * Mock entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 

@@ -11,6 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Queue\RequeueException;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\node\NodeInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -29,26 +30,36 @@ class AiAssessmentQueueWorkerTest extends TestCase {
 
   /**
    * Assessment service mock.
+   *
+   * @var \Drupal\ai_content_audit_scoring\Service\AiAssessmentService&\PHPUnit\Framework\MockObject\MockObject
    */
   protected AiAssessmentService $assessmentService;
 
   /**
    * Entity type manager mock.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * Node storage mock.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected EntityStorageInterface $nodeStorage;
 
   /**
    * Logger factory mock.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected LoggerChannelFactoryInterface $loggerFactory;
 
   /**
    * Logger channel mock.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected LoggerChannelInterface $logger;
 
@@ -83,6 +94,7 @@ class AiAssessmentQueueWorkerTest extends TestCase {
       $this->assessmentService,
       $this->entityTypeManager,
       $this->loggerFactory,
+      $this->createMock(TimeInterface::class),
     );
   }
 

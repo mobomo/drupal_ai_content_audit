@@ -11,6 +11,7 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
 use Drupal\Core\State\StateInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -25,15 +26,24 @@ class SiteAnalysisServiceTest extends TestCase {
   /**
    * AI provider plugin manager mock.
    */
-  protected AiProviderPluginManager $aiProvider;
+  protected MockObject $aiProvider;
+
+  /**
+   * AI provider plugin manager service mock.
+   */
+  protected AiProviderPluginManager $aiProviderService;
 
   /**
    * Key-value expirable factory mock.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected KeyValueExpirableFactoryInterface $kvFactory;
 
   /**
    * State service mock.
+   *
+   * @var \Drupal\Core\State\StateInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected StateInterface $state;
 
@@ -53,7 +63,9 @@ class SiteAnalysisServiceTest extends TestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $this->aiProvider = $aiProvider;
+    $this->aiProviderService = $aiProvider;
     $this->kvFactory = $this->createMock(KeyValueExpirableFactoryInterface::class);
     $this->state = $this->createMock(StateInterface::class);
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
@@ -76,7 +88,7 @@ class SiteAnalysisServiceTest extends TestCase {
    */
   protected function createService(): SiteAnalysisService {
     return new SiteAnalysisService(
-      $this->aiProvider,
+      $this->aiProviderService,
       $this->kvFactory,
       $this->state,
       $this->configFactory,

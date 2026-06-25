@@ -63,12 +63,15 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $reloaded = $storage->load($assessment->id());
 
     $this->assertNotNull($reloaded);
+    assert($reloaded instanceof AiContentAssessment);
     $this->assertNull($reloaded->get('score')->value, 'Database value should remain NULL.');
     $this->assertNull($reloaded->getScore(), 'Accessor must return NULL for an unset score.');
 
     $reloaded->set('score', 88);
     $reloaded->save();
-    $this->assertSame(88, $storage->load($reloaded->id())->getScore());
+    $saved = $storage->load($reloaded->id());
+    assert($saved instanceof AiContentAssessment);
+    $this->assertSame(88, $saved->getScore());
   }
 
   /**
@@ -120,6 +123,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $reloaded = $storage->load($assessment->id());
 
     $this->assertNotNull($reloaded);
+    assert($reloaded instanceof AiContentAssessment);
 
     // sub_scores round-trip.
     $sub_scores = $reloaded->getSubScores();
@@ -144,7 +148,9 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     // NULL cleared fields stay NULL.
     $reloaded->setSubScores(NULL);
     $reloaded->save();
-    $this->assertNull($storage->load($reloaded->id())->getSubScores());
+    $cleared = $storage->load($reloaded->id());
+    assert($cleared instanceof AiContentAssessment);
+    $this->assertNull($cleared->getSubScores());
   }
 
   /**
@@ -167,12 +173,14 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
       'provider_id' => 'openai',
       'model_id'    => 'gpt-4o-mini',
     ]);
+    assert($second instanceof AiContentAssessment);
     $second->set('score', 75);
     $delta = 75 - 60;
     $second->setScoreTrendDelta($delta);
     $second->save();
 
     $reloaded = $this->assessmentStorage()->load($second->id());
+    assert($reloaded instanceof AiContentAssessment);
     $this->assertSame(15, $reloaded->getScoreTrendDelta());
 
     // Third assessment: score 70 → delta = 70 - 75 = -5.
@@ -181,11 +189,13 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
       'provider_id' => 'openai',
       'model_id'    => 'gpt-4o-mini',
     ]);
+    assert($third instanceof AiContentAssessment);
     $third->set('score', 70);
     $third->setScoreTrendDelta(70 - 75);
     $third->save();
 
     $reloaded_third = $this->assessmentStorage()->load($third->id());
+    assert($reloaded_third instanceof AiContentAssessment);
     $this->assertSame(-5, $reloaded_third->getScoreTrendDelta());
   }
 
@@ -204,6 +214,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $storage  = $this->assessmentStorage();
     $reloaded = $storage->load($assessment->id());
 
+    assert($reloaded instanceof AiContentAssessment);
     $this->assertNull($reloaded->getSubScores(), 'sub_scores must be NULL for v1 response.');
     $this->assertNull($reloaded->getCheckpoints(), 'checkpoints must be NULL for v1 response.');
     $this->assertNull($reloaded->getActionItems(), 'action_items must be NULL for v1 response.');
@@ -334,7 +345,9 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
 
     $assessment->save();
 
-    return $this->assessmentStorage()->load($assessment->id());
+    $reloaded = $this->assessmentStorage()->load($assessment->id());
+    assert($reloaded instanceof AiContentAssessment);
+    return $reloaded;
   }
 
   /**
@@ -359,11 +372,14 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     }
 
     $assessment = $this->assessmentStorage()->create($values);
+    assert($assessment instanceof AiContentAssessment);
     $assessment->set('score', $score);
     $assessment->save();
 
     // Reload to mimic real storage round-trips.
-    return $this->assessmentStorage()->load($assessment->id());
+    $reloaded = $this->assessmentStorage()->load($assessment->id());
+    assert($reloaded instanceof AiContentAssessment);
+    return $reloaded;
   }
 
   /**

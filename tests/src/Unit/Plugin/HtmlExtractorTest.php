@@ -13,7 +13,6 @@ use Drupal\Core\Render\MainContent\HtmlRenderer;
 use Drupal\Core\Render\RendererInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\Core\Theme\ActiveTheme;
 use Drupal\Core\Theme\ThemeInitializationInterface;
@@ -70,9 +69,6 @@ class HtmlExtractorTest extends TestCase {
     $request = $this->createMock(Request::class);
     $request->method('getHost')->willReturn($host);
 
-    $requestStack = $this->createMock(RequestStack::class);
-    $requestStack->method('getCurrentRequest')->willReturn($request);
-
     $themeManager = $this->createMock(ThemeManagerInterface::class);
     $active_theme = $this->getMockBuilder(ActiveTheme::class)
       ->disableOriginalConstructor()
@@ -97,7 +93,7 @@ class HtmlExtractorTest extends TestCase {
       $themeManager,
       $themeInitialization,
       $this->createMock(HtmlRenderer::class),
-      $requestStack,
+      $request,
       $this->createMock(AttachmentsResponseProcessorInterface::class),
       $moduleHandler,
     );
@@ -266,16 +262,7 @@ class HtmlExtractorTest extends TestCase {
    */
   public function testConvertHtmlTreatsAllLinksAsExternalWhenNoHost(): void {
     // Arrange — build extractor whose requestStack returns NULL (CLI mode).
-    $requestStack = $this->createMock(RequestStack::class);
-    $requestStack->method('getCurrentRequest')->willReturn(NULL);
-
-    $extractor = new HtmlExtractor(
-      [], 'html_rendered', ['render_mode' => 'html'],
-      $this->createMock(EntityTypeManagerInterface::class),
-      $this->createMock(RendererInterface::class),
-      $this->createMock(ConfigFactoryInterface::class),
-      $requestStack,
-    );
+    $extractor = $this->buildExtractor('');
     $html = '<p><a href="https://example.com/page">A Link</a></p>';
 
     // Act.

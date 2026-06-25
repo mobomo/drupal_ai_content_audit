@@ -19,6 +19,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -37,7 +38,7 @@ class AiAssessmentServiceTest extends TestCase {
   /**
    * AI provider plugin manager mock.
    */
-  protected AiProviderPluginManager $aiProvider;
+  protected MockObject $aiProvider;
 
   /**
    * Content extractor manager mock.
@@ -46,6 +47,8 @@ class AiAssessmentServiceTest extends TestCase {
 
   /**
    * Content extractor mock.
+   *
+   * @var \Drupal\ai_content_audit\Extractor\ContentExtractorInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected ContentExtractorInterface $mockExtractor;
 
@@ -75,7 +78,8 @@ class AiAssessmentServiceTest extends TestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $this->aiProvider = $aiProvider;
 
     // Create a mock extractor that the manager will return.
     $this->mockExtractor = $this->createMock(ContentExtractorInterface::class);
@@ -105,7 +109,7 @@ class AiAssessmentServiceTest extends TestCase {
     $this->providerModelChoices = $this->createMock(ProviderModelChoices::class);
 
     $this->service = new AiAssessmentService(
-      $this->aiProvider,
+      $aiProvider,
       $this->extractorManager,
       $this->loggerFactory,
       $this->configFactory,

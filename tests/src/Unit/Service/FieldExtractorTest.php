@@ -27,6 +27,8 @@ class FieldExtractorTest extends TestCase {
 
   /**
    * Entity type manager mock.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 

@@ -26,11 +26,15 @@ class AiResponseSubscriberTest extends TestCase {
 
   /**
    * Logger factory mock.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected LoggerChannelFactoryInterface $loggerFactory;
 
   /**
    * Logger channel mock.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected LoggerChannelInterface $logger;
 

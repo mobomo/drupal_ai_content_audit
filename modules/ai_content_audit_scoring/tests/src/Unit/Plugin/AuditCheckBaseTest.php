@@ -43,6 +43,9 @@ class AuditCheckBaseTest extends TestCase {
    *   Plugin label.
    * @param string $category
    *   Plugin category.
+   *
+   * @return \Drupal\ai_content_audit_scoring\Plugin\AuditCheck\AuditCheckBase&\Drupal\Tests\ai_content_audit_scoring\Unit\Plugin\TestAuditCheckInterface
+   *   A concrete audit check with public wrappers for protected helpers.
    */
   private function makeCheck(
     string $scope = 'site',
@@ -54,7 +57,7 @@ class AuditCheckBaseTest extends TestCase {
       ['scope' => $scope],
       $id,
       ['id' => $id, 'label' => $label, 'category' => $category, 'scope' => $scope],
-    ) extends AuditCheckBase {
+    ) extends AuditCheckBase implements TestAuditCheckInterface {
 
       /**
        * {@inheritdoc}
@@ -281,5 +284,42 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertSame('pass', $result->status);
     $this->assertSame('test_check', $result->check);
   }
+
+}
+
+/**
+ * Describes public wrappers exposed by the anonymous test check.
+ */
+interface TestAuditCheckInterface {
+
+  /**
+   * Exposes AuditCheckBase::pass().
+   */
+  public function callPass(
+    string $desc,
+    ?string $current = NULL,
+    ?string $recommended = NULL,
+    array $details = [],
+  ): TechnicalAuditResult;
+
+  /**
+   * Exposes AuditCheckBase::fail().
+   */
+  public function callFail(
+    string $desc,
+    ?string $current = NULL,
+    ?string $recommended = NULL,
+    array $details = [],
+  ): TechnicalAuditResult;
+
+  /**
+   * Exposes AuditCheckBase::warning().
+   */
+  public function callWarning(
+    string $desc,
+    ?string $current = NULL,
+    ?string $recommended = NULL,
+    array $details = [],
+  ): TechnicalAuditResult;
 
 }
