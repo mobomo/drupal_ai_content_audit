@@ -5,6 +5,9 @@ provider how a page may appear or respond in AI-assisted discovery experiences.
 It is powered by the [Drupal AI module](https://www.drupal.org/project/ai) and
 uses the configured chat provider/model for responses.
 
+> AI assistance was used during development of this module. All generated code
+> and documentation is reviewed and maintained by the project maintainers.
+
 > Pre-release notice: this module is under active development. Public APIs,
 > configuration schema, and internal services may change until a stable `1.0.0`
 > release is tagged.
@@ -90,6 +93,7 @@ installed. In DDEV, use container paths when checking a symlinked module:
 
 ```bash
 ddev php vendor/bin/phpcs --standard=Drupal,DrupalPractice \
+  --extensions=php,module,inc,install,profile,theme,yml \
   /var/www/html/docroot/modules/contrib/ai_content_audit
 ```
 
@@ -105,6 +109,3 @@ The tab manager should return only:
 ```text
 preview-tab | AI Preview
 ```
-
-Maintainer-oriented contrib readiness notes live in
-`docs/CONTRIB_READINESS.md`.

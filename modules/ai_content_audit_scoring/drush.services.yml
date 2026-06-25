@@ -2,7 +2,7 @@ services:
   ai_content_audit_scoring.commands:
     class: Drupal\ai_content_audit_scoring\Commands\AiContentAuditCommands
     arguments:
-      - '@ai_content_audit.assessment_service'
+      - '@ai_content_audit_scoring.assessment_service'
       - '@entity_type.manager'
       - '@queue'
       - '@config.factory'

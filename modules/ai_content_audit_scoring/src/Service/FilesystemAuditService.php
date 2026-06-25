@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Service;
 
-use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
-use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
+use Drupal\ai_content_audit_scoring\Plugin\Manager\AuditCheckManager;
+use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Psr\Log\LoggerInterface;
@@ -36,7 +36,7 @@ final class FilesystemAuditService {
    * @param bool $force_refresh
    *   When TRUE, bypass the cache and re-run every check.
    *
-   * @return \Drupal\ai_content_audit\ValueObject\TechnicalAuditResult[]
+   * @return \Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult[]
    *   Indexed array of audit results, one per check.
    */
   public function runAllChecks(bool $force_refresh = FALSE): array {
@@ -57,7 +57,7 @@ final class FilesystemAuditService {
       }
 
       try {
-        /** @var \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckInterface $check */
+        /** @var \Drupal\ai_content_audit_scoring\Plugin\AuditCheck\AuditCheckInterface $check */
         $check = $this->auditCheckManager->createInstance($id);
 
         if (!$check->applies(NULL)) {

@@ -34,7 +34,7 @@ services:
       - '@ai_site_audit.aggregation'
       - '@ai_site_audit.rollup'
       - '@ai_site_audit.analysis'
-      - '@ai_content_audit.technical_audit'
+      - '@ai_content_audit_scoring.technical_audit'
       - '@ai_content_audit_scoring.filesystem_audit'
       - '@state'
       - '@queue'

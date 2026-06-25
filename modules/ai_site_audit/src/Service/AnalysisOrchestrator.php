@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_site_audit\Service;
 
 use Drupal\ai_content_audit_scoring\Service\FilesystemAuditService;
-use Drupal\ai_content_audit\Service\TechnicalAuditService;
+use Drupal\ai_content_audit_scoring\Service\TechnicalAuditService;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\State\StateInterface;

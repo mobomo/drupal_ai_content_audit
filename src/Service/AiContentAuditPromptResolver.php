@@ -13,8 +13,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
  */
 class AiContentAuditPromptResolver {
 
-  public const DEFAULT_ASSESSMENT_SYSTEM_PROMPT = 'content_audit_assessment_system__content_audit_assessment_system_default';
-  public const DEFAULT_ASSESSMENT_USER_PROMPT = 'content_audit_assessment_user__content_audit_assessment_user_default';
   public const DEFAULT_PREVIEW_SYSTEM_PROMPT = 'content_audit_preview_system__content_audit_preview_system_default';
   public const DEFAULT_PREVIEW_USER_PROMPT = 'content_audit_preview_user__content_audit_preview_user_default';
 
@@ -22,35 +20,6 @@ class AiContentAuditPromptResolver {
     private readonly ConfigFactoryInterface $configFactory,
     private readonly EntityTypeManagerInterface $entityTypeManager,
   ) {}
-
-  /**
-   * Resolves the assessment system and user prompts.
-   *
-   * @param array<string, string> $variables
-   *   Prompt variables for the assessment user prompt.
-   *
-   * @return array{system_prompt: string, user_prompt: string}
-   *   Rendered prompt text.
-   */
-  public function resolveAssessmentPrompts(array $variables): array {
-    return [
-      'system_prompt' => $this->resolve(
-        'prompts.assessment_system_prompt',
-        self::DEFAULT_ASSESSMENT_SYSTEM_PROMPT
-      ),
-      'user_prompt' => $this->resolve(
-        'prompts.assessment_user_prompt',
-        self::DEFAULT_ASSESSMENT_USER_PROMPT,
-        $variables,
-        [
-          'DETERMINISTIC_SIGNALS',
-          'SEO_SIGNALS',
-          'CONTENT',
-          'RESPONSE_SCHEMA',
-        ]
-      ),
-    ];
-  }
 
   /**
    * Resolves the preview system and user prompts.

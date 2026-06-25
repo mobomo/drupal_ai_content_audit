@@ -4,7 +4,7 @@
  */
 
 body.airo-analysis-route {
-  --airo-panel-max-width: 373px;
+  --airo-panel-max-width: var(--airo-admin-sidebar-width, 22.5rem);
   --airo-edit-form-panel-top-offset: 117px;
   --airo-panel-min-height: calc(100dvh - var(--drupal-displace-offset-top, 0px));
 }

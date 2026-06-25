@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_site_audit\Unit;
 
-use Drupal\ai_content_audit\Service\TechnicalAuditService;
-use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
+use Drupal\ai_content_audit_scoring\Service\TechnicalAuditService;
+use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\ai_site_audit\Service\AnalysisOrchestrator;
 use Drupal\ai_site_audit\Service\SiteAggregationService;
 use Drupal\ai_site_audit\Service\SiteAnalysisService;

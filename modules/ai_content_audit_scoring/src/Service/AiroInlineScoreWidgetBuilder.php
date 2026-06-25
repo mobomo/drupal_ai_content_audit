@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Service;
 
-use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
+use Drupal\ai_content_audit_scoring\Repository\AiContentAssessmentRepository;
 use Drupal\node\NodeInterface;
 
 /**
@@ -37,7 +37,7 @@ final class AiroInlineScoreWidgetBuilder {
       '#high_priority_count' => $highPriorityCount,
       '#attached' => [
         'library' => [
-          'ai_content_audit/inline-widget',
+          'ai_content_audit_scoring/inline-widget',
         ],
       ],
     ];

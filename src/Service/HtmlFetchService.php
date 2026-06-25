@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * Fetches remote HTML with per-request in-memory caching.
  *
- * @see \Drupal\ai_content_audit\Plugin\AuditCheck\AuditCheckBase
+ * @see \Drupal\ai_content_audit_scoring\Plugin\AuditCheck\AuditCheckBase
  */
 class HtmlFetchService {
 

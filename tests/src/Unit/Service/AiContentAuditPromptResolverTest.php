@@ -41,25 +41,6 @@ final class AiContentAuditPromptResolverTest extends TestCase {
   }
 
   /**
-   * Tests actionable errors for missing prompts.
-   *
-   * @covers ::resolveAssessmentPrompts
-   */
-  public function testResolveAssessmentPromptsFailsWhenPromptMissing(): void {
-    $resolver = $this->createResolver([]);
-
-    $this->expectException(\RuntimeException::class);
-    $this->expectExceptionMessage('references missing AI Prompt entity');
-
-    $resolver->resolveAssessmentPrompts([
-      'DETERMINISTIC_SIGNALS' => '- h1_markers_count: 1',
-      'SEO_SIGNALS' => '- meta_description_present: true',
-      'CONTENT' => 'Page content',
-      'RESPONSE_SCHEMA' => '{}',
-    ]);
-  }
-
-  /**
    * Tests required prompt variables must be present in the prompt text.
    *
    * @covers ::resolvePreviewPrompts

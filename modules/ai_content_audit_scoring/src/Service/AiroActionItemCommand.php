@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Service;
 
-use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
+use Drupal\ai_content_audit_scoring\Repository\AiContentAssessmentRepository;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
