@@ -9,7 +9,6 @@ use Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Unit tests for AiResponseSubscriber.

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit_scoring\Unit\Plugin\Technical;
 
 use Drupal\ai_content_audit_scoring\Plugin\AuditCheck\Technical\HttpsCheck;
-use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\node\NodeInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
