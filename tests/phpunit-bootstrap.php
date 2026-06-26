@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * @file
  * PHPUnit bootstrap for ai_content_audit (standalone or contrib install).
@@ -9,6 +7,10 @@ declare(strict_types=1);
  * Locates Drupal core from the module directory and enables BypassFinals so
  * unit tests can mock final Drupal AI classes (e.g. AiProviderPluginManager).
  */
+
+declare(strict_types=1);
+
+use DG\BypassFinals;
 
 /**
  * Finds and loads the nearest Composer autoloader (for dg/bypass-finals).
@@ -54,8 +56,8 @@ function ai_content_audit_find_core_bootstrap(string $start): string {
 $module_root = dirname(__DIR__);
 ai_content_audit_bootstrap_autoload($module_root);
 
-if (class_exists(\DG\BypassFinals::class)) {
-  \DG\BypassFinals::enable();
+if (class_exists(BypassFinals::class)) {
+  BypassFinals::enable();
 }
 
 require_once ai_content_audit_find_core_bootstrap($module_root);
