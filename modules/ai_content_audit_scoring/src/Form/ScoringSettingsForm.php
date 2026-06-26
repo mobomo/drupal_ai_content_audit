@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Form;
 
-use Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager;
+use Drupal\ai_content_audit_scoring\Plugin\Manager\AuditCheckManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -17,10 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class ScoringSettingsForm extends ConfigFormBase {
 
-  /**
-   * The parent config object managed by this submodule.
-   */
-  private const CONFIG_NAME = 'ai_content_audit.settings';
+  private const CONFIG_NAME = 'ai_content_audit_scoring.settings';
 
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -39,7 +36,7 @@ final class ScoringSettingsForm extends ConfigFormBase {
       $container->get('config.factory'),
       $container->get('config.typed'),
       $container->get('entity_type.manager'),
-      $container->get('ai_content_audit.audit_check_manager'),
+      $container->get('ai_content_audit_scoring.audit_check_manager'),
     );
   }
 

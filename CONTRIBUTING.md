@@ -30,7 +30,9 @@ Run PHPCS with the Drupal standard on the paths you change (adjust the path to
 your docroot):
 
 ```bash
-vendor/bin/phpcs --standard=Drupal,DrupalPractice web/modules/contrib/ai_content_audit
+vendor/bin/phpcs --standard=Drupal,DrupalPractice \
+  --extensions=php,module,inc,install,profile,theme,yml \
+  web/modules/contrib/ai_content_audit
 ```
 
 Fix new violations in files you touch; avoid unrelated clean-up in the same
@@ -48,10 +50,9 @@ your host project (for example `phpunit.xml` at the repository root or inside
 
 ## Documentation
 
-- **End users and site builders** — `README.md` stays free of internal backlog
-  and alarmist language.
-- **Maintainers / release candidates** — see `docs/CONTRIB_READINESS.md` for a
-  checklist of items to close before or after Drupal.org submission.
+- Keep `README.md` focused on public, site-builder-facing usage.
+- Track maintainer-only release readiness work in issues, not committed
+  checklist documents.
 
 ---
 
@@ -64,5 +65,5 @@ Do **not** open public issues for security-sensitive findings. Follow
 
 ## License
 
-Contributions are accepted under the same license as the project: **GPL-2.0-or-later**
-(see `composer.json`).
+Contributions are accepted under the same license as the project:
+**GPL-2.0-or-later** (see `composer.json`).

@@ -79,7 +79,7 @@ ai_content_audit.widget.refresh:
 ai_content_audit.node.assessment_history:
   path: '/node/{node}/ai-assessment'
   defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiAssessmentController::history'
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\AiAssessmentController::history'
     _title: 'AI Assessment History'
   requirements:
     _permission: 'view ai content assessment,administer ai content audit'
@@ -110,8 +110,8 @@ ai_content_audit.panel.actions_toggle:
 ai_content_audit.assessment.report:
   path: '/admin/ai-content-audit/assessment/{ai_content_assessment}'
   defaults:
-    _controller: '\Drupal\ai_content_audit\Controller\AiAssessmentController::report'
-    _title_callback: '\Drupal\ai_content_audit\Controller\AiAssessmentController::reportTitle'
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\AiAssessmentController::report'
+    _title_callback: '\Drupal\ai_content_audit_scoring\Controller\AiAssessmentController::reportTitle'
   requirements:
     _entity_access: 'ai_content_assessment.view'
     ai_content_assessment: \d+

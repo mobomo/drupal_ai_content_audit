@@ -2,12 +2,6 @@
 # - design-tokens (css.base) loads before all css.component libraries.
 # - All --airo-* tokens in component CSS resolve through design-tokens.css.
 
-assessment-panel:
-  version: 1.x
-  css:
-    component:
-      css/ai-assessment-panel.css: {}
-
 # G10: 'base' group ensures design-tokens CSS loads before all 'component' CSS.
 # Drupal CSS weight: theme < base < layout < component < state < overrides.
 design-tokens:
@@ -15,22 +9,6 @@ design-tokens:
   css:
     base:
       css/ai-design-tokens.css: {}
-
-# G5: core/drupal.ajax provides Drupal.ajax() used by the AJAX widget refresh.
-# G10: design-tokens declared so --airo-* vars resolve before widget CSS runs.
-inline-widget:
-  version: 1.x
-  css:
-    component:
-      css/ai-inline-score-widget.css: {}
-  js:
-    js/ai-inline-score-widget.js: {}
-  dependencies:
-    - core/drupal
-    - core/drupal.ajax
-    - core/once
-    - ai_content_audit/airo-csrf
-    - ai_content_audit/design-tokens
 
 airo-csrf:
   version: 1.x
@@ -56,46 +34,6 @@ airo-panel:
     # Individual tab providers attach their own libraries.
     - ai_content_audit/preview-tab
 
-score-tab:
-  version: 1.x
-  css:
-    component:
-      css/ai-score-tab.css: {}
-  js:
-    js/ai-score-tab.js: {}
-  dependencies:
-    - core/drupal
-    - core/drupal.ajax
-    - core/once
-    - ai_content_audit/airo-csrf
-    - ai_content_audit/design-tokens
-
-action-items-tab:
-  version: 1.x
-  css:
-    component:
-      css/ai-action-items-tab.css: {}
-  js:
-    js/ai-action-items-tab.js: {}
-  dependencies:
-    - core/drupal
-    - core/drupal.ajax
-    - core/once
-    - ai_content_audit/airo-csrf
-    - ai_content_audit/design-tokens
-
-technical-audit-tab:
-  version: 1.x
-  css:
-    component:
-      css/ai-technical-audit-tab.css: {}
-  js:
-    js/ai-technical-audit-tab.js: {}
-  dependencies:
-    - core/drupal
-    - core/once
-    - ai_content_audit/design-tokens
-
 provider_tabs:
   version: 1.x
   css:
@@ -120,18 +58,6 @@ preview-tab:
     - ai_content_audit/design-tokens
     - ai_content_audit/provider_tabs
     - ai_content_audit/airo-csrf
-
-assessment-report:
-  version: 1.x
-  css:
-    component:
-      css/ai-assessment-report.css: {}
-  js:
-    js/ai-assessment-report.js: {}
-  dependencies:
-    - core/drupal
-    - core/once
-    - ai_content_audit/design-tokens
 
 airo-panel-page-skin:
   version: 1.x

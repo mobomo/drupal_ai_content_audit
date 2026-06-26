@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Commands;
 
-use Drupal\ai_content_audit\Service\AiAssessmentService;
+use Drupal\ai_content_audit_scoring\Service\AiAssessmentService;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -271,7 +271,7 @@ final class AiContentAuditCommands extends DrushCommands {
    *   The queue worker passes these to AiAssessmentService::assessNode().
    */
   private function enqueueBulk(?string $type = NULL, array $ai_options = []): void {
-    $config           = $this->configFactory->get('ai_content_audit.settings');
+    $config           = $this->configFactory->get('ai_content_audit_scoring.settings');
     $configured_types = $config->get('node_types') ?? [];
     $storage          = $this->entityTypeManager->getStorage('node');
 

@@ -18,7 +18,7 @@ namespace Drupal\ai_content_audit\Trait;
  * - collectSchemaType()
  * - countJsonLdScripts()
  *
- * @see \Drupal\ai_content_audit\Service\TechnicalAuditService
+ * @see \Drupal\ai_content_audit_scoring\Service\TechnicalAuditService
  */
 trait SchemaMarkupParserTrait {
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="tests/phpunit-bootstrap.php"
+         colors="true"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         cacheDirectory=".phpunit.cache">
+  <php>
+    <ini name="error_reporting" value="32767"/>
+    <ini name="memory_limit" value="-1"/>
+  </php>
+  <testsuites>
+    <testsuite name="ai_content_audit">
+      <directory>tests/src/Unit</directory>
+      <directory>modules/ai_content_audit_scoring/tests/src/Unit</directory>
+      <directory>modules/ai_content_audit_scoring/tests/src/Kernel</directory>
+      <directory>modules/ai_site_audit/tests/src/Unit</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>

@@ -3,11 +3,6 @@ services:
     parent: logger.channel_base
     arguments: ['ai_content_audit']
 
-  ai_content_audit.assessment_repository:
-    class: Drupal\ai_content_audit\Repository\AiContentAssessmentRepository
-    arguments:
-      - '@entity_type.manager'
-
   ai_content_audit.extractor_manager:
     class: Drupal\ai_content_audit\Extractor\ContentExtractorManager
     arguments:
@@ -15,42 +10,11 @@ services:
       - '@cache.discovery'
       - '@module_handler'
 
-  ai_content_audit.assessment_service:
-    class: Drupal\ai_content_audit\Service\AiAssessmentService
-    arguments:
-      - '@ai.provider'
-      - '@ai_content_audit.extractor_manager'
-      - '@logger.factory'
-      - '@config.factory'
-      - '@entity_type.manager'
-      - '@ai_content_audit.prompt_resolver'
-      - '@ai_content_audit.provider_model_choices'
-
   ai_content_audit.prompt_resolver:
     class: Drupal\ai_content_audit\Service\AiContentAuditPromptResolver
     arguments:
       - '@config.factory'
       - '@entity_type.manager'
-
-  ai_content_audit.technical_audit:
-    class: Drupal\ai_content_audit\Service\TechnicalAuditService
-    arguments:
-      - '@http_client'
-      - '@config.factory'
-      - '@logger.channel.ai_content_audit'
-      - '@cache.data'
-      - '@request_stack'
-      - '@module_handler'
-      - '@entity_type.manager'
-      - '@ai_content_audit.audit_check_manager'
-
-  ai_content_audit.audit_check_manager:
-    class: Drupal\ai_content_audit\Plugin\Manager\AuditCheckManager
-    arguments:
-      - '@container.namespaces'
-      - '@cache.discovery'
-      - '@module_handler'
-      - '@config.factory'
 
   ai_content_audit.html_fetch:
     class: Drupal\ai_content_audit\Service\HtmlFetchService
@@ -58,10 +22,14 @@ services:
       - '@http_client'
       - '@request_stack'
 
+  ai_content_audit.ai_provider_registry:
+    class: Drupal\ai_content_audit\Ai\AiProviderPluginManagerRegistry
+    arguments: ['@ai.provider']
+
   ai_content_audit.provider_model_choices:
     class: Drupal\ai_content_audit\Service\ProviderModelChoices
     arguments:
-      - '@ai.provider'
+      - '@ai_content_audit.ai_provider_registry'
 
   ai_content_audit.ai_response_subscriber:
     class: Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber
@@ -152,10 +120,7 @@ services:
   ai_content_audit.airo_analysis_panel_builder:
     class: Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder
     arguments:
-      - '@ai_content_audit.assessment_repository'
       - '@ai_content_audit.airo_panel_tab_manager'
-      - '@ai_content_audit.audit_check_manager'
-      - '@ai_content_audit.technical_audit'
       - '@module_handler'
 
   ai_content_audit.airo_node_analysis_form_alterer:
@@ -171,13 +136,3 @@ services:
     class: Drupal\ai_content_audit\Service\AiroGinLayoutBuilderAdapter
     arguments:
       - '@config.factory'
-
-  ai_content_audit.lifecycle:
-    class: Drupal\ai_content_audit\Service\AiContentAuditLifecycle
-    arguments:
-      - '@config.factory'
-      - '@entity_type.manager'
-      - '@queue'
-      - '@database'
-      - '@logger.channel.ai_content_audit'
-      - '@module_handler'

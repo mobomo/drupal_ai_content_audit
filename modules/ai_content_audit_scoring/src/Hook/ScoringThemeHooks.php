@@ -29,7 +29,7 @@ final class ScoringThemeHooks {
   #[Hook('theme')]
   public function theme($existing, $type, $theme, $path): array {
     $template_path = $this->moduleHandler
-      ->getModule('ai_content_audit')
+      ->getModule('ai_content_audit_scoring')
       ->getPath() . '/templates';
 
     return [

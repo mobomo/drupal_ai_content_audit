@@ -10,6 +10,17 @@
     "ext-dom": "*",
     "drupal/ai": "^1.0"
   },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "drupal/core-composer-scaffold": true,
+      "drupal/core-project-message": true,
+      "php-http/discovery": true,
+      "phpstan/extension-installer": true,
+      "tbachert/spi": true
+    }
+  },
   "autoload": {
     "psr-4": {
       "Drupal\\ai_content_audit\\": "src/"
