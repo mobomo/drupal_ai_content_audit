@@ -33,8 +33,14 @@ interface AiProviderRegistryInterface {
   /**
    * Returns Drupal AI simple provider/model options.
    *
-   * @param array<int, \Drupal\ai\Enum\AiModelCapability> $capabilities
-   *   Optional model capability filters.
+   * @param string $operation_type
+   *   The operation type.
+   * @param bool $empty
+   *   If empty choices should be included.
+   * @param bool $setup
+   *   If the provider should be required to be setup.
+   * @param array $capabilities
+   *   The capabilities the provider should have.
    *
    * @return array<string, mixed>
    *   Simple option values keyed for Form API usage.

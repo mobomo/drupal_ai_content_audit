@@ -1,13 +1,13 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * @file
  * PHPUnit bootstrap for ai_content_audit (standalone or contrib install).
  *
  * Locates Drupal core from the module directory.
  */
+
+declare(strict_types=1);
 
 /**
  * Finds and loads the nearest Composer autoloader.

@@ -43,6 +43,9 @@ class AiAssessmentServiceTest extends UnitTestCase {
    */
   protected AiAssessmentService $service;
 
+  /**
+   * AI provider registry mock.
+   */
   protected MockObject $aiProvider;
 
   /**
