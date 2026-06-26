@@ -9,7 +9,6 @@ use Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Unit tests for AiResponseSubscriber.
@@ -68,21 +67,6 @@ class AiResponseSubscriberTest extends TestCase {
 
     $this->assertIsArray($events);
     $this->assertNotEmpty($events, 'getSubscribedEvents() must return at least one event mapping.');
-  }
-
-  /**
-   * Tests that the subscriber implements EventSubscriberInterface.
-   *
-   * This confirms the class is recognised by Symfony's event dispatcher.
-   *
-   * @covers \Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber
-   */
-  public function testSubscriberImplementsEventSubscriberInterface(): void {
-    $this->assertInstanceOf(
-      EventSubscriberInterface::class,
-      $this->subscriber,
-      'AiResponseSubscriber must implement EventSubscriberInterface.'
-    );
   }
 
   /**

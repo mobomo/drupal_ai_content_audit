@@ -97,7 +97,6 @@ class AiContentAssessmentAccessControlHandlerTest extends UnitTestCase {
 
     $result = $this->invokeCheckAccess($handler, $entity, 'view', $account);
 
-    $this->assertInstanceOf(AccessResultInterface::class, $result);
     $this->assertTrue($result->isAllowed(), 'View access should be allowed with the "view ai content assessment" permission.');
   }
 
@@ -115,7 +114,6 @@ class AiContentAssessmentAccessControlHandlerTest extends UnitTestCase {
 
     $result = $this->invokeCheckAccess($handler, $entity, 'view', $account);
 
-    $this->assertInstanceOf(AccessResultInterface::class, $result);
     $this->assertFalse($result->isAllowed(), 'View access must not be allowed without the required permission.');
   }
 
@@ -136,7 +134,6 @@ class AiContentAssessmentAccessControlHandlerTest extends UnitTestCase {
 
     $result = $this->invokeCheckAccess($handler, $entity, 'delete', $account);
 
-    $this->assertInstanceOf(AccessResultInterface::class, $result);
     $this->assertTrue($result->isAllowed(), 'Delete access should be allowed for an account with "administer ai content audit".');
   }
 

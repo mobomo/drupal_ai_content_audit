@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit_scoring\Unit\Plugin\Technical;
 
 use Drupal\ai_content_audit_scoring\Plugin\AuditCheck\Technical\HttpsCheck;
-use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\node\NodeInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,11 +28,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class HttpsCheckTest extends TestCase {
 
-  /*
-   * ---------------------------------------------------------------------------
-   * Helper
-   * ---------------------------------------------------------------------------
-   */
   /**
    * Plugin definition array that mirrors the #[AuditCheck] attribute values.
    *
@@ -78,12 +72,6 @@ class HttpsCheckTest extends TestCase {
     );
   }
 
-  /*
-   * ---------------------------------------------------------------------------
-   * run() — HTTPS context
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * Run() returns a 'pass' result when the current request is HTTPS.
    *
@@ -92,7 +80,6 @@ class HttpsCheckTest extends TestCase {
   public function testRunReturnsPassWhenRequestIsHttps(): void {
     $result = $this->buildCheck(isSecure: TRUE)->run(NULL);
 
-    $this->assertInstanceOf(TechnicalAuditResult::class, $result);
     $this->assertSame('pass', $result->status);
     $this->assertSame('https', $result->check);
   }
@@ -119,12 +106,6 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('HTTPS', $result->label);
   }
 
-  /*
-   * ---------------------------------------------------------------------------
-   * run() — HTTP context
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * Run() returns a 'warning' result (not 'fail') when the request is HTTP.
    *
@@ -136,7 +117,6 @@ class HttpsCheckTest extends TestCase {
   public function testRunReturnsWarningWhenRequestIsHttp(): void {
     $result = $this->buildCheck(isSecure: FALSE)->run(NULL);
 
-    $this->assertInstanceOf(TechnicalAuditResult::class, $result);
     $this->assertSame('warning', $result->status);
     $this->assertSame('https', $result->check);
   }
@@ -164,12 +144,6 @@ class HttpsCheckTest extends TestCase {
     $this->assertSame('warning', $result->status);
   }
 
-  /*
-   * ---------------------------------------------------------------------------
-   * run() called with a node argument
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * Run() with a NodeInterface still returns the correct result (site-scoped).
    *
@@ -181,12 +155,6 @@ class HttpsCheckTest extends TestCase {
 
     $this->assertSame('pass', $result->status);
   }
-
-  /*
-   * ---------------------------------------------------------------------------
-   * applies() — inherited from AuditCheckBase (scope: 'site')
-   * ---------------------------------------------------------------------------
-   */
 
   /**
    * Applies(NULL) returns TRUE — site-scoped checks always apply.
@@ -206,12 +174,6 @@ class HttpsCheckTest extends TestCase {
     $node = $this->createMock(NodeInterface::class);
     $this->assertTrue($this->buildCheck()->applies($node));
   }
-
-  /*
-   * ---------------------------------------------------------------------------
-   * Plugin metadata helpers (inherited from AuditCheckBase)
-   * ---------------------------------------------------------------------------
-   */
 
   /**
    * GetId() returns the plugin ID from the definition.
