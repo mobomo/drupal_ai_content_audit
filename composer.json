@@ -3,7 +3,6 @@
   "description": "Adds an AIRO Preview chat panel for Drupal node content using the Drupal AI module.",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
-  "minimum-stability": "dev",
   "require": {
     "php": ">=8.3",
     "drupal/core": "^11.3",
