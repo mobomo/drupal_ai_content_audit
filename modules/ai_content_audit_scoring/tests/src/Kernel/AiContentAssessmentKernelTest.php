@@ -14,6 +14,8 @@ use Drupal\user\Entity\User;
 
 /**
  * Kernel coverage for AI Content Assessment behaviors.
+ *
+ * @group ai_content_audit
  */
 final class AiContentAssessmentKernelTest extends KernelTestBase {
 
@@ -27,6 +29,12 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     'filter',
     'node',
     'text',
+    'block',
+    'layout_discovery',
+    'layout_builder',
+    'key',
+    'file',
+    'ai',
     'ai_content_audit',
     'ai_content_audit_scoring',
   ];
@@ -42,7 +50,7 @@ final class AiContentAssessmentKernelTest extends KernelTestBase {
     $this->installEntitySchema('ai_content_assessment');
     $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
-    $this->installConfig(['node']);
+    $this->installConfig(['system', 'node']);
 
     NodeType::create([
       'type' => 'article',

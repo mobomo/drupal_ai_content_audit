@@ -5,22 +5,30 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit_scoring\Unit\Service;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\OperationType\Chat\ChatOutput;
+use Drupal\ai\Plugin\ProviderProxy;
 use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\ai_content_audit\Extractor\ContentExtractorInterface;
 use Drupal\ai_content_audit\Extractor\ContentExtractorManager;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
+use Drupal\ai_content_audit_scoring\Entity\AiContentAssessment;
 use Drupal\ai_content_audit_scoring\Service\AiAssessmentService;
 use Drupal\ai_content_audit_scoring\Service\ScoringPromptResolver;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
+use Drupal\Core\Cache\Context\CacheContextsManager;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\node\NodeInterface;
+use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
+use Drupal\Core\Routing\UrlGenerator;
 
 /**
  * Unit tests for AiAssessmentService.
@@ -28,7 +36,7 @@ use PHPUnit\Framework\TestCase;
  * @group ai_content_audit
  * @coversDefaultClass \Drupal\ai_content_audit_scoring\Service\AiAssessmentService
  */
-class AiAssessmentServiceTest extends TestCase {
+class AiAssessmentServiceTest extends UnitTestCase {
 
   /**
    * The service under test.
@@ -78,6 +86,17 @@ class AiAssessmentServiceTest extends TestCase {
   protected function setUp(): void {
     parent::setUp();
 
+    $container = new ContainerBuilder();
+    $container->set('cache_tags.invalidator', $this->createMock(CacheTagsInvalidatorInterface::class));
+    $cacheContextsManager = $this->createMock(CacheContextsManager::class);
+    $cacheContextsManager->method('assertValidTokens')->willReturn(TRUE);
+    $container->set('cache_contexts_manager', $cacheContextsManager);
+    $container->set('string_translation', $this->getStringTranslationStub());
+    $urlGenerator = $this->createMock(UrlGenerator::class);
+    $urlGenerator->method('generateFromRoute')->willReturn('/admin/config/ai/providers');
+    $container->set('url_generator', $urlGenerator);
+    \Drupal::setContainer($container);
+
     $aiProvider = $this->createMock(AiProviderPluginManager::class);
     $this->aiProvider = $aiProvider;
 
@@ -96,9 +115,14 @@ class AiAssessmentServiceTest extends TestCase {
     $config = $this->createMock(Config::class);
     $config->method('get')->willReturnMap([
       ['max_chars_per_request', 8000],
+      ['default_provider_model', NULL],
+      ['enable_history', TRUE],
     ]);
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
-    $this->configFactory->method('get')->willReturn($config);
+    $this->configFactory->method('get')->willReturnMap([
+      ['ai_content_audit.settings', $config],
+      ['ai_content_audit_scoring.settings', $config],
+    ]);
 
     $entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->promptResolver = $this->createMock(ScoringPromptResolver::class);
@@ -133,7 +157,7 @@ class AiAssessmentServiceTest extends TestCase {
     $result = $this->service->assessNode($node);
 
     $this->assertFalse($result['success']);
-    $this->assertStringContainsString('No AI chat provider', $result['error']);
+    $this->assertStringContainsString('No AI chat provider', (string) $result['error']);
   }
 
   /**
@@ -217,22 +241,16 @@ class AiAssessmentServiceTest extends TestCase {
    * @covers ::assessNode
    */
   public function testAssessReturnsSuccessOnHappyPath(): void {
-    $rawJson = '{"score": 85, "summary": "Good content.", "recommendations": [{"priority": "low", "text": "Add more images."}]}';
+    $rawJson = '{"ai_readiness_score": 85, "summary": "Good content.", "recommendations": [{"priority": "low", "text": "Add more images."}]}';
 
-    // Mock the getText() carrier returned by getNormalized().
-    $mockNormalized = $this->getMockBuilder(\stdClass::class)
-      ->addMethods(['getText'])
-      ->getMock();
-    $mockNormalized->method('getText')->willReturn($rawJson);
+    $normalized = $this->createMock(ChatMessage::class);
+    $normalized->method('getText')->willReturn($rawJson);
 
-    // Mock the chat() output object whose getNormalized() returns the above.
-    $mockChatOutput = $this->getMockBuilder(\stdClass::class)
-      ->addMethods(['getNormalized'])
-      ->getMock();
-    $mockChatOutput->method('getNormalized')->willReturn($mockNormalized);
+    $mockChatOutput = $this->createMock(ChatOutput::class);
+    $mockChatOutput->method('getNormalized')->willReturn($normalized);
 
-    // Mock the AI provider proxy returned by createInstance().
-    $mockProxy = $this->getMockBuilder(\stdClass::class)
+    $mockProxy = $this->getMockBuilder(ProviderProxy::class)
+      ->disableOriginalConstructor()
       ->addMethods(['chat'])
       ->getMock();
     $mockProxy->method('chat')->willReturn($mockChatOutput);
@@ -262,21 +280,35 @@ class AiAssessmentServiceTest extends TestCase {
     $loggerFactory->method('get')->willReturn($logger);
 
     // Config: enable_history = TRUE so the pruning branch is skipped entirely.
-    $config = $this->createMock(Config::class);
-    $config->method('get')->willReturnMap([
+    $previewConfig = $this->createMock(Config::class);
+    $previewConfig->method('get')->willReturnMap([
       ['max_chars_per_request', 8000],
+      ['default_provider_model', NULL],
+    ]);
+    $scoringConfig = $this->createMock(Config::class);
+    $scoringConfig->method('get')->willReturnMap([
       ['enable_history', TRUE],
     ]);
     $configFactory = $this->createMock(ConfigFactoryInterface::class);
-    $configFactory->method('get')->willReturn($config);
+    $configFactory->method('get')->willReturnMap([
+      ['ai_content_audit.settings', $previewConfig],
+      ['ai_content_audit_scoring.settings', $scoringConfig],
+    ]);
 
     // Entity mock: save() must be called exactly once.
-    $mockAssessment = $this->createMock(EntityInterface::class);
+    $mockAssessment = $this->createMock(AiContentAssessment::class);
     $mockAssessment->expects($this->once())->method('save');
 
     // Entity storage mock: create() returns the assessment entity mock.
     $mockStorage = $this->createMock(EntityStorageInterface::class);
     $mockStorage->method('create')->willReturn($mockAssessment);
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('condition')->willReturnSelf();
+    $query->method('sort')->willReturnSelf();
+    $query->method('range')->willReturnSelf();
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('execute')->willReturn([]);
+    $mockStorage->method('getQuery')->willReturn($query);
 
     // Entity type manager mock: getStorage() returns the storage mock.
     $mockEntityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
@@ -315,7 +347,7 @@ class AiAssessmentServiceTest extends TestCase {
     $result = $service->assessNode($node);
 
     $this->assertTrue($result['success']);
-    $this->assertEquals(85, $result['parsed']['score']);
+    $this->assertEquals(85, $result['parsed']['ai_readiness_score']);
     $this->assertEquals('Good content.', $result['parsed']['summary']);
   }
 

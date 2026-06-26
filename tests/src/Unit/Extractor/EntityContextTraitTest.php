@@ -8,6 +8,7 @@ use Drupal\user\UserInterface;
 use Drupal\Core\Url;
 use Drupal\ai_content_audit\Extractor\EntityContextTrait;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\node\NodeInterface;
@@ -65,31 +66,7 @@ class EntityContextTraitTest extends TestCase {
   }
 
   /**
-   * Creates a stdClass type field stub for tests.
-   *
-   * Supports optional bundle entity label via `$node->type->entity`.
-   *
-   * @param string|null $label
-   *   Label from the bundle entity, or NULL when no bundle entity exists.
-   *
-   * @return \stdClass
-   *   Object mimicking a type field item list.
-   */
-  private function makeTypeProp(?string $label): \stdClass {
-    $typeProp = new \stdClass();
-    if ($label !== NULL) {
-      $bundleEntityStub = $this->createMock(EntityInterface::class);
-      $bundleEntityStub->method('label')->willReturn($label);
-      $typeProp->entity = $bundleEntityStub;
-    }
-    else {
-      $typeProp->entity = NULL;
-    }
-    return $typeProp;
-  }
-
-  /**
-   * Builds a NodeInterface mock with type, bundle, dates, and id.
+   * Builds a NodeInterface mock with bundle, dates, and id.
    *
    * @param string $label
    *   Node title.
@@ -101,10 +78,8 @@ class EntityContextTraitTest extends TestCase {
    *   Created timestamp.
    * @param int $changed
    *   Changed timestamp.
-   * @param string|null $bundleLabel
-   *   Human-readable bundle label (NULL = use bundle as fallback).
    * @param string|\Exception $urlOrException
-   *   URL string or exception to throw from toUrl().
+   *   URL string or exception to throw from toUrl('canonical').
    *
    * @return \Drupal\node\NodeInterface&\PHPUnit\Framework\MockObject\MockObject
    *   Configured node mock.
@@ -115,12 +90,9 @@ class EntityContextTraitTest extends TestCase {
     int $nid = 1,
     int $created = 1700000000,
     int $changed = 1710000000,
-    ?string $bundleLabel = 'Article',
     string|\Exception $urlOrException = '/node/1',
   ): NodeInterface {
-    $node = $this->getMockBuilder(NodeInterface::class)
-      ->addMethods(['__get'])
-      ->getMock();
+    $node = $this->createMock(NodeInterface::class);
 
     $node->method('label')->willReturn($label);
     $node->method('bundle')->willReturn($bundle);
@@ -128,19 +100,13 @@ class EntityContextTraitTest extends TestCase {
     $node->method('getCreatedTime')->willReturn($created);
     $node->method('getChangedTime')->willReturn($changed);
 
-    // Configure $node->type->entity for bundle label resolution.
-    $node->method('__get')->willReturnCallback(
-      fn(string $name) => $name === 'type' ? $this->makeTypeProp($bundleLabel) : NULL
-    );
-
-    // Configure toUrl() behaviour.
     $urlMock = $this->createMock(Url::class);
     if ($urlOrException instanceof \Exception) {
-      $node->method('toUrl')->willThrowException($urlOrException);
+      $node->method('toUrl')->with('canonical')->willThrowException($urlOrException);
     }
     else {
       $urlMock->method('toString')->willReturn($urlOrException);
-      $node->method('toUrl')->willReturn($urlMock);
+      $node->method('toUrl')->with('canonical')->willReturn($urlMock);
     }
 
     return $node;
@@ -166,7 +132,6 @@ class EntityContextTraitTest extends TestCase {
       nid       : 42,
       created   : mktime(0, 0, 0, 1, 1, 2024),
       changed   : mktime(0, 0, 0, 6, 1, 2024),
-      bundleLabel: 'Article',
       urlOrException: '/articles/my-node-title',
     );
 
@@ -176,7 +141,7 @@ class EntityContextTraitTest extends TestCase {
     // Assert.
     $this->assertStringContainsString('--- Content Metadata ---', $result);
     $this->assertStringContainsString('Title: My Node Title', $result);
-    $this->assertStringContainsString('Content Type: Article', $result);
+    $this->assertStringContainsString('Content Type: article', $result);
     $this->assertStringContainsString('Created: 2024-01-01', $result);
     $this->assertStringContainsString('Last Modified: 2024-06-01', $result);
     $this->assertStringContainsString('URL: /articles/my-node-title', $result);
@@ -211,9 +176,7 @@ class EntityContextTraitTest extends TestCase {
     // Arrange.
     $host = $this->createTraitHost();
     $node = $this->buildNodeMock(
-      bundle     : 'landing_page',
-    // Forces fallback.
-      bundleLabel: NULL,
+      bundle: 'landing_page',
     );
 
     // Act.
@@ -297,7 +260,7 @@ class EntityContextTraitTest extends TestCase {
     $fieldDef->method('getLabel')->willReturn('Tags');
 
     // Field item list mock — non-empty with two referenced terms.
-    $fieldList = $this->createMock(FieldItemListInterface::class);
+    $fieldList = $this->createMock(EntityReferenceFieldItemListInterface::class);
     $fieldList->method('isEmpty')->willReturn(FALSE);
     $fieldList->method('referencedEntities')->willReturn([$term1, $term2]);
 
