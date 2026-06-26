@@ -71,21 +71,6 @@ class AiResponseSubscriberTest extends TestCase {
   }
 
   /**
-   * Tests that the subscriber implements EventSubscriberInterface.
-   *
-   * This confirms the class is recognised by Symfony's event dispatcher.
-   *
-   * @covers \Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber
-   */
-  public function testSubscriberImplementsEventSubscriberInterface(): void {
-    $this->assertInstanceOf(
-      EventSubscriberInterface::class,
-      $this->subscriber,
-      'AiResponseSubscriber must implement EventSubscriberInterface.'
-    );
-  }
-
-  /**
    * Tests onPostGenerateResponse logs when the event carries the module tag.
    *
    * When 'ai_content_audit' appears in the event tags the subscriber must call

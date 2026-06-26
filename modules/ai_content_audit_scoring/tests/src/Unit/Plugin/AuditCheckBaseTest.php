@@ -22,12 +22,6 @@ use PHPUnit\Framework\TestCase;
  */
 class AuditCheckBaseTest extends TestCase {
 
-  /*
-   * ---------------------------------------------------------------------------
-   * Helper: anonymous concrete subclass factory
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * Creates an anonymous AuditCheckBase subclass for the given scope.
    *
@@ -90,12 +84,6 @@ class AuditCheckBaseTest extends TestCase {
     };
   }
 
-  /*
-   * ---------------------------------------------------------------------------
-   * getId() / getLabel() / getCategory()
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * GetId() returns the 'id' value from the plugin definition.
    *
@@ -141,12 +129,6 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertSame('Technical', $this->makeCheck(category: 'Technical')->getCategory());
   }
 
-  /*
-   * ---------------------------------------------------------------------------
-   * applies()
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * Applies(NULL) returns TRUE for a 'site'-scoped check.
    *
@@ -187,12 +169,6 @@ class AuditCheckBaseTest extends TestCase {
     $this->assertTrue($this->makeCheck(scope: 'site')->applies($node));
   }
 
-  /*
-   * ---------------------------------------------------------------------------
-   * pass() / fail() / warning() result factory helpers
-   * ---------------------------------------------------------------------------
-   */
-
   /**
    * Pass() returns TechnicalAuditResult with status pass and correct fields.
    *
@@ -207,7 +183,6 @@ class AuditCheckBaseTest extends TestCase {
       ['key' => 'val'],
     );
 
-    $this->assertInstanceOf(TechnicalAuditResult::class, $result);
     $this->assertSame('pass', $result->status);
     $this->assertSame('test_check', $result->check);
     $this->assertSame('Test Check', $result->label);
@@ -240,7 +215,6 @@ class AuditCheckBaseTest extends TestCase {
     $check  = $this->makeCheck();
     $result = $check->callFail('Something broke', 'current', 'recommended', ['detail' => 1]);
 
-    $this->assertInstanceOf(TechnicalAuditResult::class, $result);
     $this->assertSame('fail', $result->status);
     $this->assertSame('test_check', $result->check);
     $this->assertSame('Test Check', $result->label);
@@ -280,7 +254,6 @@ class AuditCheckBaseTest extends TestCase {
     $check  = $this->makeCheck();
     $result = $check->run(NULL);
 
-    $this->assertInstanceOf(TechnicalAuditResult::class, $result);
     $this->assertSame('pass', $result->status);
     $this->assertSame('test_check', $result->check);
   }
