@@ -8,6 +8,7 @@ use Drupal\ai_content_audit_scoring\Plugin\QueueWorker\AiAssessmentQueueWorker;
 use Drupal\ai_content_audit_scoring\Service\AiAssessmentService;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Queue\RequeueException;
@@ -64,6 +65,13 @@ class AiAssessmentQueueWorkerTest extends TestCase {
   protected LoggerChannelInterface $logger;
 
   /**
+   * Assessment entity storage mock.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface&\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected EntityStorageInterface $assessmentStorage;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -72,12 +80,22 @@ class AiAssessmentQueueWorkerTest extends TestCase {
     $this->assessmentService = $this->createMock(AiAssessmentService::class);
 
     $this->nodeStorage = $this->createMock(EntityStorageInterface::class);
+    $this->assessmentStorage = $this->createMock(EntityStorageInterface::class);
+
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
+    $query->method('count')->willReturnSelf();
+    $query->method('execute')->willReturn(0);
+    $this->assessmentStorage->method('getQuery')->willReturn($query);
 
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->entityTypeManager
       ->method('getStorage')
-      ->with('node')
-      ->willReturn($this->nodeStorage);
+      ->willReturnMap([
+        ['node', $this->nodeStorage],
+        ['ai_content_assessment', $this->assessmentStorage],
+      ]);
 
     $this->logger = $this->createMock(LoggerChannelInterface::class);
 
@@ -87,6 +105,9 @@ class AiAssessmentQueueWorkerTest extends TestCase {
       ->with('ai_content_audit')
       ->willReturn($this->logger);
 
+    $time = $this->createMock(TimeInterface::class);
+    $time->method('getRequestTime')->willReturn(1_700_000_000);
+
     $this->worker = new AiAssessmentQueueWorker(
       [],
       'ai_content_audit_assessment',
@@ -94,7 +115,7 @@ class AiAssessmentQueueWorkerTest extends TestCase {
       $this->assessmentService,
       $this->entityTypeManager,
       $this->loggerFactory,
-      $this->createMock(TimeInterface::class),
+      $time,
     );
   }
 

@@ -5,22 +5,38 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit_scoring\Unit;
 
 use Drupal\ai_content_audit_scoring\AiContentAssessmentAccessControlHandler;
+use Drupal\ai_content_audit_scoring\Entity\AiContentAssessment;
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
+use Drupal\Core\Cache\Context\CacheContextsManager;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Session\AccountInterface;
-use PHPUnit\Framework\TestCase;
+use Drupal\node\NodeInterface;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Unit tests for AiContentAssessmentAccessControlHandler.
  *
- * Because checkAccess() is a protected method we invoke it via reflection so
- * we do not need the full Drupal entity system bootstrapped.
- *
  * @group ai_content_audit
  * @coversDefaultClass \Drupal\ai_content_audit_scoring\AiContentAssessmentAccessControlHandler
  */
-class AiContentAssessmentAccessControlHandlerTest extends TestCase {
+class AiContentAssessmentAccessControlHandlerTest extends UnitTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+    $container = new ContainerBuilder();
+    $container->set('cache_tags.invalidator', $this->createMock(CacheTagsInvalidatorInterface::class));
+    $cacheContextsManager = $this->createMock(CacheContextsManager::class);
+    $cacheContextsManager->method('assertValidTokens')->willReturn(TRUE);
+    $container->set('cache_contexts_manager', $cacheContextsManager);
+    \Drupal::setContainer($container);
+  }
 
   /**
    * Builds a handler instance with a minimal EntityTypeInterface mock.
@@ -31,19 +47,27 @@ class AiContentAssessmentAccessControlHandlerTest extends TestCase {
   }
 
   /**
+   * Builds an assessment entity mock with optional node view access.
+   */
+  protected function buildAssessmentEntity(bool $nodeViewAllowed = TRUE): AiContentAssessment {
+    $node = $this->createMock(NodeInterface::class);
+    $node->method('access')->willReturnCallback(
+      static function (string $operation, $account, bool $returnAsObject = FALSE) use ($nodeViewAllowed) {
+        $result = $nodeViewAllowed ? AccessResult::allowed() : AccessResult::forbidden();
+        return $returnAsObject ? $result : $nodeViewAllowed;
+      }
+    );
+
+    $entity = $this->createMock(AiContentAssessment::class);
+    $entity->method('getTargetNode')->willReturn($node);
+    $entity->method('getCacheContexts')->willReturn([]);
+    $entity->method('getCacheTags')->willReturn([]);
+    $entity->method('getCacheMaxAge')->willReturn(-1);
+    return $entity;
+  }
+
+  /**
    * Invokes the protected checkAccess() method via reflection.
-   *
-   * @param \Drupal\ai_content_audit_scoring\AiContentAssessmentAccessControlHandler $handler
-   *   The handler under test.
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   A mock entity (not used by this handler's logic).
-   * @param string $operation
-   *   The operation string ('view', 'delete', 'update', …).
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   A mock account.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The access result returned by checkAccess().
    */
   protected function invokeCheckAccess(
     AiContentAssessmentAccessControlHandler $handler,
@@ -63,7 +87,7 @@ class AiContentAssessmentAccessControlHandlerTest extends TestCase {
    */
   public function testViewAccessGrantedWithPermission(): void {
     $handler = $this->buildHandler();
-    $entity  = $this->createMock(EntityInterface::class);
+    $entity = $this->buildAssessmentEntity(TRUE);
 
     $account = $this->createMock(AccountInterface::class);
     $account->method('hasPermission')->willReturnMap([
@@ -84,7 +108,7 @@ class AiContentAssessmentAccessControlHandlerTest extends TestCase {
    */
   public function testViewAccessDeniedWithoutPermission(): void {
     $handler = $this->buildHandler();
-    $entity  = $this->createMock(EntityInterface::class);
+    $entity = $this->buildAssessmentEntity(TRUE);
 
     $account = $this->createMock(AccountInterface::class);
     $account->method('hasPermission')->willReturn(FALSE);
@@ -102,7 +126,7 @@ class AiContentAssessmentAccessControlHandlerTest extends TestCase {
    */
   public function testDeleteAccessGrantedForAdmin(): void {
     $handler = $this->buildHandler();
-    $entity  = $this->createMock(EntityInterface::class);
+    $entity = $this->createMock(EntityInterface::class);
 
     $account = $this->createMock(AccountInterface::class);
     $account->method('hasPermission')->willReturnMap([

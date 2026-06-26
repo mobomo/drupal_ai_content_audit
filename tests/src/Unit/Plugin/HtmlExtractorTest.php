@@ -482,7 +482,7 @@ class HtmlExtractorTest extends TestCase {
     $result = $this->convert($html);
 
     // Assert — output must not contain three or more consecutive newlines.
-    $this->assertDoesNotMatch('/\n{3,}/', $result);
+    $this->assertDoesNotMatchRegularExpression('/\n{3,}/', $result);
   }
 
   /**
