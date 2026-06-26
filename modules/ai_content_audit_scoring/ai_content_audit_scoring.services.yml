@@ -27,7 +27,7 @@ services:
   ai_content_audit_scoring.assessment_service:
     class: Drupal\ai_content_audit_scoring\Service\AiAssessmentService
     arguments:
-      - '@ai.provider'
+      - '@ai_content_audit.ai_provider_registry'
       - '@ai_content_audit.extractor_manager'
       - '@logger.factory'
       - '@config.factory'

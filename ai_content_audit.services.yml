@@ -22,10 +22,14 @@ services:
       - '@http_client'
       - '@request_stack'
 
+  ai_content_audit.ai_provider_registry:
+    class: Drupal\ai_content_audit\Ai\AiProviderPluginManagerRegistry
+    arguments: ['@ai.provider']
+
   ai_content_audit.provider_model_choices:
     class: Drupal\ai_content_audit\Service\ProviderModelChoices
     arguments:
-      - '@ai.provider'
+      - '@ai_content_audit.ai_provider_registry'
 
   ai_content_audit.ai_response_subscriber:
     class: Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber

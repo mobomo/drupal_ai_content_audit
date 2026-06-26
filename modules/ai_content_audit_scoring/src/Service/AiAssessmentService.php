@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Service;
 
-use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai_content_audit\Enum\RenderMode;
@@ -147,7 +147,7 @@ class AiAssessmentService {
 JSON;
 
   public function __construct(
-    protected AiProviderPluginManager $aiProvider,
+    protected AiProviderRegistryInterface $aiProvider,
     protected ContentExtractorManager $extractorManager,
     protected LoggerChannelFactoryInterface $loggerFactory,
     protected ConfigFactoryInterface $configFactory,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_site_audit\Unit\Service;
 
-use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai_site_audit\Service\SiteAnalysisService;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
@@ -24,14 +24,14 @@ use Psr\Log\LoggerInterface;
 class SiteAnalysisServiceTest extends TestCase {
 
   /**
-   * AI provider plugin manager mock.
+   * AI provider registry mock.
    */
   protected MockObject $aiProvider;
 
   /**
-   * AI provider plugin manager service mock.
+   * AI provider registry service mock.
    */
-  protected AiProviderPluginManager $aiProviderService;
+  protected AiProviderRegistryInterface $aiProviderService;
 
   /**
    * Key-value expirable factory mock.
@@ -63,7 +63,7 @@ class SiteAnalysisServiceTest extends TestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $this->aiProvider = $aiProvider;
     $this->aiProviderService = $aiProvider;
     $this->kvFactory = $this->createMock(KeyValueExpirableFactoryInterface::class);
