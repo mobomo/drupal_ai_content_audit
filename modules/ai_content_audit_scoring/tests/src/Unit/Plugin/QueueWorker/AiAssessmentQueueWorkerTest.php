@@ -139,9 +139,6 @@ class AiAssessmentQueueWorkerTest extends TestCase {
 
     // No exception expected — processItem should return cleanly.
     $this->worker->processItem(['nid' => 42]);
-
-    // Assertion: we reached this point without an exception.
-    $this->assertTrue(TRUE);
   }
 
   /**
@@ -171,8 +168,6 @@ class AiAssessmentQueueWorkerTest extends TestCase {
 
     // No RequeueException should propagate.
     $this->worker->processItem(['nid' => 99]);
-
-    $this->assertTrue(TRUE);
   }
 
   /**
@@ -203,8 +198,6 @@ class AiAssessmentQueueWorkerTest extends TestCase {
 
     // Should complete without throwing any exception.
     $this->worker->processItem(['nid' => 7]);
-
-    $this->assertTrue(TRUE);
   }
 
   /**
