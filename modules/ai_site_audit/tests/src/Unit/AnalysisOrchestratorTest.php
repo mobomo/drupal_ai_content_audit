@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_site_audit\Unit;
 
+use Drupal\ai_content_audit_scoring\Audit\FilesystemAuditRunnerInterface;
 use Drupal\ai_content_audit_scoring\Service\TechnicalAuditService;
-use Drupal\ai_content_audit_scoring\Service\FilesystemAuditService;
 use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\ai_site_audit\Service\AnalysisOrchestrator;
 use Drupal\ai_site_audit\Service\SiteAggregationService;
@@ -57,14 +57,14 @@ class AnalysisOrchestratorTest extends TestCase {
   protected TechnicalAuditService $technicalAudit;
 
   /**
-   * Filesystem audit service mock.
+   * Filesystem audit runner mock.
    */
   protected MockObject $filesystemAudit;
 
   /**
-   * Filesystem audit service mock.
+   * Filesystem audit runner service mock.
    */
-  protected FilesystemAuditService $filesystemAuditService;
+  protected FilesystemAuditRunnerInterface $filesystemAuditService;
 
   /**
    * State service mock.
@@ -102,7 +102,8 @@ class AnalysisOrchestratorTest extends TestCase {
     $this->rollup = $this->createMock(SiteRollupService::class);
     $this->analysis = $this->createMock(SiteAnalysisService::class);
     $this->technicalAudit = $this->createMock(TechnicalAuditService::class);
-    $this->filesystemAudit = $this->createMock(FilesystemAuditService::class);
+    $this->filesystemAudit = $this->createMock(FilesystemAuditRunnerInterface::class);
+    $this->filesystemAudit->method('runAllChecks')->willReturn([]);
     $this->filesystemAuditService = $this->filesystemAudit;
     $this->state = $this->createMock(StateInterface::class);
     $this->queueFactory = $this->createMock(QueueFactory::class);

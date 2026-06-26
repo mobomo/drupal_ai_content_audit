@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Service;
 
-use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai\Enum\AiModelCapability;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -15,7 +15,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 class ProviderModelChoices {
 
   public function __construct(
-    protected AiProviderPluginManager $aiProvider,
+    protected AiProviderRegistryInterface $aiProvider,
   ) {}
 
   /**

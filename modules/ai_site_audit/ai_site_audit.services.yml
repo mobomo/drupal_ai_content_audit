@@ -22,7 +22,7 @@ services:
   ai_site_audit.analysis:
     class: Drupal\ai_site_audit\Service\SiteAnalysisService
     arguments:
-      - '@ai.provider'
+      - '@ai_content_audit.ai_provider_registry'
       - '@keyvalue.expirable'
       - '@state'
       - '@config.factory'

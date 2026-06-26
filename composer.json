@@ -10,12 +10,6 @@
     "ext-dom": "*",
     "drupal/ai": "^1.0"
   },
-  "require-dev": {
-    "dg/bypass-finals": "^1.9"
-  },
-  "suggest": {
-    "dg/bypass-finals": "Required to run unit tests that mock final Drupal AI plugin managers."
-  },
   "config": {
     "allow-plugins": {
       "composer/installers": true,

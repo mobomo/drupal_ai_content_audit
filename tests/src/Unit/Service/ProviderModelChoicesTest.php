@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\Tests\ai_content_audit\Unit\Service;
 
 use Drupal\ai\AiProviderInterface;
-use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\Enum\AiModelCapability;
+use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -30,7 +30,7 @@ final class ProviderModelChoicesTest extends TestCase {
     $provider = $this->createMock(AiProviderInterface::class);
     $provider->method('getPluginId')->willReturn('openai');
 
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $aiProvider->expects($this->once())
       ->method('getSimpleProviderModelOptions')
       ->with('chat', FALSE, TRUE, [AiModelCapability::ChatSystemRole])
@@ -57,7 +57,7 @@ final class ProviderModelChoicesTest extends TestCase {
    * @covers ::parseKey
    */
   public function testUnavailableSimpleOptionIsSkipped(): void {
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $aiProvider->method('getSimpleProviderModelOptions')
       ->willReturn(['missing:model' => 'Missing model']);
     $aiProvider->method('loadProviderFromSimpleOption')
@@ -78,7 +78,7 @@ final class ProviderModelChoicesTest extends TestCase {
     $provider = $this->createMock(AiProviderInterface::class);
     $provider->method('getPluginId')->willReturn('openai');
 
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $aiProvider->method('getSimpleProviderModelOptions')
       ->willReturn([
         'OpenAI' => [
@@ -102,7 +102,7 @@ final class ProviderModelChoicesTest extends TestCase {
     $provider = $this->createMock(AiProviderInterface::class);
     $provider->method('getPluginId')->willReturn('openai');
 
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $aiProvider->method('getSimpleProviderModelOptions')
       ->willReturn(['openai:gpt-4o' => 'OpenAI - GPT-4o']);
     $this->stubProviderResolution($aiProvider, $provider);
@@ -123,7 +123,7 @@ final class ProviderModelChoicesTest extends TestCase {
     $provider = $this->createMock(AiProviderInterface::class);
     $provider->method('getPluginId')->willReturn('openai');
 
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $aiProvider->method('getSimpleProviderModelOptions')
       ->willReturn([
         'openai__gpt-4o' => 'OpenAI - gpt-4o',

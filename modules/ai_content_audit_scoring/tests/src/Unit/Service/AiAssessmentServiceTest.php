@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_content_audit_scoring\Unit\Service;
 
-use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\ai\OperationType\Chat\ChatOutput;
 use Drupal\ai\Plugin\ProviderProxy;
@@ -43,9 +43,6 @@ class AiAssessmentServiceTest extends UnitTestCase {
    */
   protected AiAssessmentService $service;
 
-  /**
-   * AI provider plugin manager mock.
-   */
   protected MockObject $aiProvider;
 
   /**
@@ -97,7 +94,7 @@ class AiAssessmentServiceTest extends UnitTestCase {
     $container->set('url_generator', $urlGenerator);
     \Drupal::setContainer($container);
 
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $this->aiProvider = $aiProvider;
 
     // Create a mock extractor that the manager will return.
@@ -256,7 +253,7 @@ class AiAssessmentServiceTest extends UnitTestCase {
     $mockProxy->method('chat')->willReturn($mockChatOutput);
 
     // AI provider plugin manager: provider available, defaults resolved.
-    $aiProvider = $this->createMock(AiProviderPluginManager::class);
+    $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
     $aiProvider->method('hasProvidersForOperationType')->willReturn(TRUE);
     $aiProvider->method('getDefaultProviderForOperationType')->willReturnMap([
       ['content_audit', NULL],

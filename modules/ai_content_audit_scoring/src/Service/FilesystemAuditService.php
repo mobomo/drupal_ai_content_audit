@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit_scoring\Service;
 
+use Drupal\ai_content_audit_scoring\Audit\FilesystemAuditRunnerInterface;
 use Drupal\ai_content_audit_scoring\Plugin\Manager\AuditCheckManager;
 use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\Component\Datetime\TimeInterface;
@@ -16,7 +17,7 @@ use Psr\Log\LoggerInterface;
  * Individual checks live under Plugin/AuditCheck/Filesystem (ID prefix fs_).
  * Path traversal guards and scan limits are enforced in FilesystemCheckBase.
  */
-final class FilesystemAuditService {
+final class FilesystemAuditService implements FilesystemAuditRunnerInterface {
 
   protected const CACHE_TTL = 900;
   protected const CACHE_ID = 'ai_content_audit_scoring:filesystem_audit';
