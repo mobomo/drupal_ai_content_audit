@@ -1,0 +1,146 @@
+{#
+/**
+ * @file
+ * Inline score widget displayed on node edit forms.
+ *
+ * Variables:
+ * - score: The overall AI readiness score (0-100) or null.
+ * - is_analyzing: Boolean indicating analysis is in progress.
+ * - has_assessment: Boolean indicating a previous assessment exists.
+ * - node_id: The node ID.
+ * - high_priority_count: Number of high-priority action items.
+ * - score_color: 'good', 'warning', or 'danger'.
+ * - status_label: Human-readable status text.
+ * - donut_radius: SVG circle radius.
+ * - donut_circumference: SVG stroke-dasharray value.
+ * - donut_offset: SVG stroke-dashoffset value.
+ * - assess_url: URL used by [data-airo-action] buttons to trigger analysis.
+ *
+ * Note: This template uses only module-owned CSS classes (.airo-widget,
+ * .airo-badge) and standard Drupal button classes. No Gin-specific classes
+ * (.card, .card__content-wrapper, .gin-status) are used so the widget renders
+ * correctly under any admin theme (Claro, Gin, Navigation, custom).
+ */
+#}
+<div class="airo-widget" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+  <div class="airo-widget__body">
+
+    {% if is_analyzing %}
+      {# ── Analyzing state ── #}
+      {# aria-live="polite" so screen readers announce the transition. #}
+      <div class="airo-widget__state airo-widget__state--analyzing" role="status" aria-live="polite">
+      <div class="airo-widget__spinner" aria-hidden="true"></div>
+      <div class="airo-widget__state-text">
+        <span class="airo-widget__state-title">{{ 'Analyzing\u2026'|t }}</span>
+        <span class="airo-widget__state-sub">{{ 'AI readiness check in progress'|t }}</span>
+      </div>
+    </div>
+
+    {% elseif has_assessment and score is not null %}
+      {# ── Scored state ── #}
+      <div class="airo-widget__state airo-widget__state--scored">
+
+        {# Donut SVG — aria-hidden; score announced in info div below #}
+        <div class="airo-widget__donut" aria-hidden="true">
+          <svg viewBox="0 0 64 64" class="airo-widget__donut-svg">
+            {# Track — stroke color set via .airo-widget__donut-track in CSS #}
+            <circle class="airo-widget__donut-track"
+              cx="32" cy="32" r="{{ donut_radius }}"
+              fill="none" stroke-width="6" />
+            {#
+              Fill arc — stroke color set via .airo-widget__donut-fill--{score_color}:
+                good    → var(--airo-score-good)
+                warning → var(--airo-score-warning)
+                danger  → var(--airo-score-danger)
+            #}
+            <circle class="airo-widget__donut-fill airo-widget__donut-fill--{{ score_color }}"
+              cx="32" cy="32" r="{{ donut_radius }}"
+              fill="none"
+              stroke-width="6"
+              stroke-dasharray="{{ donut_circumference }}"
+              stroke-dashoffset="{{ donut_offset }}"
+              stroke-linecap="round"
+              transform="rotate(-90 32 32)" />
+            {# Score text — fill color set via .airo-widget__score-text in CSS #}
+            <text x="32" y="32" text-anchor="middle" dominant-baseline="central"
+              class="airo-widget__score-text">{{ score }}</text>
+          </svg>
+        </div>
+
+        {# Info column — aria-label announces full score for screen readers #}
+        <div class="airo-widget__info"
+          aria-label="{{ 'AI Readiness Score: @score out of 100'|t({'@score': score}) }}"
+          aria-live="polite">
+          {#
+            Module-owned .airo-badge chip — theme-agnostic, styled in
+            ai-inline-score-widget.css using --airo-status-* tokens.
+              good    → airo-badge--success
+              warning → airo-badge--warning
+              danger  → airo-badge--danger
+          #}
+          <span class="airo-badge airo-badge--{{ score_color == 'good' ? 'success' : score_color }}">
+            {{ status_label }}
+          </span>
+
+          {% if high_priority_count > 0 %}
+            <span class="airo-badge airo-badge--danger airo-widget__priority-count">
+              {{ high_priority_count }} {{ 'high priority'|t }}
+            </span>
+          {% endif %}
+        </div>
+
+        {#
+          Actions — the "View Full Analysis" popup trigger has been removed.
+          The full AIRO analysis is now presented as an accordion item in the
+          node edit form sidebar directly below this widget. Only the
+          Re-analyze quick-action remains here.
+        #}
+        <div class="airo-widget__actions">
+          <button type="button"
+            class="button button--small airo-widget__reanalyze"
+            data-assess-url="{{ assess_url }}"
+            data-revision-id="{{ revision_id }}"
+            data-airo-action="reanalyze"
+            aria-label="{{ 'Re-run AI analysis for this content'|t }}">
+            {{ 'Re-analyze'|t }}
+          </button>
+        </div>
+
+      </div>
+
+    {% else %}
+      {# ── Empty / not-yet-evaluated state ── #}
+      <div class="airo-widget__state airo-widget__state--empty">
+        {#
+          Icon wrapper:
+            background-color: var(--gin-bg-layer2)
+            border-radius:    var(--gin-border-m)
+            color:            var(--gin-color-text-light)
+        #}
+        <div class="airo-widget__empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+        </div>
+
+        <div class="airo-widget__state-text">
+          <span class="airo-widget__state-title">{{ 'AI Readiness Score'|t }}</span>
+          <span class="airo-widget__state-sub">{{ 'Run an analysis to check AI readiness'|t }}</span>
+        </div>
+
+        <button type="button"
+          class="button button--primary button--small"
+          data-assess-url="{{ assess_url }}"
+          data-revision-id="{{ revision_id }}"
+          data-airo-action="run-analysis"
+          aria-label="{{ 'Run AI analysis for this content'|t }}">
+          {{ 'Run Analysis'|t }}
+        </button>
+      </div>
+
+    {% endif %}
+
+  </div>{# end .airo-widget__body #}
+</div>{# end .airo-widget — data-node-id preserved here; JS depends on it #}

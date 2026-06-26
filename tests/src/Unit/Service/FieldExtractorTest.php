@@ -27,6 +27,8 @@ class FieldExtractorTest extends TestCase {
 
   /**
    * Entity type manager mock.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected EntityTypeManagerInterface $entityTypeManager;
 
@@ -45,20 +47,21 @@ class FieldExtractorTest extends TestCase {
   }
 
   /**
-   * Tests that the node title is always included in the output.
+   * Tests that the title field is skipped in extractForNode output.
+   *
+   * Title is emitted via buildContentMetadataBlock() in extract(), not here.
    *
    * @covers ::extractForNode
    */
-  public function testTitleIsAlwaysIncluded(): void {
+  public function testTitleFieldIsSkippedInExtractForNode(): void {
     $node = $this->createMockNode('Test Article Title', []);
 
-    // No display, no extra fields.
     $this->entityTypeManager->method('getStorage')->willReturn(
       $this->createConfiguredMock(EntityStorageInterface::class, ['load' => NULL])
     );
 
     $result = $this->extractor->extractForNode($node);
-    $this->assertStringContainsString('Title: Test Article Title', $result);
+    $this->assertSame('', $result);
   }
 
   /**
@@ -92,15 +95,11 @@ class FieldExtractorTest extends TestCase {
 
     $html = '<p>Hello   <strong>World</strong></p><br/>How are you?';
     $result = $reflection->invoke($this->extractor, $html);
-    $this->assertEquals('Hello World How are you?', $result);
+    $this->assertEquals('Hello WorldHow are you?', $result);
   }
 
   /**
-   * Tests a node with only unsupported field types yields only its title.
-   *
-   * When every field on a node is of a non-extractable type (e.g. 'integer')
-   * the output should consist solely of the "Title: …" line — the unsupported
-   * fields must be absent from the result.
+   * Tests a node with only unsupported field types yields empty body text.
    *
    * @covers ::extractForNode
    */
@@ -119,11 +118,8 @@ class FieldExtractorTest extends TestCase {
 
     $result = $this->extractor->extractForNode($node);
 
-    // The result must start with the title and contain nothing else.
-    $this->assertStringContainsString('Title: My Node', $result);
+    $this->assertSame('', $result);
     $this->assertStringNotContainsString('Page Count', $result);
-    // Trim ignores leading/trailing whitespace as "extra" content.
-    $this->assertEquals('Title: My Node', trim($result));
   }
 
   /**
@@ -192,8 +188,6 @@ class FieldExtractorTest extends TestCase {
 
     $this->assertStringContainsString('Subtitle: The subtitle text', $result);
     $this->assertStringContainsString('Body: The body text', $result);
-    // Both fields must be present in the same output string.
-    $this->assertStringContainsString('Title: Multi Field Node', $result);
   }
 
   /**

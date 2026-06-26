@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit_scoring\Controller;
 
 use Drupal\ai_content_audit\Enum\RenderMode;
-use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
-use Drupal\ai_content_audit\Service\AiAssessmentService;
+use Drupal\ai_content_audit_scoring\Repository\AiContentAssessmentRepository;
+use Drupal\ai_content_audit_scoring\Service\AiAssessmentService;
 use Drupal\ai_content_audit_scoring\Service\AiroActionItemCommand;
 use Drupal\ai_content_audit_scoring\Service\AiroInlineScoreWidgetBuilder;
 use Drupal\ai_content_audit\Service\AiroNodeRevisionResolver;
@@ -40,10 +40,10 @@ final class ScoringPanelController extends ControllerBase {
    */
   public static function create(ContainerInterface $container): static {
     return new static(
-      $container->get('ai_content_audit.assessment_service'),
+      $container->get('ai_content_audit_scoring.assessment_service'),
       $container->get('renderer'),
       $container->get('request_stack'),
-      $container->get('ai_content_audit.assessment_repository'),
+      $container->get('ai_content_audit_scoring.assessment_repository'),
       $container->get('ai_content_audit.airo_node_revision_resolver'),
       $container->get('ai_content_audit_scoring.airo_action_item_command'),
       $container->get('ai_content_audit_scoring.airo_inline_score_widget_builder'),

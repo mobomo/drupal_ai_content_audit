@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\ai_site_audit\Unit;
 
-use Drupal\ai_content_audit\Service\TechnicalAuditService;
-use Drupal\ai_content_audit\ValueObject\TechnicalAuditResult;
+use Drupal\ai_content_audit_scoring\Audit\FilesystemAuditRunnerInterface;
+use Drupal\ai_content_audit_scoring\Service\TechnicalAuditService;
+use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\ai_site_audit\Service\AnalysisOrchestrator;
 use Drupal\ai_site_audit\Service\SiteAggregationService;
 use Drupal\ai_site_audit\Service\SiteAnalysisService;
@@ -15,6 +16,7 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\Core\Queue\QueueInterface;
 use Drupal\Core\State\StateInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -28,31 +30,53 @@ class AnalysisOrchestratorTest extends TestCase {
 
   /**
    * Site aggregation service mock.
+   *
+   * @var \Drupal\ai_site_audit\Service\SiteAggregationService&\PHPUnit\Framework\MockObject\MockObject
    */
   protected SiteAggregationService $aggregation;
 
   /**
    * Site rollup service mock.
+   *
+   * @var \Drupal\ai_site_audit\Service\SiteRollupService&\PHPUnit\Framework\MockObject\MockObject
    */
   protected SiteRollupService $rollup;
 
   /**
    * Site analysis service mock.
+   *
+   * @var \Drupal\ai_site_audit\Service\SiteAnalysisService&\PHPUnit\Framework\MockObject\MockObject
    */
   protected SiteAnalysisService $analysis;
 
   /**
    * Technical audit service mock.
+   *
+   * @var \Drupal\ai_content_audit_scoring\Service\TechnicalAuditService&\PHPUnit\Framework\MockObject\MockObject
    */
   protected TechnicalAuditService $technicalAudit;
 
   /**
+   * Filesystem audit runner mock.
+   */
+  protected MockObject $filesystemAudit;
+
+  /**
+   * Filesystem audit runner service mock.
+   */
+  protected FilesystemAuditRunnerInterface $filesystemAuditService;
+
+  /**
    * State service mock.
+   *
+   * @var \Drupal\Core\State\StateInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected StateInterface $state;
 
   /**
    * Queue factory mock.
+   *
+   * @var \Drupal\Core\Queue\QueueFactory&\PHPUnit\Framework\MockObject\MockObject
    */
   protected QueueFactory $queueFactory;
 
@@ -63,6 +87,8 @@ class AnalysisOrchestratorTest extends TestCase {
 
   /**
    * Logger mock.
+   *
+   * @var \Psr\Log\LoggerInterface&\PHPUnit\Framework\MockObject\MockObject
    */
   protected LoggerInterface $logger;
 
@@ -76,6 +102,9 @@ class AnalysisOrchestratorTest extends TestCase {
     $this->rollup = $this->createMock(SiteRollupService::class);
     $this->analysis = $this->createMock(SiteAnalysisService::class);
     $this->technicalAudit = $this->createMock(TechnicalAuditService::class);
+    $this->filesystemAudit = $this->createMock(FilesystemAuditRunnerInterface::class);
+    $this->filesystemAudit->method('runAllChecks')->willReturn([]);
+    $this->filesystemAuditService = $this->filesystemAudit;
     $this->state = $this->createMock(StateInterface::class);
     $this->queueFactory = $this->createMock(QueueFactory::class);
     $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
@@ -102,6 +131,7 @@ class AnalysisOrchestratorTest extends TestCase {
       $this->rollup,
       $this->analysis,
       $this->technicalAudit,
+      $this->filesystemAuditService,
       $this->state,
       $this->queueFactory,
       $this->configFactory,

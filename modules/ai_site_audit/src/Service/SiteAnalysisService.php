@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\ai_site_audit\Service;
 
-use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai\OperationType\Chat\ChatInput;
 use Drupal\ai\OperationType\Chat\ChatMessage;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -37,7 +37,7 @@ class SiteAnalysisService {
   protected const DEFAULT_TTL = 86400;
 
   public function __construct(
-    protected AiProviderPluginManager $aiProvider,
+    protected AiProviderRegistryInterface $aiProvider,
     protected KeyValueExpirableFactoryInterface $keyValueFactory,
     protected StateInterface $state,
     protected ConfigFactoryInterface $configFactory,

@@ -8,28 +8,9 @@
 declare(strict_types=1);
 
 /**
- * Initializes scoring defaults on the parent settings object.
+ * Initializes scoring prompt config.
  */
 function ai_content_audit_scoring_install(): void {
-  $config = \Drupal::configFactory()->getEditable('ai_content_audit.settings');
-  $data = $config->getRawData();
-
-  $data += [
-    'enable_on_save' => FALSE,
-    'enable_history' => TRUE,
-    'node_types' => [],
-    'max_assessments_per_node' => 10,
-    'render_mode' => 'text',
-    'disabled_checks' => [],
-  ];
-
-  $data['prompts'] = ($data['prompts'] ?? []) + [
-    'assessment_system_prompt' => 'content_audit_assessment_system__content_audit_assessment_system_default',
-    'assessment_user_prompt' => 'content_audit_assessment_user__content_audit_assessment_user_default',
-  ];
-
-  $config->setData($data)->save();
-
   ai_content_audit_scoring_ensure_prompt_config();
 }
 

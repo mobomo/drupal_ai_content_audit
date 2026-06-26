@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\ai_content_audit\Controller;
 
-use Drupal\ai_content_audit\Entity\AiContentAssessment;
-use Drupal\ai_content_audit\Repository\AiContentAssessmentRepository;
 use Drupal\ai_content_audit\Service\AiroNodeRevisionResolver;
 use Drupal\ai_content_audit\Service\AiroPanelTabManager;
 use Drupal\ai_content_audit\Service\AiroPreviewChat;
@@ -31,7 +29,6 @@ class AiroPanelController extends ControllerBase {
   public function __construct(
     protected RendererInterface $renderer,
     protected RequestStack $requestStack,
-    protected AiContentAssessmentRepository $assessmentRepository,
     protected AiroPanelTabManager $tabManager,
     protected AiroNodeRevisionResolver $revisionResolver,
     protected AiroPreviewChat $previewChat,
@@ -45,7 +42,6 @@ class AiroPanelController extends ControllerBase {
     return new static(
       $container->get('renderer'),
       $container->get('request_stack'),
-      $container->get('ai_content_audit.assessment_repository'),
       $container->get('ai_content_audit.airo_panel_tab_manager'),
       $container->get('ai_content_audit.airo_node_revision_resolver'),
       $container->get('ai_content_audit.airo_preview_chat'),
@@ -57,7 +53,6 @@ class AiroPanelController extends ControllerBase {
    * Opens the AIRO Preview panel in the off-canvas dialog.
    */
   public function openPanel(NodeInterface $node): AjaxResponse {
-    $assessment = $this->assessmentRepository->getLatestForNode((int) $node->id());
     $paneBuilds = $this->tabManager->buildTabPanes($node);
     $tabDefinitions = $this->tabManager->buildTabDefinitions($node);
     $activeTab = array_key_first($paneBuilds) ?: 'preview-tab';
@@ -76,7 +71,7 @@ class AiroPanelController extends ControllerBase {
       '#theme' => 'ai_airo_panel',
       '#node_id' => $node->id(),
       '#revision_id' => (int) $node->getRevisionId(),
-      '#score' => $assessment?->getScore(),
+      '#score' => NULL,
       '#node_title' => $node->getTitle(),
       '#is_analyzing' => FALSE,
       '#active_tab' => $activeTab,
@@ -87,7 +82,7 @@ class AiroPanelController extends ControllerBase {
       '#assess_url' => $showAssessmentActions
         ? $this->buildAssessUrl($node)
         : NULL,
-      '#full_report_url' => $this->buildFullReportUrl($assessment),
+      '#full_report_url' => NULL,
     ];
 
     $html = $this->renderer->renderRoot($build);
@@ -144,24 +139,6 @@ class AiroPanelController extends ControllerBase {
   private function getJsonRequestBody(): array {
     $body = json_decode($this->requestStack->getCurrentRequest()?->getContent() ?: '{}', TRUE);
     return is_array($body) ? $body : [];
-  }
-
-  /**
-   * Builds the full report URL for an assessment when available.
-   */
-  private function buildFullReportUrl(?AiContentAssessment $assessment): ?string {
-    if ($assessment === NULL) {
-      return NULL;
-    }
-
-    try {
-      return Url::fromRoute('ai_content_audit.assessment.report', [
-        'ai_content_assessment' => $assessment->id(),
-      ])->toString();
-    }
-    catch (RouteNotFoundException) {
-      return NULL;
-    }
   }
 
   /**

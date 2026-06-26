@@ -3,10 +3,6 @@
 /**
  * @file
  * Install and uninstall functions for AI Content Audit module.
- *
- * NOTE: No hook_schema() is needed. SqlContentEntityStorage automatically
- * creates and manages the ai_content_assessment table based on the entity's
- * baseFieldDefinitions() when the module is installed.
  */
 
 use Drupal\Core\Url;
@@ -15,7 +11,6 @@ use Drupal\Core\Url;
  * Implements hook_uninstall().
  */
 function ai_content_audit_uninstall(): void {
-  // Entity tables are dropped automatically on module uninstall.
   // Clean up the module settings config object.
   \Drupal::configFactory()
     ->getEditable('ai_content_audit.settings')

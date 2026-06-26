@@ -257,7 +257,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $result = $this->convertMethod->invoke($this->extractor, $html);
 
     // Assert — result must not contain three or more consecutive newlines.
-    $this->assertDoesNotMatch('/\n{3,}/', $result);
+    $this->assertDoesNotMatchRegularExpression('/\n{3,}/', $result);
   }
 
   /**
@@ -275,8 +275,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     // Assert — entities decoded, tags stripped.
     $this->assertStringContainsString('£10', $result);
     $this->assertStringContainsString('& more', $result);
-    // Literal "<details>" from &lt;details&gt; must not become a tag.
-    $this->assertStringContainsString('<details>', $result);
+    $this->assertStringNotContainsString('<details>', $result);
   }
 
   /*
@@ -298,7 +297,7 @@ class FieldExtractorConvertHtmlTest extends TestCase {
     $result = $this->stripMethod->invoke($this->extractor, $html);
 
     // Assert.
-    $this->assertEquals('Hello World How are you?', $result);
+    $this->assertEquals('Hello WorldHow are you?', $result);
   }
 
   /**

@@ -1,0 +1,244 @@
+/**
+ * Action Items Tab Styles — theme-agnostic.
+ *
+ * All values resolve through --airo-* design tokens (ai-design-tokens.css).
+ * No --gin-* references here.
+ */
+
+.airo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--airo-spacing-l, 1.25rem);
+}
+
+/* ── Summary bar ────────────────────────────────────────────────────────── */
+.airo-actions__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--airo-spacing-s, 0.75rem) var(--airo-spacing-m, 1rem);
+  background: var(--airo-bg-wash, #edeff5);
+  border-radius: var(--airo-radius, 0.5rem);
+  border: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-actions__counts {
+  display: flex;
+  align-items: center;
+  gap: var(--airo-spacing-xs, 0.5rem);
+  font-size: var(--airo-font-size-xs, 0.8125rem);
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-actions__count-high {
+  color: var(--airo-score-danger, #cc3d3d);
+  font-weight: var(--airo-font-weight-semibold, 500);
+}
+
+.airo-actions__count-completed {
+  color: var(--airo-success, #058260);
+  font-weight: var(--airo-font-weight-semibold, 500);
+}
+
+.airo-actions__count-separator {
+  color: var(--airo-text-light, #545560);
+}
+
+/* ── Priority groups ────────────────────────────────────────────────────── */
+.airo-actions__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--airo-spacing-xs, 0.5rem);
+}
+
+.airo-actions__group-title {
+  display: flex;
+  align-items: center;
+  gap: var(--airo-spacing-xs, 0.5rem);
+  font-size: var(--airo-font-size-xs, 0.8125rem);
+  font-weight: var(--airo-font-weight-bold, 600);
+  color: var(--airo-title, #222330);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.airo-actions__group-count {
+  font-weight: var(--airo-font-weight-normal, 400);
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-actions__priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.airo-actions__priority-dot--high   { background: var(--airo-score-danger, #cc3d3d); }
+.airo-actions__priority-dot--medium { background: var(--airo-score-warning, #d8b234); }
+.airo-actions__priority-dot--low    { background: var(--airo-success, #058260); }
+
+/* ── Individual action item card ────────────────────────────────────────── */
+.airo-actions__item {
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-sm, 0.375rem);
+  padding: var(--airo-spacing-s, 0.75rem);
+  background: var(--airo-bg, #fff);
+  transition: opacity 0.2s, border-color 0.2s;
+}
+
+.airo-actions__item--completed {
+  opacity: 0.6;
+  background: var(--airo-bg-wash, #edeff5);
+}
+
+.airo-actions__item-header {
+  display: flex;
+  gap: var(--airo-spacing-s, 0.75rem);
+  align-items: flex-start;
+}
+
+/* ── Custom checkbox ────────────────────────────────────────────────────── */
+.airo-actions__checkbox-label {
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.airo-actions__checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.airo-actions__checkbox-custom {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-xs, 0.25rem);
+  background: var(--airo-bg, #fff);
+  transition: all 0.15s;
+}
+
+.airo-actions__checkbox:checked + .airo-actions__checkbox-custom {
+  background: var(--airo-success, #058260);
+  border-color: var(--airo-success, #058260);
+}
+
+.airo-actions__checkbox:checked + .airo-actions__checkbox-custom::after {
+  content: '\2713';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /*
+   * --airo-on-primary is always the light-on-dark variant because the
+   * parent background is always --airo-success (dark green).
+   */
+  color: var(--airo-on-primary, #fff);
+  font-size: var(--airo-font-size-xxs, 0.75rem);
+  font-weight: var(--airo-font-weight-bold, 600);
+  width: 100%;
+  height: 100%;
+}
+
+.airo-actions__checkbox:focus-visible + .airo-actions__checkbox-custom {
+  box-shadow: 0 0 0 1px var(--airo-focus-border, rgba(0, 0, 0, 0.2)),
+              0 0 0 4px var(--airo-focus, rgba(0, 125, 250, 0.6));
+}
+
+/* Fallback for browsers that don't support :focus-visible */
+.airo-actions__checkbox:focus + .airo-actions__checkbox-custom {
+  box-shadow: 0 0 0 1px var(--airo-focus-border, rgba(0, 0, 0, 0.2)),
+              0 0 0 4px var(--airo-focus, rgba(0, 125, 250, 0.6));
+}
+
+/* ── Item info ──────────────────────────────────────────────────────────── */
+.airo-actions__item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--airo-spacing-xxs, 0.25rem);
+}
+
+.airo-actions__item-title {
+  font-size: var(--airo-font-size-s, 0.875rem);
+  font-weight: var(--airo-font-weight-semibold, 500);
+  color: var(--airo-title, #222330);
+}
+
+.airo-actions__item-title--completed {
+  text-decoration: line-through;
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-actions__item-description {
+  font-size: var(--airo-font-size-xs, 0.8125rem);
+  color: var(--airo-text-light, #545560);
+  line-height: 1.4;
+}
+
+/* ── Suggested content block ────────────────────────────────────────────── */
+.airo-actions__suggested {
+  margin-top: var(--airo-spacing-s, 0.75rem);
+  margin-left: 2.75rem;
+  padding: var(--airo-spacing-s, 0.75rem);
+  background: var(--airo-bg-wash, #edeff5);
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-sm, 0.375rem);
+}
+
+.airo-actions__suggested-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--airo-spacing-xs, 0.5rem);
+}
+
+.airo-actions__suggested-label {
+  font-size: var(--airo-font-size-xxs, 0.75rem);
+  font-weight: var(--airo-font-weight-semibold, 500);
+  color: var(--airo-primary, #0036b1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.airo-actions__copy-btn {
+  font-size: var(--airo-font-size-xxs, 0.75rem);
+  padding: var(--airo-spacing-xxs, 0.125rem) var(--airo-spacing-xs, 0.5rem);
+}
+
+.airo-actions__suggested-content {
+  font-size: var(--airo-font-size-xs, 0.8125rem);
+  color: var(--airo-text, #222330);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ── Admin link ─────────────────────────────────────────────────────────── */
+.airo-actions__item-footer {
+  margin-top: var(--airo-spacing-xs, 0.5rem);
+  margin-left: 2.75rem;
+}
+
+.airo-actions__admin-link {
+  font-size: var(--airo-font-size-xxs, 0.75rem);
+  color: var(--airo-primary, #0036b1);
+  text-decoration: none;
+  font-weight: var(--airo-font-weight-semibold, 500);
+}
+
+.airo-actions__admin-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+.airo-actions__empty {
+  text-align: center;
+  padding: var(--airo-spacing-xl, 2rem);
+  color: var(--airo-text-light, #545560);
+}

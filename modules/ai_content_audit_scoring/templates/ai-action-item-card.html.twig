@@ -1,0 +1,45 @@
+{#
+/**
+ * @file
+ * Individual action item card partial.
+ *
+ * Variables:
+ * - item: The action item object {id, priority, title, description, field_target, suggested_content}.
+ * - status: Completion status object {completed, completed_by, completed_at} or null.
+ * - node_id: The node ID.
+ */
+#}
+{% set is_completed = status and status.completed|default(false) %}
+<div class="airo-actions__item{{ is_completed ? ' airo-actions__item--completed' : '' }}"
+  data-item-id="{{ item.id }}" data-node-id="{{ node_id }}">
+  <div class="airo-actions__item-header">
+    <label class="airo-actions__checkbox-label">
+      <input type="checkbox" class="airo-actions__checkbox"
+        {{ is_completed ? 'checked' : '' }}
+        data-toggle-url="{{ url('ai_content_audit.panel.actions_toggle', {node: node_id, item_id: item.id}) }}">
+      <span class="airo-actions__checkbox-custom"></span>
+    </label>
+    <div class="airo-actions__item-info">
+      <span class="airo-actions__item-title{{ is_completed ? ' airo-actions__item-title--completed' : '' }}">
+        {{ item.title }}
+      </span>
+      <span class="airo-actions__item-description">{{ item.description }}</span>
+    </div>
+  </div>
+
+  {% if item.suggested_content and item.suggested_content is not null %}
+  <div class="airo-actions__suggested">
+    <div class="airo-actions__suggested-header">
+      <span class="airo-actions__suggested-label">{{ 'Suggested content'|t }}</span>
+      <button type="button" class="airo-actions__copy-btn button button--small"
+        data-copy-text="{{ item.suggested_content|e('html_attr') }}">
+        {{ 'Copy'|t }}
+      </button>
+    </div>
+    <div class="airo-actions__suggested-content">
+      {{ item.suggested_content }}
+    </div>
+  </div>
+  {% endif %}
+
+</div>

@@ -1,0 +1,135 @@
+{#
+/**
+ * @file
+ * Filesystem audit section within the Technical Audit tab.
+ *
+ * Variables:
+ * - filesystem_categories: Keyed array grouping check arrays by category label.
+ *   e.g. {'Security': [{check array}, ...], 'Configuration': [...], ...}
+ * - filesystem_summary: Array with keys: pass_count, fail_count, warning_count, info_count, total_count.
+ * - can_refresh: bool — whether the user has permission to re-run.
+ * - node_id: The node ID.
+ *
+ * Behavior:
+ * - "Module Inventory" and "Filesystem Health" categories are rendered collapsed
+ *   when ALL their checks have status 'pass' or 'info'. Otherwise they expand.
+ * - All other categories open by default (first category uses loop.first heuristic).
+ * - Code blocks (current_content, recommended_content) are collapsed via <details>.
+ */
+#}
+{% if filesystem_categories is not empty %}
+<div class="airo-fs-audit" id="ai-filesystem-audit">
+  <div class="airo-fs-audit__header">
+    <h3 class="airo-fs-audit__title">{{ 'Filesystem Audit'|t }}</h3>
+    <div class="airo-fs-audit__summary-badges">
+      {% if filesystem_summary.pass_count > 0 %}
+        <span class="airo-fs-audit__badge airo-fs-audit__badge--pass">{{ filesystem_summary.pass_count }} {{ 'pass'|t }}</span>
+      {% endif %}
+      {% if filesystem_summary.fail_count > 0 %}
+        <span class="airo-fs-audit__badge airo-fs-audit__badge--fail">{{ filesystem_summary.fail_count }} {{ 'fail'|t }}</span>
+      {% endif %}
+      {% if filesystem_summary.warning_count > 0 %}
+        <span class="airo-fs-audit__badge airo-fs-audit__badge--warning">{{ filesystem_summary.warning_count }} {{ 'warning'|t }}</span>
+      {% endif %}
+      {% if filesystem_summary.info_count > 0 %}
+        <span class="airo-fs-audit__badge airo-fs-audit__badge--info">{{ filesystem_summary.info_count }} {{ 'info'|t }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Categories that auto-collapse when all checks pass/info #}
+  {% set collapsible_categories = ['Module Inventory', 'Filesystem Health'] %}
+
+  {% for category_label, category_checks in filesystem_categories %}
+
+    {# Determine if all checks in this category are pass or info #}
+    {% set all_passing = true %}
+    {% for check in category_checks %}
+      {% if check.status != 'pass' and check.status != 'info' %}
+        {% set all_passing = false %}
+      {% endif %}
+    {% endfor %}
+
+    {# Collapse logic: only auto-collapse designated collapsible categories when all pass #}
+    {% set should_collapse = all_passing and category_label in collapsible_categories %}
+    {% set pass_count = category_checks|length %}
+
+    <details class="airo-fs-audit__category{% if should_collapse %} airo-fs-audit__category--all-pass{% endif %}"{% if not should_collapse %} open{% endif %}>
+      <summary class="airo-fs-audit__category-summary">
+        <span class="airo-fs-audit__category-label">{{ category_label }}</span>
+        {% if should_collapse %}
+          <span class="airo-fs-audit__category-count airo-fs-audit__category-count--passing">
+            {{ '%count/%total passing'|t({'%count': pass_count, '%total': pass_count}) }} ✓
+          </span>
+        {% else %}
+          <span class="airo-fs-audit__category-count">({{ category_checks|length }})</span>
+        {% endif %}
+      </summary>
+      <div class="airo-fs-audit__category-body">
+        {% for check in category_checks %}
+          <div class="airo-audit__check airo-audit__check--{{ check.status }}">
+            <div class="airo-audit__check-header">
+              <div class="airo-audit__check-status">
+                <span class="airo-audit__status-icon airo-audit__status-icon--{{ check.status }}"
+                  aria-label="{{ check.status }}">
+                  {% if check.status == 'pass' %}✓
+                  {% elseif check.status == 'fail' %}✗
+                  {% elseif check.status == 'info' %}ℹ
+                  {% else %}!{% endif %}
+                </span>
+              </div>
+              <div class="airo-audit__check-info">
+                <span class="airo-audit__check-label">{{ check.label }}</span>
+                <span class="airo-audit__check-description">{{ check.description }}</span>
+              </div>
+            </div>
+
+            {# Current content — collapsed by default #}
+            {% if check.current_content is not null and check.current_content != '' %}
+              <div class="airo-audit__content-block airo-audit__content-block--current">
+                <details class="airo-audit__code-details">
+                  <summary class="airo-audit__code-summary">
+                    <span class="airo-audit__content-label">{{ 'Show current content'|t }}</span>
+                  </summary>
+                  <pre class="airo-audit__code-block"><code>{{ check.current_content }}</code></pre>
+                </details>
+              </div>
+            {% endif %}
+
+            {# Recommended content — collapsed by default #}
+            {% if check.recommended_content is not null and check.recommended_content != '' %}
+              <div class="airo-audit__content-block airo-audit__content-block--recommended">
+                <details class="airo-audit__code-details airo-audit__code-details--recommended">
+                  <summary class="airo-audit__code-summary airo-audit__code-summary--recommended">
+                    <span class="airo-audit__content-label">{{ 'Show recommended content'|t }}</span>
+                  </summary>
+                  <pre class="airo-audit__code-block airo-audit__code-block--recommended"><code>{{ check.recommended_content }}</code></pre>
+                </details>
+              </div>
+            {% endif %}
+
+            {% if check.details is not empty %}
+              <div class="airo-audit__details">
+                {% for key, value in check.details %}
+                  <div class="airo-audit__detail">
+                    <span class="airo-audit__detail-key">{{ key }}:</span>
+                    <span class="airo-audit__detail-value
+                      {% if value == true or value == 'yes' %} airo-audit__detail-yes
+                      {% elseif value == false or value == 'no' %} airo-audit__detail-no
+                      {% endif %}">
+                      {% if value == true %}{{ 'Yes'|t }}
+                      {% elseif value == false %}{{ 'No'|t }}
+                      {% elseif value is iterable %}{{ value|join(', ') }}
+                      {% else %}{{ value }}{% endif %}
+                    </span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </details>
+  {% endfor %}
+</div>
+{% endif %}

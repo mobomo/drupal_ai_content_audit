@@ -1,0 +1,862 @@
+{#
+/**
+ * @file
+ * Template for the full AI Content Assessment Report page.
+ *
+ * Available variables:
+ * - assessment_id: The assessment entity ID.
+ * - node: The assessed NodeInterface entity (may be NULL).
+ * - node_edit_url: URL string to the node edit form (may be NULL).
+ * - score: Integer score 0-100.
+ * - qualitative_status: String label from the LLM (e.g. "AI Ready").
+ * - qualitative_label: Human-readable status from preprocess.
+ * - score_color: CSS class modifier: good | warning | danger.
+ * - score_color_hex: Hex color string for the SVG.
+ * - donut_radius, donut_circumference, donut_offset: SVG donut values.
+ * - trend_delta: Integer ±N or NULL.
+ * - created: Unix timestamp integer.
+ * - assessment_date: Formatted date string from preprocess.
+ * - provider_id: AI provider machine name.
+ * - model_id: AI model identifier.
+ * - run_by: Display name of the user who triggered the assessment.
+ * - sub_scores: Array of dimension score objects {dimension, label, score, max_score, percentage}.
+ * - checkpoints: Flat array of all checkpoints.
+ * - checkpoints_by_category: Checkpoints keyed by category name.
+ * - high_items, medium_items, low_items: Action item arrays by priority.
+ * - action_items_status: Completion tracking keyed by item ID.
+ * - completed_count: Integer count of completed action items.
+ * - total_action_items: Total action item count.
+ * - history: Array of score history rows.
+ * - technical_checks: Flat array of all technical audit checks.
+ * - technical_checks_grouped: Array of {label, checks[]} groups.
+ * - technical_pass_count, technical_total_count: Integers.
+ * - filesystem_categories: Checks keyed by category name.
+ * - filesystem_summary: {pass_count, fail_count, warning_count, info_count, total_count}.
+ * - readability: {grade_level, assessment}.
+ * - seo: {title_present, meta_description_present, suggested_meta, open_graph_present, canonical_present}.
+ * - content_completeness: {missing_topics[], word_count_adequate, has_lead_paragraph}.
+ * - tone_consistency: {tone, confidence}.
+ * - heading_hierarchy: {has_single_h1, hierarchy_valid, total_headings, assessment}.
+ * - image_accessibility: {total_images, images_with_alt, images_without_alt, alt_quality, assessment}.
+ * - link_analysis: {internal_links, external_links, total_links, has_meaningful_anchors, assessment}.
+ * - content_freshness: {days_since_modified, is_stale, assessment}.
+ * - entity_richness: {has_author, has_taxonomy, has_related_content, assessment}.
+ * - content_patterns: All boolean flags + assessment narrative.
+ * - rag_chunk_quality: All counts + assessment narrative.
+ * - raw_output: Raw LLM text output string.
+ * - result_json_formatted: Pretty-printed JSON string.
+ */
+#}
+<div class="ai-report" id="ai-assessment-report-{{ assessment_id }}">
+
+  {# =========================================================================
+     REPORT HEADER
+     ========================================================================= #}
+  <header class="ai-report__header">
+    <div class="ai-report__header-left">
+      {% if node %}
+        <h1 class="ai-report__node-title">
+          {{ node.label() }}
+        </h1>
+        <div class="ai-report__header-meta">
+          {% if node_edit_url %}
+            <a href="{{ node_edit_url }}" class="ai-report__back-link">← Edit this node</a>
+          {% endif %}
+          <span class="ai-report__date">Assessed: {{ assessment_date }}</span>
+          {% if run_by %}
+            <span class="ai-report__run-by">Run by: <strong>{{ run_by }}</strong></span>
+          {% endif %}
+          <span class="ai-report__provider">
+            Provider: <strong>{{ provider_id }}</strong>
+            {% if model_id %} / {{ model_id }}{% endif %}
+          </span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="ai-report__header-right">
+      <div class="ai-report__score-donut ai-report__score-donut--{{ score_color }}">
+        <svg viewBox="0 0 128 128" class="ai-report__donut-svg" aria-hidden="true">
+          <circle class="ai-report__donut-track"
+            cx="64" cy="64" r="{{ donut_radius }}"
+            fill="none" stroke-width="12"
+          />
+          <circle class="ai-report__donut-fill"
+            cx="64" cy="64" r="{{ donut_radius }}"
+            fill="none" stroke="{{ score_color_hex }}" stroke-width="12"
+            stroke-dasharray="{{ donut_circumference }}"
+            stroke-dashoffset="{{ donut_offset }}"
+            stroke-linecap="round"
+            transform="rotate(-90 64 64)"
+          />
+        </svg>
+        <div class="ai-report__donut-text">
+          <span class="ai-report__score-number">{{ score }}</span>
+          <span class="ai-report__score-label">/100</span>
+        </div>
+      </div>
+      <div class="ai-report__score-meta">
+        <span class="ai-report__badge ai-report__badge--{{ score_color }}">{{ qualitative_label }}</span>
+        {% if trend_delta is not null %}
+          <span class="ai-report__trend {% if trend_delta > 0 %}ai-report__trend--up{% elseif trend_delta < 0 %}ai-report__trend--down{% else %}ai-report__trend--flat{% endif %}">
+            {% if trend_delta > 0 %}▲ +{{ trend_delta }}{% elseif trend_delta < 0 %}▼ {{ trend_delta }}{% else %}→ 0{% endif %}
+            pts vs previous
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  {# =========================================================================
+     SCORE OVERVIEW
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-score-overview">
+    <h2 class="ai-report__section-title">Score Overview</h2>
+
+    {% if sub_scores %}
+      <div class="ai-report__sub-scores">
+        <h3 class="ai-report__subsection-title">Dimension Breakdown</h3>
+        <table class="ai-report__table">
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>Score</th>
+              <th>Max</th>
+              <th>Percentage</th>
+              <th>Bar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in sub_scores %}
+              <tr>
+                <td><strong>{{ sub.label }}</strong></td>
+                <td>{{ sub.score }}</td>
+                <td>{{ sub.max_score }}</td>
+                <td>{{ sub.percentage }}%</td>
+                <td>
+                  <div class="ai-report__progress-bar">
+                    <div class="ai-report__progress-fill ai-report__progress-fill--{% if sub.percentage >= 75 %}good{% elseif sub.percentage >= 50 %}warning{% else %}danger{% endif %}"
+                      style="width: {{ sub.percentage }}%"></div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if history %}
+      <div class="ai-report__history">
+        <h3 class="ai-report__subsection-title">Score History ({{ history|length }} assessments)</h3>
+        <table class="ai-report__table ai-report__table--history">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Score</th>
+              <th>Change</th>
+              <th>Provider / Model</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in history %}
+              <tr class="{% if entry.is_current %}ai-report__history-row--current{% endif %}">
+                <td>{{ entry.date_full }}</td>
+                <td>
+                  <span class="ai-report__badge ai-report__badge--{% if entry.score >= 75 %}good{% elseif entry.score >= 50 %}warning{% else %}danger{% endif %}">
+                    {{ entry.score }}/100
+                  </span>
+                </td>
+                <td>
+                  {% if entry.delta is not null %}
+                    <span class="{% if entry.delta > 0 %}ai-report__trend--up{% elseif entry.delta < 0 %}ai-report__trend--down{% else %}ai-report__trend--flat{% endif %}">
+                      {% if entry.delta > 0 %}+{% endif %}{{ entry.delta }}
+                    </span>
+                  {% else %}
+                    <span class="ai-report__muted">—</span>
+                  {% endif %}
+                </td>
+                <td>{{ entry.provider }}{% if entry.model %} / {{ entry.model }}{% endif %}</td>
+                <td>
+                  {% if entry.is_current %}
+                    <span class="ai-report__badge ai-report__badge--info">Current</span>
+                  {% else %}
+                    <a href="{{ entry.url }}">View</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {# Visual bar sparkline #}
+        <div class="ai-report__sparkline" aria-hidden="true">
+          {% for entry in history %}
+            <div class="ai-report__spark-bar {% if entry.is_current %}ai-report__spark-bar--current{% endif %}"
+              style="height: {{ entry.bar_height }}%"
+              title="{{ entry.date }}: {{ entry.score }}/100"></div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+  {# =========================================================================
+     CONTENT QUALITY ANALYSIS
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-content-quality">
+    <h2 class="ai-report__section-title">Content Quality Analysis</h2>
+
+    {# Readability #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Readability</h3>
+      <div class="ai-report__kv-grid">
+        {% if readability.grade_level is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Grade Level</span>
+            <span class="ai-report__kv-value">{{ readability.grade_level }}</span>
+          </div>
+        {% endif %}
+      </div>
+      {% if readability.assessment %}
+        <p class="ai-report__narrative">{{ readability.assessment }}</p>
+      {% endif %}
+    </div>
+
+    {# Tone #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Tone Consistency</h3>
+      <div class="ai-report__kv-grid">
+        {% if tone_consistency.tone %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Detected Tone</span>
+            <span class="ai-report__kv-value">{{ tone_consistency.tone }}</span>
+          </div>
+        {% endif %}
+        {% if tone_consistency.confidence is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Confidence</span>
+            <span class="ai-report__kv-value">{{ (tone_consistency.confidence * 100)|round }}%</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Content Completeness #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Content Completeness</h3>
+      <div class="ai-report__kv-grid">
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Word Count Adequate</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_completeness.word_count_adequate ? 'pass' : 'fail' }}">
+            {{ content_completeness.word_count_adequate ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Has Lead Paragraph</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_completeness.has_lead_paragraph ? 'pass' : 'fail' }}">
+            {{ content_completeness.has_lead_paragraph ? 'Yes' : 'No' }}
+          </span>
+        </div>
+      </div>
+      {% if content_completeness.missing_topics is not empty %}
+        <div class="ai-report__missing-topics">
+          <strong>Missing Topics:</strong>
+          <ul class="ai-report__list">
+            {% for topic in content_completeness.missing_topics %}
+              <li>{{ topic }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+
+    {# Content Freshness #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Content Freshness</h3>
+      <div class="ai-report__kv-grid">
+        {% if content_freshness.days_since_modified is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Days Since Modified</span>
+            <span class="ai-report__kv-value">{{ content_freshness.days_since_modified }}</span>
+          </div>
+        {% endif %}
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Stale</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_freshness.is_stale ? 'warning' : 'pass' }}">
+            {{ content_freshness.is_stale ? 'Yes' : 'No' }}
+          </span>
+        </div>
+      </div>
+      {% if content_freshness.assessment %}
+        <p class="ai-report__narrative">{{ content_freshness.assessment }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {# =========================================================================
+     STRUCTURE & ACCESSIBILITY
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-structure">
+    <h2 class="ai-report__section-title">Structure &amp; Accessibility</h2>
+
+    {# Heading Hierarchy #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Heading Hierarchy</h3>
+      <div class="ai-report__kv-grid">
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Single H1</span>
+          <span class="ai-report__badge ai-report__badge--{{ heading_hierarchy.has_single_h1 ? 'pass' : 'fail' }}">
+            {{ heading_hierarchy.has_single_h1 ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Hierarchy Valid</span>
+          <span class="ai-report__badge ai-report__badge--{{ heading_hierarchy.hierarchy_valid ? 'pass' : 'fail' }}">
+            {{ heading_hierarchy.hierarchy_valid ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        {% if heading_hierarchy.total_headings is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Total Headings</span>
+            <span class="ai-report__kv-value">{{ heading_hierarchy.total_headings }}</span>
+          </div>
+        {% endif %}
+      </div>
+      {% if heading_hierarchy.assessment %}
+        <p class="ai-report__narrative">{{ heading_hierarchy.assessment }}</p>
+      {% endif %}
+    </div>
+
+    {# Image Accessibility #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Image Accessibility</h3>
+      <div class="ai-report__kv-grid">
+        {% if image_accessibility.total_images is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Total Images</span>
+            <span class="ai-report__kv-value">{{ image_accessibility.total_images }}</span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">With Alt Text</span>
+            <span class="ai-report__kv-value ai-report__kv-value--{{ image_accessibility.images_with_alt == image_accessibility.total_images ? 'good' : 'warning' }}">
+              {{ image_accessibility.images_with_alt }}
+            </span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Missing Alt Text</span>
+            <span class="ai-report__kv-value {% if image_accessibility.images_without_alt > 0 %}ai-report__kv-value--danger{% endif %}">
+              {{ image_accessibility.images_without_alt }}
+            </span>
+          </div>
+        {% endif %}
+        {% if image_accessibility.alt_quality %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Alt Text Quality</span>
+            <span class="ai-report__kv-value">{{ image_accessibility.alt_quality }}</span>
+          </div>
+        {% endif %}
+      </div>
+      {% if image_accessibility.assessment %}
+        <p class="ai-report__narrative">{{ image_accessibility.assessment }}</p>
+      {% endif %}
+    </div>
+
+    {# Link Analysis #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Link Analysis</h3>
+      <div class="ai-report__kv-grid">
+        {% if link_analysis.total_links is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Internal Links</span>
+            <span class="ai-report__kv-value">{{ link_analysis.internal_links }}</span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">External Links</span>
+            <span class="ai-report__kv-value">{{ link_analysis.external_links }}</span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Total Links</span>
+            <span class="ai-report__kv-value">{{ link_analysis.total_links }}</span>
+          </div>
+        {% endif %}
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Meaningful Anchors</span>
+          <span class="ai-report__badge ai-report__badge--{{ link_analysis.has_meaningful_anchors ? 'pass' : 'warning' }}">
+            {{ link_analysis.has_meaningful_anchors ? 'Yes' : 'No' }}
+          </span>
+        </div>
+      </div>
+      {% if link_analysis.assessment %}
+        <p class="ai-report__narrative">{{ link_analysis.assessment }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {# =========================================================================
+     AI / LLM READINESS
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-llm-readiness">
+    <h2 class="ai-report__section-title">AI / LLM Readiness</h2>
+
+    {# Content Patterns #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">Content Patterns</h3>
+      <div class="ai-report__kv-grid ai-report__kv-grid--flags">
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Q&amp;A Structure</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_patterns.has_qa_structure ? 'pass' : 'info' }}">
+            {{ content_patterns.has_qa_structure ? 'Yes' : 'No' }}
+          </span>
+          {% if content_patterns.qa_pair_count %}
+            <span class="ai-report__kv-detail">({{ content_patterns.qa_pair_count }} pairs)</span>
+          {% endif %}
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Definition Patterns</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_patterns.has_definition_patterns ? 'pass' : 'info' }}">
+            {{ content_patterns.has_definition_patterns ? 'Yes' : 'No' }}
+          </span>
+          {% if content_patterns.definition_count %}
+            <span class="ai-report__kv-detail">({{ content_patterns.definition_count }} found)</span>
+          {% endif %}
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">TL;DR Section</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_patterns.has_tldr_section ? 'pass' : 'info' }}">
+            {{ content_patterns.has_tldr_section ? 'Yes' : 'No' }}
+          </span>
+          {% if content_patterns.tldr_location and content_patterns.tldr_location != 'none' %}
+            <span class="ai-report__kv-detail">({{ content_patterns.tldr_location }})</span>
+          {% endif %}
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Key Takeaways</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_patterns.has_key_takeaways ? 'pass' : 'info' }}">
+            {{ content_patterns.has_key_takeaways ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Summary Section</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_patterns.has_summary_section ? 'pass' : 'info' }}">
+            {{ content_patterns.has_summary_section ? 'Yes' : 'No' }}
+          </span>
+        </div>
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Direct Answer First</span>
+          <span class="ai-report__badge ai-report__badge--{{ content_patterns.has_direct_answer_first ? 'pass' : 'warning' }}">
+            {{ content_patterns.has_direct_answer_first ? 'Yes' : 'No' }}
+          </span>
+        </div>
+      </div>
+      {% if content_patterns.assessment %}
+        <p class="ai-report__narrative">{{ content_patterns.assessment }}</p>
+      {% endif %}
+    </div>
+
+    {# RAG Chunk Quality #}
+    <div class="ai-report__subsection">
+      <h3 class="ai-report__subsection-title">RAG Chunk Quality</h3>
+      <div class="ai-report__kv-grid">
+        {% if rag_chunk_quality.h2_section_count is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">H2 Section Count</span>
+            <span class="ai-report__kv-value">{{ rag_chunk_quality.h2_section_count }}</span>
+          </div>
+        {% endif %}
+        {% if rag_chunk_quality.sections_optimal_length is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Optimal Length</span>
+            <span class="ai-report__kv-value ai-report__kv-value--good">{{ rag_chunk_quality.sections_optimal_length }}</span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Too Short</span>
+            <span class="ai-report__kv-value {% if rag_chunk_quality.sections_too_short > 0 %}ai-report__kv-value--warning{% endif %}">{{ rag_chunk_quality.sections_too_short }}</span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Too Long</span>
+            <span class="ai-report__kv-value {% if rag_chunk_quality.sections_too_long > 0 %}ai-report__kv-value--warning{% endif %}">{{ rag_chunk_quality.sections_too_long }}</span>
+          </div>
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Self-Contained</span>
+            <span class="ai-report__kv-value">{{ rag_chunk_quality.sections_self_contained }}</span>
+          </div>
+        {% endif %}
+        {% if rag_chunk_quality.average_section_length_estimate is not null %}
+          <div class="ai-report__kv-pair">
+            <span class="ai-report__kv-label">Avg. Section Length (est.)</span>
+            <span class="ai-report__kv-value">{{ rag_chunk_quality.average_section_length_estimate }} words</span>
+          </div>
+        {% endif %}
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Has Topic Sentences</span>
+          <span class="ai-report__badge ai-report__badge--{{ rag_chunk_quality.has_topic_sentences ? 'pass' : 'warning' }}">
+            {{ rag_chunk_quality.has_topic_sentences ? 'Yes' : 'No' }}
+          </span>
+        </div>
+      </div>
+      {% if rag_chunk_quality.assessment %}
+        <p class="ai-report__narrative">{{ rag_chunk_quality.assessment }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {# =========================================================================
+     ENTITY RICHNESS
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-entity-richness">
+    <h2 class="ai-report__section-title">Entity Richness</h2>
+    <div class="ai-report__kv-grid">
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Has Author</span>
+        <span class="ai-report__badge ai-report__badge--{{ entity_richness.has_author ? 'pass' : 'info' }}">
+          {{ entity_richness.has_author ? 'Yes' : 'No' }}
+        </span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Has Taxonomy</span>
+        <span class="ai-report__badge ai-report__badge--{{ entity_richness.has_taxonomy ? 'pass' : 'info' }}">
+          {{ entity_richness.has_taxonomy ? 'Yes' : 'No' }}
+        </span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Has Related Content</span>
+        <span class="ai-report__badge ai-report__badge--{{ entity_richness.has_related_content ? 'pass' : 'info' }}">
+          {{ entity_richness.has_related_content ? 'Yes' : 'No' }}
+        </span>
+      </div>
+    </div>
+    {% if entity_richness.assessment %}
+      <p class="ai-report__narrative">{{ entity_richness.assessment }}</p>
+    {% endif %}
+  </section>
+
+  {# =========================================================================
+     SEO INVENTORY
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-seo">
+    <h2 class="ai-report__section-title">SEO Inventory</h2>
+    <div class="ai-report__kv-grid">
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Title Present</span>
+        <span class="ai-report__badge ai-report__badge--{{ seo.title_present ? 'pass' : 'fail' }}">
+          {{ seo.title_present ? 'Yes' : 'No' }}
+        </span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Meta Description</span>
+        <span class="ai-report__badge ai-report__badge--{{ seo.meta_description_present ? 'pass' : 'fail' }}">
+          {{ seo.meta_description_present ? 'Present' : 'Missing' }}
+        </span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Open Graph Tags</span>
+        <span class="ai-report__badge ai-report__badge--{{ seo.open_graph_present ? 'pass' : 'warning' }}">
+          {{ seo.open_graph_present ? 'Present' : 'Missing' }}
+        </span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Canonical Tag</span>
+        <span class="ai-report__badge ai-report__badge--{{ seo.canonical_present ? 'pass' : 'warning' }}">
+          {{ seo.canonical_present ? 'Present' : 'Missing' }}
+        </span>
+      </div>
+    </div>
+
+    {% if seo.suggested_meta %}
+      <div class="ai-report__copy-block">
+        <div class="ai-report__copy-block-header">
+          <span class="ai-report__copy-block-label">💡 Suggested Meta Description</span>
+          <button class="ai-report__copy-btn" data-copy-target="suggested-meta-{{ assessment_id }}">
+            Copy
+          </button>
+        </div>
+        <pre id="suggested-meta-{{ assessment_id }}" class="ai-report__copy-content">{{ seo.suggested_meta }}</pre>
+      </div>
+    {% endif %}
+  </section>
+
+  {# =========================================================================
+     CHECKPOINTS (FULL)
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-checkpoints">
+    <h2 class="ai-report__section-title">
+      Checkpoints
+      <span class="ai-report__count-badge">{{ checkpoints|length }}</span>
+    </h2>
+    {% if checkpoints_by_category %}
+      {% for category, cps in checkpoints_by_category %}
+        <div class="ai-report__checkpoint-group">
+          <h3 class="ai-report__subsection-title">{{ category }}</h3>
+          <ul class="ai-report__checkpoint-list">
+            {% for cp in cps %}
+              <li class="ai-report__checkpoint-item ai-report__checkpoint-item--{{ cp.status }}">
+                <span class="ai-report__checkpoint-icon" aria-hidden="true">
+                  {% if cp.status == 'pass' %}✅
+                  {% elseif cp.status == 'fail' %}❌
+                  {% elseif cp.status == 'warning' %}⚠️
+                  {% else %}ℹ️
+                  {% endif %}
+                </span>
+                <span class="ai-report__checkpoint-text">{{ cp.item }}</span>
+                {% if cp.priority %}
+                  <span class="ai-report__priority-badge ai-report__priority-badge--{{ cp.priority }}">{{ cp.priority }}</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="ai-report__empty">No checkpoints available for this assessment.</p>
+    {% endif %}
+  </section>
+
+  {# =========================================================================
+     ACTION ITEMS (FULL)
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-action-items">
+    <h2 class="ai-report__section-title">
+      Action Items
+      <span class="ai-report__count-badge">{{ total_action_items }}</span>
+      {% if total_action_items > 0 %}
+        <span class="ai-report__progress-summary">{{ completed_count }} / {{ total_action_items }} completed</span>
+      {% endif %}
+    </h2>
+
+    {% set action_groups = [
+      { 'label': 'High Priority', 'items': high_items, 'mod': 'high' },
+      { 'label': 'Medium Priority', 'items': medium_items, 'mod': 'medium' },
+      { 'label': 'Low Priority', 'items': low_items, 'mod': 'low' },
+    ] %}
+
+    {% for group in action_groups %}
+      {% if group.items %}
+        <div class="ai-report__action-group">
+          <h3 class="ai-report__subsection-title ai-report__subsection-title--{{ group.mod }}">
+            {{ group.label }}
+            <span class="ai-report__count-badge ai-report__count-badge--{{ group.mod }}">{{ group.items|length }}</span>
+          </h3>
+          {% for item in group.items %}
+            {% set is_completed = action_items_status[item.id] is defined and action_items_status[item.id].completed %}
+            <div class="ai-report__action-card ai-report__action-card--{{ group.mod }} {% if is_completed %}ai-report__action-card--completed{% endif %}">
+              <div class="ai-report__action-card-header">
+                <strong class="ai-report__action-title">{{ item.title }}</strong>
+                {% if item.field_target and item.field_target != 'null' %}
+                  <span class="ai-report__field-tag">{{ item.field_target }}</span>
+                {% endif %}
+                {% if is_completed %}
+                  <span class="ai-report__badge ai-report__badge--pass">✓ Completed</span>
+                  {% if action_items_status[item.id].completed_at is defined %}
+                    <span class="ai-report__muted"> on {{ action_items_status[item.id].completed_at|date('M j, Y') }}</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+              {% if item.description %}
+                <p class="ai-report__action-description">{{ item.description }}</p>
+              {% endif %}
+              {% if item.suggested_content %}
+                <div class="ai-report__copy-block ai-report__copy-block--suggested">
+                  <div class="ai-report__copy-block-header">
+                    <span class="ai-report__copy-block-label">Suggested content</span>
+                    <button class="ai-report__copy-btn" data-copy-target="action-{{ assessment_id }}-{{ item.id }}">
+                      Copy
+                    </button>
+                  </div>
+                  <pre id="action-{{ assessment_id }}-{{ item.id }}" class="ai-report__copy-content">{{ item.suggested_content }}</pre>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if total_action_items == 0 %}
+      <p class="ai-report__empty">No action items available for this assessment.</p>
+    {% endif %}
+  </section>
+
+  {# =========================================================================
+     TECHNICAL AUDIT (FULL)
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-technical-audit">
+    <h2 class="ai-report__section-title">
+      Technical Audit
+      {% if technical_total_count > 0 %}
+        <span class="ai-report__pass-ratio {% if technical_pass_count == technical_total_count %}ai-report__pass-ratio--all{% endif %}">
+          {{ technical_pass_count }} / {{ technical_total_count }} pass
+        </span>
+      {% endif %}
+    </h2>
+
+    {% if technical_checks_grouped %}
+      {% for group in technical_checks_grouped %}
+        <div class="ai-report__audit-group">
+          {% if group.label %}
+            <h3 class="ai-report__subsection-title">{{ group.label }}</h3>
+          {% endif %}
+          {% for check in group.checks %}
+            <div class="ai-report__check-card ai-report__check-card--{{ check.status }}">
+              <div class="ai-report__check-header">
+                <span class="ai-report__check-icon" aria-hidden="true">
+                  {% if check.status == 'pass' %}✅{% elseif check.status == 'fail' %}❌{% elseif check.status == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                </span>
+                <strong class="ai-report__check-title">{{ check.label ?? check.check }}</strong>
+                <span class="ai-report__badge ai-report__badge--{{ check.status }}">{{ check.status }}</span>
+              </div>
+              {% if check.detail %}
+                <p class="ai-report__check-detail">{{ check.detail }}</p>
+              {% endif %}
+              {% if check.currentContent %}
+                <div class="ai-report__copy-block">
+                  <div class="ai-report__copy-block-header">
+                    <span class="ai-report__copy-block-label">Current</span>
+                    <button class="ai-report__copy-btn" data-copy-target="check-current-{{ loop.index }}">Copy</button>
+                  </div>
+                  <pre id="check-current-{{ loop.index }}" class="ai-report__copy-content">{{ check.currentContent }}</pre>
+                </div>
+              {% endif %}
+              {% if check.recommendedContent %}
+                <div class="ai-report__copy-block ai-report__copy-block--recommended">
+                  <div class="ai-report__copy-block-header">
+                    <span class="ai-report__copy-block-label">Recommended</span>
+                    <button class="ai-report__copy-btn" data-copy-target="check-recommended-{{ loop.index }}">Copy</button>
+                  </div>
+                  <pre id="check-recommended-{{ loop.index }}" class="ai-report__copy-content">{{ check.recommendedContent }}</pre>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="ai-report__empty">Technical audit data is not available.</p>
+    {% endif %}
+  </section>
+
+  {# =========================================================================
+     FILESYSTEM AUDIT (FULL)
+     ========================================================================= #}
+  <section class="ai-report__section" id="report-filesystem-audit">
+    <h2 class="ai-report__section-title">
+      Filesystem Audit
+      {% if filesystem_summary.total_count > 0 %}
+        <span class="ai-report__fs-summary">
+          <span class="ai-report__badge ai-report__badge--pass">{{ filesystem_summary.pass_count }} pass</span>
+          {% if filesystem_summary.fail_count > 0 %}
+            <span class="ai-report__badge ai-report__badge--fail">{{ filesystem_summary.fail_count }} fail</span>
+          {% endif %}
+          {% if filesystem_summary.warning_count > 0 %}
+            <span class="ai-report__badge ai-report__badge--warning">{{ filesystem_summary.warning_count }} warning</span>
+          {% endif %}
+        </span>
+      {% endif %}
+    </h2>
+
+    {% set fs_category_order = ['Security', 'Configuration', 'Module Inventory', 'Filesystem Health', 'AI Readiness', 'Other'] %}
+    {% for category in fs_category_order %}
+      {% if filesystem_categories[category] is defined %}
+        <div class="ai-report__audit-group">
+          <h3 class="ai-report__subsection-title">{{ category }}</h3>
+          {% for check in filesystem_categories[category] %}
+            <div class="ai-report__check-card ai-report__check-card--{{ check.status }}">
+              <div class="ai-report__check-header">
+                <span class="ai-report__check-icon" aria-hidden="true">
+                  {% if check.status == 'pass' %}✅{% elseif check.status == 'fail' %}❌{% elseif check.status == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                </span>
+                <strong class="ai-report__check-title">{{ check.label ?? check.check }}</strong>
+                <span class="ai-report__badge ai-report__badge--{{ check.status }}">{{ check.status }}</span>
+              </div>
+              {% if check.detail %}
+                <p class="ai-report__check-detail">{{ check.detail }}</p>
+              {% endif %}
+              {% if check.currentContent %}
+                <div class="ai-report__copy-block">
+                  <div class="ai-report__copy-block-header">
+                    <span class="ai-report__copy-block-label">Current</span>
+                    <button class="ai-report__copy-btn" data-copy-target="fs-current-{{ loop.index }}">Copy</button>
+                  </div>
+                  <pre id="fs-current-{{ loop.index }}" class="ai-report__copy-content">{{ check.currentContent }}</pre>
+                </div>
+              {% endif %}
+              {% if check.recommendedContent %}
+                <div class="ai-report__copy-block ai-report__copy-block--recommended">
+                  <div class="ai-report__copy-block-header">
+                    <span class="ai-report__copy-block-label">Recommended</span>
+                    <button class="ai-report__copy-btn" data-copy-target="fs-recommended-{{ loop.index }}">Copy</button>
+                  </div>
+                  <pre id="fs-recommended-{{ loop.index }}" class="ai-report__copy-content">{{ check.recommendedContent }}</pre>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </section>
+
+  {# =========================================================================
+     METADATA FOOTER
+     ========================================================================= #}
+  <section class="ai-report__section ai-report__section--footer" id="report-metadata">
+    <h2 class="ai-report__section-title">Metadata</h2>
+
+    <div class="ai-report__metadata-grid">
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Assessment ID</span>
+        <span class="ai-report__kv-value">{{ assessment_id }}</span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Assessment Date</span>
+        <span class="ai-report__kv-value">{{ assessment_date }}</span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Provider</span>
+        <span class="ai-report__kv-value">{{ provider_id }}</span>
+      </div>
+      <div class="ai-report__kv-pair">
+        <span class="ai-report__kv-label">Model</span>
+        <span class="ai-report__kv-value">{{ model_id }}</span>
+      </div>
+      {% if run_by %}
+        <div class="ai-report__kv-pair">
+          <span class="ai-report__kv-label">Run By</span>
+          <span class="ai-report__kv-value">{{ run_by }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if raw_output %}
+      <details class="ai-report__collapsible">
+        <summary class="ai-report__collapsible-summary">Raw LLM Output</summary>
+        <div class="ai-report__collapsible-body">
+          <div class="ai-report__copy-block">
+            <div class="ai-report__copy-block-header">
+              <span class="ai-report__copy-block-label">Raw output</span>
+              <button class="ai-report__copy-btn" data-copy-target="raw-output-{{ assessment_id }}">Copy</button>
+            </div>
+            <pre id="raw-output-{{ assessment_id }}" class="ai-report__copy-content ai-report__copy-content--raw">{{ raw_output }}</pre>
+          </div>
+        </div>
+      </details>
+    {% endif %}
+
+    {% if result_json_formatted %}
+      <details class="ai-report__collapsible">
+        <summary class="ai-report__collapsible-summary">Full Result JSON</summary>
+        <div class="ai-report__collapsible-body">
+          <div class="ai-report__copy-block">
+            <div class="ai-report__copy-block-header">
+              <span class="ai-report__copy-block-label">result_json</span>
+              <button class="ai-report__copy-btn" data-copy-target="result-json-{{ assessment_id }}">Copy</button>
+            </div>
+            <pre id="result-json-{{ assessment_id }}" class="ai-report__copy-content ai-report__copy-content--json">{{ result_json_formatted }}</pre>
+          </div>
+        </div>
+      </details>
+    {% endif %}
+  </section>
+
+</div>{# end .ai-report #}
