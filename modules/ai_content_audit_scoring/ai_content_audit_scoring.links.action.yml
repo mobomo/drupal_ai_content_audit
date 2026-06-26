@@ -1,0 +1,5 @@
+entity.ai_content_assessment.delete_action:
+  route_name: entity.ai_content_assessment.delete_form
+  title: 'Delete'
+  appears_on:
+    - entity.ai_content_assessment.canonical

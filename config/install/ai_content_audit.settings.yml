@@ -1,0 +1,5 @@
+max_chars_per_request: 8000
+default_provider_model: ''
+prompts:
+  preview_system_prompt: 'content_audit_preview_system__content_audit_preview_system_default'
+  preview_user_prompt: 'content_audit_preview_user__content_audit_preview_user_default'

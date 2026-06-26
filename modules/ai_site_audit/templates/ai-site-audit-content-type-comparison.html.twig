@@ -1,0 +1,134 @@
+{#
+/**
+ * @file
+ * Template for the content type comparison page.
+ *
+ * Variables:
+ * - content_types: Array of content type data with keys: type, label, count,
+ *   avg_score, min_score, max_score, score_range, top_nodes, bottom_nodes.
+ * - overall_avg: Sitewide average score for baseline comparison.
+ * - overall_count: Total number of assessed nodes.
+ */
+#}
+<div class="ai-site-audit-content-type-comparison">
+
+  <div class="comparison-summary">
+    <p class="comparison-baseline">
+      <strong>Sitewide baseline:</strong>
+      {{ overall_avg|number_format(1) }} avg score across {{ overall_count }} assessed nodes
+    </p>
+  </div>
+
+  {% if content_types is empty %}
+    <div class="messages messages--warning">
+      <p>No content types have been assessed yet. Run a sitewide audit to populate data.</p>
+    </div>
+  {% else %}
+
+    {# Summary comparison table #}
+    <h2>Side-by-Side Comparison</h2>
+    <table class="ai-comparison-table">
+      <thead>
+        <tr>
+          <th>Content Type</th>
+          <th>Count</th>
+          <th>Avg Score</th>
+          <th>vs Baseline</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Range</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ct in content_types %}
+          {% set diff = ct.avg_score - overall_avg %}
+          {% if ct.avg_score >= 80 %}
+            {% set grade = 'A' %}
+            {% set grade_class = 'grade-a' %}
+          {% elseif ct.avg_score >= 60 %}
+            {% set grade = 'B' %}
+            {% set grade_class = 'grade-b' %}
+          {% elseif ct.avg_score >= 40 %}
+            {% set grade = 'C' %}
+            {% set grade_class = 'grade-c' %}
+          {% elseif ct.avg_score >= 20 %}
+            {% set grade = 'D' %}
+            {% set grade_class = 'grade-d' %}
+          {% else %}
+            {% set grade = 'F' %}
+            {% set grade_class = 'grade-f' %}
+          {% endif %}
+          <tr class="comparison-row {{ grade_class }}">
+            <td class="type-label"><strong>{{ ct.label }}</strong> <small>({{ ct.type }})</small></td>
+            <td class="type-count">{{ ct.count }}</td>
+            <td class="type-avg-score">
+              <span class="score-value">{{ ct.avg_score|number_format(1) }}</span>
+            </td>
+            <td class="type-diff {% if diff > 0 %}diff-positive{% elseif diff < 0 %}diff-negative{% else %}diff-neutral{% endif %}">
+              {% if diff > 0 %}+{% endif %}{{ diff|number_format(1) }}
+            </td>
+            <td class="type-min">{{ ct.min_score }}</td>
+            <td class="type-max">{{ ct.max_score }}</td>
+            <td class="type-range">{{ ct.score_range }}</td>
+            <td class="type-grade"><span class="grade-badge {{ grade_class }}">{{ grade }}</span></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {# Per-type detail cards #}
+    <h2>Detailed Breakdown</h2>
+    <div class="comparison-cards">
+      {% for ct in content_types %}
+        <div class="comparison-card">
+          <div class="card-header">
+            <h3>{{ ct.label }}</h3>
+            <span class="card-score {% if ct.avg_score >= 80 %}score-high{% elseif ct.avg_score >= 50 %}score-mid{% else %}score-low{% endif %}">
+              {{ ct.avg_score|number_format(1) }}
+            </span>
+          </div>
+          <div class="card-stats">
+            <div class="stat-item">
+              <span class="stat-label">Assessed</span>
+              <span class="stat-value">{{ ct.count }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Score Range</span>
+              <span class="stat-value">{{ ct.min_score }} – {{ ct.max_score }}</span>
+            </div>
+          </div>
+
+          {% if ct.bottom_nodes is not empty %}
+            <div class="card-section">
+              <h4>Needs Attention</h4>
+              <ul class="node-list">
+                {% for node in ct.bottom_nodes %}
+                  <li>
+                    <a href="/node/{{ node.nid }}">{{ node.title }}</a>
+                    <span class="node-score score-low">{{ node.score }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% if ct.top_nodes is not empty %}
+            <div class="card-section">
+              <h4>Top Performing</h4>
+              <ul class="node-list">
+                {% for node in ct.top_nodes %}
+                  <li>
+                    <a href="/node/{{ node.nid }}">{{ node.title }}</a>
+                    <span class="node-score score-high">{{ node.score }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+  {% endif %}
+</div>

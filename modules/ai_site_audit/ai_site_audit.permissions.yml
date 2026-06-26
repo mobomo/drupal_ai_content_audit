@@ -1,0 +1,8 @@
+view site audit dashboard:
+  title: 'View sitewide audit dashboard'
+  description: 'Access the sitewide AI content audit dashboard and statistics.'
+
+run site audit analysis:
+  title: 'Run sitewide audit analysis'
+  description: 'Trigger AI-powered sitewide analysis and refresh statistics.'
+  restrict access: true

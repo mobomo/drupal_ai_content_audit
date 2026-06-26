@@ -1,0 +1,73 @@
+assessment-panel:
+  version: 1.x
+  css:
+    component:
+      css/ai-assessment-panel.css: {}
+  dependencies:
+    - ai_content_audit/design-tokens
+
+inline-widget:
+  version: 1.x
+  css:
+    component:
+      css/ai-inline-score-widget.css: {}
+  js:
+    js/ai-inline-score-widget.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+    - ai_content_audit/airo-csrf
+    - ai_content_audit/design-tokens
+
+score-tab:
+  version: 1.x
+  css:
+    component:
+      css/ai-score-tab.css: {}
+  js:
+    js/ai-score-tab.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+    - ai_content_audit/airo-csrf
+    - ai_content_audit/design-tokens
+
+action-items-tab:
+  version: 1.x
+  css:
+    component:
+      css/ai-action-items-tab.css: {}
+  js:
+    js/ai-action-items-tab.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+    - ai_content_audit/airo-csrf
+    - ai_content_audit/design-tokens
+
+technical-audit-tab:
+  version: 1.x
+  css:
+    component:
+      css/ai-technical-audit-tab.css: {}
+  js:
+    js/ai-technical-audit-tab.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - ai_content_audit/design-tokens
+
+assessment-report:
+  version: 1.x
+  css:
+    component:
+      css/ai-assessment-report.css: {}
+  js:
+    js/ai-assessment-report.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - ai_content_audit/design-tokens

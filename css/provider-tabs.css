@@ -1,0 +1,14 @@
+/**
+ * @file
+ * Provider compare results — tab panels (accordion inline nav; page skin uses external nav).
+ *
+ * Model selector styling lives in ai-preview-tab.css and airo-panel-page-skin.css.
+ */
+
+.ai-content-audit-tab-panel {
+  padding: 1rem 0.25rem;
+}
+
+.ai-content-audit-tab-panel[hidden] {
+  display: none !important;
+}

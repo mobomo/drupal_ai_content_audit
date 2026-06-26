@@ -1,0 +1,80 @@
+ai_content_audit.panel.open:
+  path: '/admin/ai-content-audit/panel/{node}'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::openPanel'
+    _title: 'AIRO Preview'
+  requirements:
+    _permission: 'access airo preview,administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
+    node: \d+
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.node.airo_analysis:
+  path: '/node/{node}/airo-analysis'
+  defaults:
+    _entity_form: 'node.edit'
+    _controller: 'Drupal\ai_content_audit\Controller\AiroEntityFormController::getContentResult'
+    _title: 'AIRO Preview'
+  requirements:
+    _permission: 'access airo preview,administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::access'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.node.airo_analysis_panel_refresh:
+  path: '/node/{node}/airo-analysis/panel-refresh'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::panelRefresh'
+  requirements:
+    _permission: 'access airo preview,administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::access'
+    node: \d+
+  methods: [GET]
+  options:
+    _admin_route: FALSE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.panel.preview_query:
+  path: '/admin/ai-content-audit/panel/{node}/preview-query'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::submitPreviewQuery'
+  requirements:
+    _permission: 'access airo preview,administer ai content audit'
+    _csrf_request_header_token: 'TRUE'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::runAccess'
+    node: \d+
+  methods: [POST]
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
+ai_content_audit.panel.available_models:
+  path: '/admin/ai-content-audit/api/available-models'
+  defaults:
+    _controller: '\Drupal\ai_content_audit\Controller\AiroPanelController::listAvailableModels'
+    _title: 'Available AI Models'
+    _format: 'json'
+  requirements:
+    _permission: 'use any ai provider in airo,administer ai content audit'
+  methods: [GET]
+  options:
+    _admin_route: TRUE
+
+ai_content_audit.settings:
+  path: '/admin/config/ai/content-audit'
+  defaults:
+    _form: '\Drupal\ai_content_audit\Form\SettingsForm'
+    _title: 'AIRO Preview settings'
+  requirements:
+    _permission: 'administer ai content audit,manage content audit prompts'

@@ -1,0 +1,108 @@
+{#
+/**
+ * @file
+ * Template for AI insights section.
+ */
+#}
+<div class="ai-site-dashboard__insights" data-drupal-selector="ai-site-insights">
+  {% if insights %}
+    {# Grade badge #}
+    {% if insights.overall_grade is defined %}
+      <div class="ai-site-dashboard__grade ai-site-dashboard__grade--{{ insights.overall_grade|lower }}">
+        <span class="ai-site-dashboard__grade-letter">{{ insights.overall_grade }}</span>
+        <span class="ai-site-dashboard__grade-label">Overall Grade</span>
+      </div>
+    {% endif %}
+
+    {# Executive summary #}
+    {% if insights.executive_summary is defined %}
+      <div class="ai-site-dashboard__insight-block">
+        <h4>Executive Summary</h4>
+        <p>{{ insights.executive_summary }}</p>
+      </div>
+    {% endif %}
+
+    {# Top priorities #}
+    {% if insights.top_priorities is not empty %}
+      <div class="ai-site-dashboard__insight-block">
+        <h4>Top Priorities</h4>
+        <ol class="ai-site-dashboard__priority-list">
+          {% for priority in insights.top_priorities %}
+            <li>
+              <strong>{{ priority.title }}</strong>
+              <p>{{ priority.description }}</p>
+              {% if priority.affected_nodes is defined %}
+                <span class="ai-site-dashboard__meta">Affects: {{ priority.affected_nodes }}</span>
+              {% endif %}
+              {% if priority.potential_score_impact is defined %}
+                <span class="ai-site-dashboard__meta">Potential impact: +{{ priority.potential_score_impact }} pts</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    {% endif %}
+
+    {# Quick wins #}
+    {% if insights.quick_wins is not empty %}
+      <div class="ai-site-dashboard__insight-block">
+        <h4>Quick Wins</h4>
+        <ul class="ai-site-dashboard__quick-wins">
+          {% for qw in insights.quick_wins %}
+            <li>
+              <strong>{{ qw.title }}</strong>: {{ qw.description }}
+              <span class="ai-site-dashboard__meta">Effort: {{ qw.effort }} | Impact: {{ qw.impact }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    {# Patterns identified #}
+    {% if insights.patterns_identified is not empty %}
+      <div class="ai-site-dashboard__insight-block">
+        <h4>Patterns Identified</h4>
+        {% for pattern in insights.patterns_identified %}
+          <div class="ai-site-dashboard__pattern">
+            <strong>{{ pattern.pattern }}</strong>
+            <p>{{ pattern.significance }}</p>
+            <p><em>Recommendation: {{ pattern.recommendation }}</em></p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {# Projected improvement #}
+    {% if insights.projected_improvement is defined %}
+      <div class="ai-site-dashboard__insight-block">
+        <h4>Projected Improvement</h4>
+        <p>
+          Current average: <strong>{{ insights.projected_improvement.current_avg }}</strong> →
+          Projected: <strong>{{ insights.projected_improvement.projected_avg }}</strong>
+          (Confidence: {{ insights.projected_improvement.confidence }})
+        </p>
+      </div>
+    {% endif %}
+
+    <div class="ai-site-dashboard__insight-meta">
+      {% if insights.analyzed_at is defined %}
+        <small>Analysis generated: {{ insights.analyzed_at|date('Y-m-d H:i') }}</small>
+      {% endif %}
+    </div>
+
+  {% else %}
+    {# No insights yet #}
+    <div class="ai-site-dashboard__insights-empty">
+      <p>No AI analysis has been run yet.</p>
+      {% if can_run_analysis %}
+        <button class="button button--primary" data-drupal-selector="ai-site-trigger-analysis" type="button">
+          Generate AI Analysis
+        </button>
+      {% else %}
+        {% if analysis_state.state is defined and analysis_state.state not in ['idle', 'complete', 'failed'] %}
+          <p class="ai-site-dashboard__status--running">Analysis in progress: {{ analysis_state.state }}…</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

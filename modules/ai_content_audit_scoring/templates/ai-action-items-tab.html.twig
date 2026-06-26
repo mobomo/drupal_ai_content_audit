@@ -1,0 +1,92 @@
+{#
+/**
+ * @file
+ * Action Items tab content for the AIRO panel.
+ *
+ * Variables:
+ * - high_items: Array of high-priority action items.
+ * - medium_items: Array of medium-priority action items.
+ * - low_items: Array of low-priority action items.
+ * - action_items_status: Object of completion states keyed by item ID.
+ * - total_count: Total number of action items.
+ * - completed_count: Number of completed items.
+ * - high_count: Number of high-priority items.
+ * - node_id: The node ID.
+ * - assess_url: URL for re-check endpoint.
+ */
+#}
+<div class="airo-actions" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+
+  {# Summary Header #}
+  <div class="airo-actions__summary">
+    <div class="airo-actions__counts">
+      <span class="airo-actions__count-total">{{ total_count }} {{ 'items'|t }}</span>
+      <span class="airo-actions__count-separator">·</span>
+      <span class="airo-actions__count-completed">{{ completed_count }} {{ 'completed'|t }}</span>
+      {% if high_count > 0 %}
+        <span class="airo-actions__count-separator">·</span>
+        <span class="airo-actions__count-high">{{ high_count }} {{ 'high priority'|t }}</span>
+      {% endif %}
+    </div>
+    <button type="button" class="airo-actions__recheck button button--small"
+      data-assess-url="{{ assess_url }}"
+      data-revision-id="{{ revision_id }}">
+      {{ 'Re-check'|t }}
+    </button>
+  </div>
+
+  {#
+    Priority group headings use module-owned .airo-badge chips styled via
+    ai-action-items-tab.css → --airo-status-* tokens. No .gin-status dependency.
+      high   → airo-badge--danger  (red)
+      medium → airo-badge--warning (yellow)
+      low    → airo-badge--success (green)
+  #}
+
+  {# High Priority Group #}
+  {% if high_items is not empty %}
+  <div class="airo-actions__group airo-actions__group--high">
+    <h3 class="airo-actions__group-title">
+      <span class="airo-badge airo-badge--danger">{{ 'High Priority'|t }}</span>
+      <span class="airo-actions__group-count">({{ high_items|length }})</span>
+    </h3>
+    {% for item in high_items %}
+      {{ include('ai-action-item-card.html.twig', {item: item, status: action_items_status[item.id]|default(null), node_id: node_id}) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Medium Priority Group #}
+  {% if medium_items is not empty %}
+  <div class="airo-actions__group airo-actions__group--medium">
+    <h3 class="airo-actions__group-title">
+      <span class="airo-badge airo-badge--warning">{{ 'Medium Priority'|t }}</span>
+      <span class="airo-actions__group-count">({{ medium_items|length }})</span>
+    </h3>
+    {% for item in medium_items %}
+      {{ include('ai-action-item-card.html.twig', {item: item, status: action_items_status[item.id]|default(null), node_id: node_id}) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Low Priority Group #}
+  {% if low_items is not empty %}
+  <div class="airo-actions__group airo-actions__group--low">
+    <h3 class="airo-actions__group-title">
+      <span class="airo-badge airo-badge--success">{{ 'Low Priority'|t }}</span>
+      <span class="airo-actions__group-count">({{ low_items|length }})</span>
+    </h3>
+    {% for item in low_items %}
+      {{ include('ai-action-item-card.html.twig', {item: item, status: action_items_status[item.id]|default(null), node_id: node_id}) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# Empty state #}
+  {% if total_count == 0 %}
+  <div class="airo-actions__empty">
+    <p>{{ 'No action items found. Run an analysis to identify improvement opportunities.'|t }}</p>
+  </div>
+  {% endif %}
+
+</div>

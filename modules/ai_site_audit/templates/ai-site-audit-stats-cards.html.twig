@@ -1,0 +1,48 @@
+{#
+/**
+ * @file
+ * Template for sitewide stats summary cards.
+ */
+#}
+<div class="ai-site-dashboard__stats-cards">
+  <div class="ai-site-dashboard__card">
+    <div class="ai-site-dashboard__card-value" data-drupal-selector="stat-avg-score">
+      {{ stats.avg_score ?? '—' }}
+    </div>
+    <div class="ai-site-dashboard__card-label">Average Score</div>
+    {% if stats.median_score is not null %}
+      <div class="ai-site-dashboard__card-sub">Median: {{ stats.median_score }}</div>
+    {% endif %}
+  </div>
+
+  <div class="ai-site-dashboard__card">
+    <div class="ai-site-dashboard__card-value" data-drupal-selector="stat-total-assessed">
+      {{ stats.total_assessed ?? 0 }}
+    </div>
+    <div class="ai-site-dashboard__card-label">Pages Assessed</div>
+    {% if coverage.coverage_pct is defined %}
+      <div class="ai-site-dashboard__card-sub">{{ coverage.coverage_pct }}% coverage</div>
+    {% endif %}
+  </div>
+
+  <div class="ai-site-dashboard__card ai-site-dashboard__card--success">
+    <div class="ai-site-dashboard__card-value" data-drupal-selector="stat-ai-ready">
+      {{ stats.ai_ready ?? 0 }}
+    </div>
+    <div class="ai-site-dashboard__card-label">AI Ready (80+)</div>
+  </div>
+
+  <div class="ai-site-dashboard__card ai-site-dashboard__card--warning">
+    <div class="ai-site-dashboard__card-value" data-drupal-selector="stat-improving">
+      {{ stats.improving ?? 0 }}
+    </div>
+    <div class="ai-site-dashboard__card-label">Improving (50-79)</div>
+  </div>
+
+  <div class="ai-site-dashboard__card ai-site-dashboard__card--danger">
+    <div class="ai-site-dashboard__card-value" data-drupal-selector="stat-needs-work">
+      {{ stats.needs_work ?? 0 }}
+    </div>
+    <div class="ai-site-dashboard__card-label">Needs Work (&lt;50)</div>
+  </div>
+</div>

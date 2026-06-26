@@ -1,0 +1,19 @@
+services:
+  ai_content_audit_scoring.commands:
+    class: Drupal\ai_content_audit_scoring\Commands\AiContentAuditCommands
+    arguments:
+      - '@ai_content_audit_scoring.assessment_service'
+      - '@entity_type.manager'
+      - '@queue'
+      - '@config.factory'
+      - '@module_installer'
+      - '@ai_content_audit.provider_model_choices'
+    tags:
+      - { name: drush.command }
+
+  ai_content_audit_scoring.commands.filesystem_audit:
+    class: Drupal\ai_content_audit_scoring\Commands\AiFilesystemAuditCommands
+    arguments:
+      - '@ai_content_audit_scoring.filesystem_audit'
+    tags:
+      - { name: drush.command }

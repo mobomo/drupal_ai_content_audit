@@ -1,0 +1,22 @@
+langcode: en
+dependencies:
+  config:
+    - ai.ai_prompt_type.content_audit_preview_user
+  enforced:
+    module:
+      - ai_content_audit
+id: content_audit_preview_user__content_audit_preview_user_default
+label: 'Default preview user prompt.'
+type: content_audit_preview_user
+prompt: |
+  PAGE CONTENT:
+  ---
+  {PAGE_CONTENT}
+  ---
+
+  VISITOR QUESTION:
+  {VISITOR_QUESTION}
+
+  Answer as a helpful person who just read the page, based only on the content
+  above. Tone: natural, human, helpful, lightly conversational, not salesy, not
+  corporate, not technical.

@@ -1,0 +1,82 @@
+# Library architecture:
+# - design-tokens (css.base) loads before all css.component libraries.
+# - All --airo-* tokens in component CSS resolve through design-tokens.css.
+
+# G10: 'base' group ensures design-tokens CSS loads before all 'component' CSS.
+# Drupal CSS weight: theme < base < layout < component < state < overrides.
+design-tokens:
+  version: 1.x
+  css:
+    base:
+      css/ai-design-tokens.css: {}
+
+airo-csrf:
+  version: 1.x
+  js:
+    js/airo-csrf.js: {}
+  dependencies:
+    - core/drupal
+
+airo-panel:
+  version: 1.x
+  css:
+    component:
+      css/ai-airo-panel.css: {}
+  js:
+    js/ai-airo-panel.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupal.dialog.off_canvas
+    - core/once
+    - ai_content_audit/airo-csrf
+    - ai_content_audit/design-tokens
+    # Individual tab providers attach their own libraries.
+    - ai_content_audit/preview-tab
+
+provider_tabs:
+  version: 1.x
+  css:
+    component:
+      css/provider-tabs.css: {}
+  js:
+    js/provider-tabs.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+preview-tab:
+  version: 1.x
+  css:
+    component:
+      css/ai-preview-tab.css: {}
+  js:
+    js/ai-preview-tab.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - ai_content_audit/design-tokens
+    - ai_content_audit/provider_tabs
+    - ai_content_audit/airo-csrf
+
+airo-panel-page-skin:
+  version: 1.x
+  css:
+    component:
+      css/airo-panel-page-skin.css: {}
+  dependencies:
+    - ai_content_audit/design-tokens
+
+airo-analysis-page:
+  version: 1.x
+  css:
+    component:
+      css/airo-analysis-page.css: {}
+  js:
+    js/airo-analysis-sidebar-opener.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - ai_content_audit/airo-panel
+    - ai_content_audit/airo-panel-page-skin
+    - ai_content_audit/design-tokens

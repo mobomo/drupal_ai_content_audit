@@ -1,0 +1,84 @@
+{#
+/**
+ * @file
+ * Off-canvas AIRO analysis panel.
+ *
+ * Variables:
+ * - node_id: The node ID.
+ * - score: The overall score or null.
+ * - is_analyzing: Whether analysis is in progress.
+ * - active_tab: The ID of the tab that should be visible on load.
+ * - tab_definitions: Ordered tab definitions with id and label.
+ * - tab_panes: Associative array keyed by tab ID, values are pre-rendered
+ *   HTML strings. All panes are embedded; visibility is toggled via the
+ *   HTML `hidden` attribute — no per-tab AJAX required.
+ * - assess_url: URL to the Re-analyze endpoint (POST).
+ * - full_report_url: URL to the full assessment report, or null if none exists.
+ */
+#}
+{% set active_tab = active_tab|default('preview-tab') %}
+<div class="airo-panel" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+
+  {% if is_analyzing %}
+    {# Analyzing State — aria-live so screen readers announce the transition #}
+    <div class="airo-panel__analyzing" role="status" aria-live="polite">
+      <div class="airo-panel__analyzing-spinner" aria-hidden="true"></div>
+      <div class="airo-panel__analyzing-label">{{ 'Analyzing content...'|t }}</div>
+      <div class="airo-panel__analyzing-sublabel">{{ 'This may take a moment'|t }}</div>
+    </div>
+  {% endif %}
+
+  {# Tab Bar — Drupal .tabs--primary structure, styled by the active admin theme. #}
+  <nav class="tabs-wrapper is-horizontal" aria-label="{{ 'Analysis sections'|t }}">
+    <ul class="tabs tabs--primary is-horizontal clearfix" role="tablist">
+      {% for tab in tab_definitions %}
+        <li class="tabs__tab{% if active_tab == tab.id %} is-active{% endif %}">
+          <button type="button"
+            id="{{ tab.id }}-tab"
+            class="tabs__link{% if active_tab == tab.id %} is-active{% endif %}"
+            data-airo-tab="{{ tab.id }}"
+            role="tab"
+            aria-selected="{{ active_tab == tab.id ? 'true' : 'false' }}"
+            aria-controls="{{ tab.id }}-panel"
+            tabindex="{{ active_tab == tab.id ? '0' : '-1' }}">
+            {{ tab.label }}
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+  {# Tab Panes — all rendered at open time; visibility controlled by `hidden`. #}
+  {% for tab_id, pane_html in tab_panes %}
+    <div class="airo-panel__content"
+      id="{{ tab_id }}-panel"
+      data-tab-pane="{{ tab_id }}"
+      role="tabpanel"
+      aria-labelledby="{{ tab_id }}-tab"
+      {% if tab_id != active_tab %}hidden{% endif %}>
+      {{ pane_html|raw }}
+    </div>
+  {% endfor %}
+
+  {% if show_assessment_actions %}
+  <footer class="airo-panel__footer">
+    {% if full_report_url %}
+      <a href="{{ full_report_url }}"
+        class="button button--primary button--small airo-panel__footer__action"
+        aria-label="{{ 'View full AI analysis report'|t }}">
+        {{ 'View Full Report'|t }}
+      </a>
+    {% endif %}
+    {# TODO: if a per-node "latest report" route is added later, replace full_report_url with it. #}
+    <button type="button"
+      class="button button--small airo-panel__footer__action"
+      data-assess-url="{{ assess_url }}"
+      data-revision-id="{{ revision_id }}"
+      data-airo-action="panel-reanalyze"
+      aria-label="{{ 'Re-run AI analysis for this node'|t }}">
+      {{ 'Re-analyze'|t }}
+    </button>
+  </footer>
+  {% endif %}
+
+</div>

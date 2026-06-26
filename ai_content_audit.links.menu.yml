@@ -1,0 +1,5 @@
+ai_content_audit.settings:
+  title: 'AIRO Preview settings'
+  description: 'Configure AI provider, model, and preview prompts.'
+  route_name: ai_content_audit.settings
+  parent: ai.admin_settings

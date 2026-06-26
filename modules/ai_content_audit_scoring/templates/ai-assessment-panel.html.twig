@@ -1,0 +1,76 @@
+{#
+/**
+ * @file
+ * Template for the AI Assessment summary panel.
+ *
+ * Available variables:
+ * - score: integer 0-100 or NULL if not assessed.
+ * - suggestions: array of objects with keys: area, suggestion, priority.
+ * - provider_id: string machine name of the AI provider.
+ * - model_id: string model identifier.
+ * - created: Unix timestamp of the assessment.
+ */
+#}
+{% set score_class = 'ai-score--none' %}
+{% if score is not null %}
+  {% if score >= 70 %}
+    {% set score_class = 'ai-score--green' %}
+  {% elseif score >= 40 %}
+    {% set score_class = 'ai-score--yellow' %}
+  {% else %}
+    {% set score_class = 'ai-score--red' %}
+  {% endif %}
+{% endif %}
+
+{# L-3: Provide a descriptive aria-label so screen readers can convey the score. #}
+{% if score is not null %}
+  {% set score_label = 'Content quality score: @score out of 100'|t({'@score': score}) %}
+{% else %}
+  {% set score_label = 'Not assessed'|t %}
+{% endif %}
+
+{# L-4: Allow callers to pass a heading_level variable; default to h3. #}
+{% set heading_level = heading_level ?? 'h3' %}
+
+<div class="ai-assessment-panel">
+
+  <div class="ai-score-badge {{ score_class }}" aria-label="{{ score_label }}">
+    {% if score is not null %}
+      {{ score }}<span class="ai-score-badge__denom">/100</span>
+    {% else %}
+      {{ 'Not assessed'|t }}
+    {% endif %}
+  </div>
+
+  {% if suggestions is not empty %}
+    <{{ heading_level }} class="ai-assessment-panel__heading">{{ 'Suggestions'|t }}</{{ heading_level }}>
+    <ul class="ai-suggestions">
+      {% for item in suggestions %}
+        {# M-7: Whitelist priority values before using as CSS class names to
+           prevent injection of unexpected AI-returned values into HTML. #}
+        {% set priority_class = item.priority in ['low', 'medium', 'high'] ? item.priority : 'unknown' %}
+        <li class="ai-suggestions__item ai-suggestions__item--{{ priority_class }}">
+          <strong class="ai-suggestions__area">{{ item.area }}</strong>:
+          {{ item.suggestion }}
+          <span class="ai-priority ai-priority--{{ priority_class }}">({{ item.priority }})</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <dl class="ai-metadata">
+    {% if provider_id %}
+      <dt>{{ 'Provider'|t }}</dt>
+      <dd>{{ provider_id }}</dd>
+    {% endif %}
+    {% if model_id %}
+      <dt>{{ 'Model'|t }}</dt>
+      <dd>{{ model_id }}</dd>
+    {% endif %}
+    {% if created %}
+      <dt>{{ 'Assessed'|t }}</dt>
+      <dd>{{ created|format_date('short') }}</dd>
+    {% endif %}
+  </dl>
+
+</div>

@@ -1,0 +1,792 @@
+/**
+ * Technical Audit Tab Styles — theme-agnostic.
+ *
+ * All values resolve through --airo-* design tokens (ai-design-tokens.css).
+ * No --gin-* references here.
+ */
+
+.airo-audit {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Summary */
+.airo-audit__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--airo-bg-wash, #edeff5);
+  border-radius: var(--airo-radius, 0.5rem);
+  border: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-audit__summary-score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.airo-audit__summary-number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--airo-title, #222330);
+}
+
+.airo-audit__summary-label {
+  font-size: 0.8125rem;
+  color: var(--airo-text-light, #545560);
+}
+
+/* Check Cards */
+.airo-audit__check {
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-sm, 0.375rem);
+  padding: 0.75rem;
+  background: var(--airo-bg, #fff);
+}
+
+.airo-audit__check--pass {
+  border-left: 3px solid var(--airo-score-good, #058260);
+}
+
+.airo-audit__check--fail {
+  border-left: 3px solid var(--airo-score-danger, #cc3d3d);
+}
+
+.airo-audit__check--warning {
+  border-left: 3px solid var(--airo-score-warning, #d8b234);
+}
+
+.airo-audit__check-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.airo-audit__check-status {
+  flex-shrink: 0;
+}
+
+.airo-audit__status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.airo-audit__status-icon--pass {
+  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
+  color: var(--airo-score-good, #058260);
+}
+
+.airo-audit__status-icon--fail {
+  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
+  color: var(--airo-score-danger, #cc3d3d);
+}
+
+.airo-audit__status-icon--warning {
+  background: var(--airo-status-warning-bg, rgba(216, 178, 52, 0.15));
+  color: var(--airo-score-warning, #d8b234);
+}
+
+.airo-audit__check-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.airo-audit__check-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--airo-title, #222330);
+}
+
+.airo-audit__check-description {
+  font-size: 0.8125rem;
+  color: var(--airo-text-light, #545560);
+  line-height: 1.4;
+}
+
+/* Content blocks (current/recommended) */
+.airo-audit__content-block {
+  margin-top: 0.75rem;
+  margin-left: 2.75rem;
+}
+
+.airo-audit__content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.375rem;
+}
+
+.airo-audit__content-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-audit__content-block--recommended .airo-audit__content-label {
+  color: var(--airo-primary, #0036b1);
+}
+
+.airo-audit__code-block {
+  background: var(--airo-bg-wash, #edeff5);
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-sm, 0.375rem);
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  font-family: var(--airo-font, 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace);
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.airo-audit__code-block code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.airo-audit__code-block--recommended {
+  background: var(--airo-bg-wash, #edeff5);
+  border-color: var(--airo-border, #d4d4d8);
+}
+
+/* Details row */
+.airo-audit__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.625rem;
+  margin-left: 2.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--airo-bg-wash, #edeff5);
+}
+
+.airo-audit__detail {
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.airo-audit__detail-key {
+  color: var(--airo-text-light, #545560);
+  font-weight: 500;
+}
+
+.airo-audit__detail-value {
+  color: var(--airo-title, #222330);
+  font-weight: 500;
+}
+
+.airo-audit__detail-yes {
+  color: var(--airo-score-good, #058260);
+}
+
+.airo-audit__detail-no {
+  color: var(--airo-score-danger, #cc3d3d);
+}
+
+.airo-audit__copy-btn {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+}
+
+/* Empty state */
+.airo-audit__empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--airo-text-light, #545560);
+}
+
+/* ──────────────────────────────────────────
+   Section group headers
+   ────────────────────────────────────────── */
+
+.airo-audit__group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.375rem;
+}
+
+.airo-audit__group-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--airo-text-light, #545560);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.airo-audit__group-rule {
+  flex: 1;
+  border: none;
+  border-top: 1px solid var(--airo-border, #d4d4d8);
+  margin: 0;
+}
+
+/* ──────────────────────────────────────────
+   Collapsed code blocks (<details>/<summary>)
+   ────────────────────────────────────────── */
+
+.airo-audit__code-details {
+  margin-top: 0.625rem;
+}
+
+.airo-audit__code-details > summary {
+  list-style: none;
+}
+.airo-audit__code-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.airo-audit__code-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--airo-text-light, #545560);
+  padding: 0.25rem 0;
+}
+
+.airo-audit__code-summary::before {
+  content: '▸';
+  font-size: 0.625rem;
+  color: var(--airo-text-light, #545560);
+  flex-shrink: 0;
+}
+
+.airo-audit__code-details[open] > .airo-audit__code-summary::before {
+  transform: rotate(90deg);
+}
+
+.airo-audit__code-summary--recommended {
+  color: var(--airo-primary, #0036b1);
+}
+
+.airo-audit__code-summary--recommended::before {
+  color: var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__code-details .airo-audit__code-block {
+  margin-top: 0.375rem;
+}
+
+/* =============================================
+   Filesystem Audit Section
+   ============================================= */
+
+.airo-audit__separator {
+  margin: 1rem 0 0.5rem;
+}
+
+.airo-audit__separator hr {
+  border: none;
+  border-top: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-fs-audit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.airo-fs-audit__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.airo-fs-audit__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--airo-title, #222330);
+  margin: 0;
+}
+
+.airo-fs-audit__summary-badges {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.airo-fs-audit__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--airo-radius-xl, 9999px);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.airo-fs-audit__badge--pass {
+  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
+  color: var(--airo-success, #058260);
+}
+
+.airo-fs-audit__badge--fail {
+  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
+  color: var(--airo-score-danger, #cc3d3d);
+}
+
+.airo-fs-audit__badge--warning {
+  background: var(--airo-status-warning-bg, rgba(216, 178, 52, 0.15));
+  color: var(--airo-score-warning, #d8b234);
+}
+
+.airo-fs-audit__badge--info {
+  background: var(--airo-bg-wash, #edeff5);
+  color: var(--airo-primary, #0036b1);
+}
+
+/* ──────────────────────────────────────────
+   Filesystem category — all-pass collapsed state
+   ────────────────────────────────────────── */
+
+.airo-fs-audit__category--all-pass > .airo-fs-audit__category-summary {
+  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
+  border-color: var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-fs-audit__category-count--passing {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--airo-score-good, #058260);
+}
+
+/* Category accordion panels */
+.airo-fs-audit__category {
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-sm, 0.375rem);
+  overflow: hidden;
+}
+
+.airo-fs-audit__category[open] > .airo-fs-audit__category-summary {
+  border-bottom: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-fs-audit__category-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--airo-bg-wash, #edeff5);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.airo-fs-audit__category-summary::-webkit-details-marker {
+  display: none;
+}
+
+.airo-fs-audit__category-summary::before {
+  content: '▸';
+  font-size: 0.75rem;
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-fs-audit__category[open] > .airo-fs-audit__category-summary::before {
+  transform: rotate(90deg);
+}
+
+.airo-fs-audit__category-summary:focus-visible {
+  box-shadow:
+    0 0 0 1px var(--airo-focus-border, rgba(0, 0, 0, 0.2)),
+    0 0 0 4px var(--airo-focus, rgba(0, 125, 250, 0.6));
+  outline: none;
+}
+
+.airo-fs-audit__category-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--airo-title, #222330);
+}
+
+.airo-fs-audit__category-count {
+  font-size: 0.75rem;
+  color: var(--airo-text-light, #545560);
+}
+
+.airo-fs-audit__category-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.airo-fs-audit__category-body > .airo-audit__check {
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  border-bottom: 1px solid var(--airo-bg-wash, #edeff5);
+  padding-left: 1rem;
+}
+
+.airo-fs-audit__category-body > .airo-audit__check:last-child {
+  border-bottom: none;
+}
+
+.airo-fs-audit__category-body > .airo-audit__check--pass {
+  border-left: 3px solid var(--airo-score-good, #058260);
+}
+
+.airo-fs-audit__category-body > .airo-audit__check--fail {
+  border-left: 3px solid var(--airo-score-danger, #cc3d3d);
+}
+
+.airo-fs-audit__category-body > .airo-audit__check--warning {
+  border-left: 3px solid var(--airo-score-warning, #d8b234);
+}
+
+.airo-fs-audit__category-body > .airo-audit__check--info {
+  border-left: 3px solid var(--airo-primary, #0036b1);
+}
+
+/* Info status icon */
+.airo-audit__status-icon--info {
+  background: var(--airo-bg-wash, #edeff5);
+  color: var(--airo-primary, #0036b1);
+}
+
+/* =============================================================================
+   CROSS-SURFACE BANNER (ai_site_audit contextual link)
+   ============================================================================= */
+
+.airo-audit__site-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--airo-bg-wash, #edeff5);
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius, 0.5rem);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  flex-wrap: wrap;
+}
+
+.airo-audit__site-banner-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.airo-audit__site-banner-text {
+  flex: 1 1 100px;
+  color: var(--airo-primary, #0036b1);
+}
+
+.airo-audit__site-banner-link {
+  color: var(--airo-primary, #0036b1);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.airo-audit__site-banner-link:hover {
+  text-decoration: underline;
+}
+
+/* =============================================================================
+   TWO-TIER AUDIT REPORT LAYOUT
+   ============================================================================= */
+
+/* ── Outer group card ─────────────────────────────────────────────────────── */
+
+.airo-audit__group-card {
+  border: 1px solid var(--airo-border, #d4d4d8);
+  border-radius: var(--airo-radius-sm, 0.375rem);
+  background: var(--airo-bg, #fff);
+  overflow: hidden;
+}
+
+/* ── Group header bar ─────────────────────────────────────────────────────── */
+
+.airo-audit__group-header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 1rem;
+  background: var(--airo-bg-wash, #edeff5);
+  border-bottom: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-audit__group-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.airo-audit__group-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--airo-title, #222330);
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.airo-audit__group-description {
+  font-size: 0.75rem;
+  color: var(--airo-text-light, #545560);
+  line-height: 1.35;
+}
+
+.airo-audit__group-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding-top: 0.125rem;
+}
+
+.airo-audit__group-counts {
+  font-size: 0.75rem;
+  color: var(--airo-text-light, #545560);
+  white-space: nowrap;
+}
+
+/* Group worst-status badge */
+.airo-audit__group-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--airo-radius-xs, 4px);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.airo-audit__group-badge--fail {
+  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
+  color: var(--airo-score-danger, #cc3d3d);
+  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__group-badge--warning {
+  background: var(--airo-status-warning-bg, rgba(216, 178, 52, 0.15));
+  color: var(--airo-score-warning, #d8b234);
+  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__group-badge--pass {
+  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
+  color: var(--airo-success, #058260);
+  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__group-badge--info,
+.airo-audit__group-badge--other {
+  background: var(--airo-bg-wash, #edeff5);
+  color: var(--airo-primary, #0036b1);
+  border: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-audit__badge-icon {
+  font-size: 0.6875rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Items list ──────────────────────────────────────────────────────────── */
+
+.airo-audit__items-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.airo-audit__items-list > .airo-audit__item + .airo-audit__item {
+  border-top: 1px solid var(--airo-border, #d4d4d8);
+}
+
+/* ── Item: <details> element ─────────────────────────────────────────────── */
+
+.airo-audit__item {
+  list-style: none;
+}
+
+.airo-audit__item::-webkit-details-marker {
+  display: none;
+}
+
+/* ── Item summary row ─────────────────────────────────────────────────────── */
+
+.airo-audit__item-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5625rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.airo-audit__item-summary::-webkit-details-marker {
+  display: none;
+}
+
+.airo-audit__item-summary:focus-visible {
+  box-shadow:
+    0 0 0 1px var(--airo-focus-border, rgba(0, 0, 0, 0.2)),
+    0 0 0 4px var(--airo-focus, rgba(0, 125, 250, 0.6));
+  outline: none;
+}
+
+.airo-audit__item-summary:hover {
+  background: var(--airo-bg-wash, #edeff5);
+}
+
+.airo-audit__item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 50%;
+}
+
+.airo-audit__item-icon--fail {
+  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
+  color: var(--airo-score-danger, #cc3d3d);
+}
+
+.airo-audit__item-icon--warning {
+  background: var(--airo-status-warning-bg, rgba(216, 178, 52, 0.15));
+  color: var(--airo-score-warning, #d8b234);
+}
+
+.airo-audit__item-icon--pass {
+  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
+  color: var(--airo-success, #058260);
+}
+
+.airo-audit__item-icon--info {
+  background: var(--airo-bg-wash, #edeff5);
+  color: var(--airo-primary, #0036b1);
+}
+
+.airo-audit__item-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--airo-text, #222330);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.airo-audit__item-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--airo-radius-xs, 4px);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  min-width: 5.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.airo-audit__item-pill--fail {
+  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
+  color: var(--airo-score-danger, #cc3d3d);
+  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__item-pill--warning {
+  background: var(--airo-status-warning-bg, rgba(216, 178, 52, 0.15));
+  color: var(--airo-score-warning, #d8b234);
+  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__item-pill--pass {
+  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
+  color: var(--airo-success, #058260);
+  border: 1px solid var(--airo-border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.airo-audit__item-pill--info {
+  background: var(--airo-bg-wash, #edeff5);
+  color: var(--airo-primary, #0036b1);
+  border: 1px solid var(--airo-border, #d4d4d8);
+}
+
+.airo-audit__item-chevron {
+  font-size: 0.875rem;
+  line-height: 1;
+  color: var(--airo-text-light, #545560);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.airo-audit__item[open] > .airo-audit__item-summary .airo-audit__item-chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Detail panel ──────────────────────────────────────────────────────────── */
+
+.airo-audit__item-details {
+  padding: 0.625rem 1rem 0.875rem;
+  background: var(--airo-bg-wash, #edeff5);
+  border-top: 1px solid var(--airo-border, #d4d4d8);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.airo-audit__item-description {
+  font-size: 0.8125rem;
+  color: var(--airo-text-light, #545560);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Reduced-motion: transitions ──────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .airo-audit__code-summary::before {
+    transition: transform 0.15s ease;
+  }
+
+  .airo-fs-audit__category-summary::before {
+    transition: transform 0.15s ease;
+  }
+
+  .airo-audit__item-chevron {
+    transition: transform 0.15s ease;
+  }
+}

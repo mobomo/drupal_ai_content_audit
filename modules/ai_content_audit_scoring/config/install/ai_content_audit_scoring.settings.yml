@@ -1,0 +1,9 @@
+enable_on_save: false
+enable_history: true
+node_types: {  }
+max_assessments_per_node: 10
+render_mode: text
+disabled_checks: {  }
+prompts:
+  assessment_system_prompt: 'content_audit_assessment_system__content_audit_assessment_system_default'
+  assessment_user_prompt: 'content_audit_assessment_user__content_audit_assessment_user_default'

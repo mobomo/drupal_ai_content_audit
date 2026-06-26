@@ -1,0 +1,11 @@
+services:
+  ai_site_audit.commands:
+    class: Drupal\ai_site_audit\Commands\AiSiteAuditCommands
+    arguments:
+      - '@ai_site_audit.orchestrator'
+      - '@ai_site_audit.aggregation'
+      - '@ai_site_audit.rollup'
+      - '@config.factory'
+      - '@state'
+    tags:
+      - { name: drush.command }

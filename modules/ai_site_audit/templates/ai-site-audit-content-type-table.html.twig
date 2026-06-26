@@ -1,0 +1,40 @@
+{#
+/**
+ * @file
+ * Template for content type breakdown table.
+ */
+#}
+<table class="ai-site-dashboard__table ai-site-dashboard__table--striped">
+  <thead>
+    <tr>
+      <th>Content Type</th>
+      <th>Count</th>
+      <th>Avg Score</th>
+      <th>Min</th>
+      <th>Max</th>
+      <th>Score Bar</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ct in content_types %}
+      <tr>
+        <td>{{ ct.label }}</td>
+        <td>{{ ct.count }}</td>
+        <td>
+          <span class="ai-site-dashboard__score ai-site-dashboard__score--{{ ct.avg_score < 50 ? 'low' : (ct.avg_score < 80 ? 'medium' : 'high') }}">
+            {{ ct.avg_score }}
+          </span>
+        </td>
+        <td>{{ ct.min_score }}</td>
+        <td>{{ ct.max_score }}</td>
+        <td>
+          <div class="ai-site-dashboard__mini-bar">
+            <div class="ai-site-dashboard__mini-bar-fill"
+                 style="width: {{ ct.avg_score }}%; background-color: {{ ct.avg_score < 50 ? '#dc3545' : (ct.avg_score < 80 ? '#f1c40f' : '#27ae60') }};">
+            </div>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
