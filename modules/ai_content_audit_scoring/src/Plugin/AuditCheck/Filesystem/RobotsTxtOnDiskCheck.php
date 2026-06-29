@@ -10,12 +10,12 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
 
 /**
- * Checks robots.txt exists and whether it is default Drupal or customised.
+ * Checks robots.txt exists and whether it is default Drupal or customized.
  */
 #[AuditCheck(
   id: 'fs_robots_txt_disk',
   label: new TranslatableMarkup('Robots.txt On Disk'),
-  description: new TranslatableMarkup('Checks robots.txt exists and determines if it is the default Drupal version or customised.'),
+  description: new TranslatableMarkup('Checks robots.txt exists and determines if it is the default Drupal version or customized.'),
   scope: 'site',
   category: 'AI Signals',
 )]
@@ -61,7 +61,7 @@ class RobotsTxtOnDiskCheck extends FilesystemCheckBase {
     }
 
     return $this->warning(
-      'robots.txt appears to be the default Drupal file without customisation. Consider adding a Sitemap directive and environment-specific rules.',
+      'robots.txt appears to be the default Drupal file without customization. Consider adding a Sitemap directive and environment-specific rules.',
       'Present (default)',
       'Customized with Sitemap and environment-specific rules',
       $details,

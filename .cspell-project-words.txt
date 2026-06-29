@@ -1,0 +1,40 @@
+=======
+# List of words excluded from cspell check for the project AI Content Audit.
+# Mostly contains custom names: variables, modules, names, etc...
+#
+# Allowed words until better suggestions are provided or added to dictionary.
+cooldown
+rollup
+salesy
+
+# Custom variable names, ids, keys or classes.
+airo
+accum
+bgcontent
+bgwash
+bgpt
+ddev
+lando
+llms
+llmstxt
+mobomo
+NOIMPLIED
+NODEFDTD
+noai
+nodefdtd
+noimageai
+noimplied
+nums
+ollama
+phpmyadmin
+sparkline
+sublabel
+subscore
+taxo
+# Colors
+edeff
+eeeff
+# Drush aliases
+acap
+acsa
+aica

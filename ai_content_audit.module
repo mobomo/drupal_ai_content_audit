@@ -1,6 +1,0 @@
-<?php
-
-/**
- * @file
- * Procedural hooks live in Drupal\ai_content_audit\Hook\* (Drupal 11.1+).
- */

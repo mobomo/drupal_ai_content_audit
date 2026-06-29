@@ -6,6 +6,8 @@
 body.airo-analysis-route {
   --airo-panel-max-width: var(--airo-admin-sidebar-width, 22.5rem);
   --airo-edit-form-panel-top-offset: 117px;
+  /* dvh (dynamic vh) handles mobile browser chrome correctly; vh would not. */
+  /* stylelint-disable-next-line unit-allowed-list */
   --airo-panel-min-height: calc(100dvh - var(--drupal-displace-offset-top, 0px));
 }
 
@@ -74,49 +76,51 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout
 }
 
 body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--edit-form .airo-analysis-page__panel {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(100%);
+  visibility: hidden;
   transition:
     transform 0.2s ease,
     opacity 0.2s ease,
     visibility 0s linear 0.2s;
-  visibility: hidden;
+  transform: translateX(100%);
+  pointer-events: none;
+  opacity: 0;
 }
 
 .airo-analysis-page--layout-builder .airo-analysis-page__panel,
 .airo-analysis-page--edit-form .airo-analysis-page__panel {
   position: fixed;
-  right: 0;
-  top: var(--drupal-displace-offset-top, 0px);
   z-index: 101;
+  top: var(--drupal-displace-offset-top, 0);
+  right: 0;
+  visibility: visible;
   width: var(--airo-panel-max-width);
+  /* stylelint-disable-next-line unit-allowed-list */
   height: calc(100dvh - var(--drupal-displace-offset-top, 0px));
   min-height: 0;
   margin-block-start: 0;
-  opacity: 1;
-  transform: translateX(0);
   transition:
     transform 0.2s ease,
     opacity 0.2s ease,
     visibility 0s linear 0s;
-  visibility: visible;
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .airo-analysis-page--edit-form .airo-analysis-page__panel {
   top: calc(var(--drupal-displace-offset-top, 0px) + var(--airo-edit-form-panel-top-offset));
+  /* stylelint-disable-next-line unit-allowed-list */
   height: calc(100dvh - var(--drupal-displace-offset-top, 0px) - var(--airo-edit-form-panel-top-offset));
 }
 
 body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout-builder .airo-analysis-page__panel {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(100%);
+  visibility: hidden;
   transition:
     transform 0.2s ease,
     opacity 0.2s ease,
     visibility 0s linear 0.2s;
-  visibility: hidden;
+  transform: translateX(100%);
+  pointer-events: none;
+  opacity: 0;
 }
 
 .airo-analysis-page__panel-content,
@@ -138,8 +142,8 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout
 .airo-analysis-page .airo-panel--page-skin,
 .airo-analysis-layout-builder-form .airo-panel--page-skin {
   flex: 1 1 auto;
-  min-height: 0;
   height: 100%;
+  min-height: 0;
 }
 
 .airo-analysis-page .airo-panel--accordion:not(.airo-panel--page-skin),
@@ -171,12 +175,12 @@ body.airo-analysis-route[data-meta-sidebar="closed"] .airo-analysis-page--layout
 
   .airo-analysis-page__panel {
     position: static;
-    opacity: 1 !important;
+    visibility: visible !important;
     min-height: 0;
     margin-top: 1rem;
-    pointer-events: auto;
     transform: none !important;
-    visibility: visible !important;
+    pointer-events: auto;
+    opacity: 1 !important;
   }
 
   .airo-analysis-page .airo-panel--accordion:not(.airo-panel--page-skin),

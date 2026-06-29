@@ -2,6 +2,6 @@ name: 'AIRO Scoring'
 type: module
 description: 'Adds scoring and saved assessments for AIRO Preview.'
 package: 'AI'
-core_version_requirement: ^11.1
+core_version_requirement: ^11.3
 dependencies:
   - ai_content_audit:ai_content_audit

@@ -184,7 +184,7 @@ JSON;
     // Check that a chat provider is available.
     if (!$this->aiProvider->hasProvidersForOperationType('chat')) {
       $providers_url = Url::fromRoute('ai.admin_providers')->toString();
-      $message = $this->t('No AI chat provider is configured for the ai_content_audit module. Please install an AI provider module and configure it at @url.', ['@url' => $providers_url]);
+      $message = $this->t('No AI chat provider is configured for the ai_content_audit module. Install an AI provider module and configure it at @url.', ['@url' => $providers_url]);
       $logger->error($message);
       return ['success' => FALSE, 'error' => $message, 'raw_output' => '', 'parsed' => NULL];
     }
@@ -443,7 +443,7 @@ JSON;
   }
 
   /**
-   * Builds deterministic structure signals from markerized content.
+   * Builds deterministic structure signals from markup content.
    */
   protected function buildDeterministicSignals(string $content): string {
     $h1 = preg_match_all('/^# H1:\s+/m', $content);
@@ -538,7 +538,7 @@ JSON;
    * Corrects heading-related fields/checkpoints using deterministic markers.
    *
    * @param string $content
-   *   Markerized extracted content.
+   *   Markdown extracted content.
    * @param array<string, mixed> $parsed
    *   Parsed LLM response (mutated in place).
    */

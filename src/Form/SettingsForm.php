@@ -144,7 +144,7 @@ final class SettingsForm extends ConfigFormBase {
     else {
       $form['provider_model_fieldset']['default_provider_model'] = [
         '#type' => 'markup',
-        '#markup' => '<p class="messages messages--warning">' . $this->t('No configured AI chat providers found. Please <a href=":url">configure at least one provider</a> first.', [
+        '#markup' => '<p class="messages messages--warning">' . $this->t('No configured AI chat providers found. <a href=":url">Configure at least one provider</a> first.', [
           ':url' => $providers_url,
         ]) . '</p>',
       ];

@@ -11,7 +11,7 @@ use Drupal\node\NodeInterface;
  * Interface for AuditCheck plugins.
  *
  * Every audit check plugin must implement this interface. Checks are
- * categorised by scope:
+ * categorized by scope:
  *  - 'site'  — site-wide checks that do not require a specific node.
  *              These are cacheable and run regardless of context.
  *  - 'node'  — per-node checks that require a NodeInterface to be provided.

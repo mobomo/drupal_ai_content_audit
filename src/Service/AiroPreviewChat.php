@@ -43,7 +43,7 @@ final class AiroPreviewChat {
   public function submit(NodeInterface $node, array $body): JsonResponse {
     $question = trim((string) ($body['question'] ?? ''));
     if ($question === '') {
-      return new JsonResponse(['error' => 'Please enter a question.'], 400);
+      return new JsonResponse(['error' => 'Enter a question.'], 400);
     }
 
     $requestedKeys = array_filter((array) ($body['provider_models'] ?? []));
@@ -193,7 +193,7 @@ final class AiroPreviewChat {
     if (str_contains($lower, 'no ai chat provider')) {
       return 'No AI provider is configured for this site.';
     }
-    return 'The AI model could not generate a response. Please try again or check your provider configuration.';
+    return 'The AI model could not generate a response. Try again or check your provider configuration.';
   }
 
   /**

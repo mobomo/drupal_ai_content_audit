@@ -69,7 +69,8 @@ services:
 
   ai_content_audit.airo_panel_controller:
     class: Drupal\ai_content_audit\Controller\AiroPanelController
-    factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
+    factory:
+      ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
     arguments: ['@service_container']
 
   ai_content_audit.airo_preview_tab_builder:
@@ -83,8 +84,7 @@ services:
   ai_content_audit.airo_panel_tab_manager:
     class: Drupal\ai_content_audit\Service\AiroPanelTabManager
     tags:
-      -
-        name: service_collector
+      - name: service_collector
         tag: ai_content_audit.airo_panel_tab
         call: addTab
 

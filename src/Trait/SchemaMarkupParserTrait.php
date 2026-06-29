@@ -119,7 +119,7 @@ trait SchemaMarkupParserTrait {
           continue;
         }
 
-        // Normalise @type to an array for uniform handling.
+        // Normalize @type to an array for uniform handling.
         $types = is_array($item['@type']) ? $item['@type'] : [$item['@type']];
         $isArticle = !empty(array_intersect($types, $articleTypes));
 

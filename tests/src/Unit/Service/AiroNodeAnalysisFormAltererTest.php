@@ -6,21 +6,19 @@ namespace Drupal\Tests\ai_content_audit\Unit\Service;
 
 use Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer;
 use Drupal\Core\Form\FormStateInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests AIRO Analysis form cleanup helpers.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer
  */
+#[Group('ai_content_audit')]
+#[CoversClass(AiroNodeAnalysisFormAlterer::class)]
 final class AiroNodeAnalysisFormAltererTest extends TestCase {
 
   /**
    * Verifies after-build cleanup removes sidebar artifacts on AIRO routes.
-   *
-   * @covers ::afterBuildStripSidebarPanel
-   * @covers ::stripAiroAnalysisTabSidebar
    */
   public function testAfterBuildStripSidebarPanelRemovesAiroSidebarArtifacts(): void {
     $form = [
@@ -52,8 +50,6 @@ final class AiroNodeAnalysisFormAltererTest extends TestCase {
 
   /**
    * Verifies after-build cleanup is scoped to AIRO Analysis edit forms.
-   *
-   * @covers ::afterBuildStripSidebarPanel
    */
   public function testAfterBuildStripSidebarPanelIgnoresOtherForms(): void {
     $form = [
