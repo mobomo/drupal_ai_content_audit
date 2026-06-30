@@ -15,6 +15,10 @@ declare(strict_types=1);
 function ai_site_audit_install(): void {
   $schema = \Drupal::database()->schema();
   $table = 'ai_content_assessment';
+  // If no ai_content_assessment table is present, bail out.
+  if (!$schema->tableExists($table)) {
+    return;
+  }
 
   // Index for fast latest-assessment-per-node subqueries.
   if (!$schema->indexExists($table, 'idx_target_node_id')) {
@@ -51,6 +55,13 @@ function ai_site_audit_install(): void {
  * Cleans up config, KeyValue stores, and State API entries.
  */
 function ai_site_audit_uninstall(): void {
+  $schema = \Drupal::database()->schema();
+  $table = 'ai_content_assessment';
+  // If no ai_content_assessment table is present, bail out.
+  if (!$schema->tableExists($table)) {
+    return;
+  }
+
   // Delete module config.
   \Drupal::configFactory()
     ->getEditable('ai_site_audit.settings')
@@ -78,8 +89,6 @@ function ai_site_audit_uninstall(): void {
   ]);
 
   // Remove indexes we added to the parent table.
-  $schema = \Drupal::database()->schema();
-  $table = 'ai_content_assessment';
   if ($schema->indexExists($table, 'idx_target_node_id')) {
     $schema->dropIndex($table, 'idx_target_node_id');
   }
