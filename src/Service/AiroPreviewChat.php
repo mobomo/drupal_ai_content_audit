@@ -15,6 +15,7 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -23,12 +24,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 final class AiroPreviewChat {
 
   public function __construct(
+    #[Autowire(service: 'ai.provider')]
     protected AiProviderPluginManager $aiProviderManager,
     protected ContentExtractorManager $contentExtractorManager,
     protected ProviderModelChoices $providerModelChoices,
     protected PrivateTempStoreFactory $tempStoreFactory,
     protected AiContentAuditPromptResolver $promptResolver,
     protected AccountInterface $currentUser,
+    #[Autowire(service: 'logger.channel.ai_content_audit')]
     protected LoggerChannelInterface $logger,
   ) {}
 

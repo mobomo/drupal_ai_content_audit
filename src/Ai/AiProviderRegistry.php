@@ -7,13 +7,15 @@ namespace Drupal\ai_content_audit\Ai;
 use Drupal\ai\AiProviderInterface;
 use Drupal\ai\AiProviderPluginManager;
 use Drupal\ai\Plugin\ProviderProxy;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Delegates AI provider registry calls to Drupal AI's plugin manager.
  */
-final class AiProviderPluginManagerRegistry implements AiProviderRegistryInterface {
+final class AiProviderRegistry implements AiProviderRegistryInterface {
 
   public function __construct(
+    #[Autowire(service: 'ai.provider')]
     private readonly AiProviderPluginManager $aiProvider,
   ) {}
 

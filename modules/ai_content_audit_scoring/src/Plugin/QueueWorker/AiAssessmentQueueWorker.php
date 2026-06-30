@@ -86,7 +86,7 @@ final class AiAssessmentQueueWorker extends QueueWorkerBase implements Container
    *   When the queue should halt (quota exhausted, catastrophic failure).
    */
   public function processItem(mixed $data): void {
-    $logger = $this->loggerFactory->get('ai_content_audit');
+    $logger = $this->loggerFactory->get('ai_content_audit_scoring');
 
     $data = (array) $data;
     $nid = $data['nid'] ?? NULL;

@@ -179,7 +179,7 @@ JSON;
    *   Array with keys: 'raw_output', 'parsed', 'success', 'error'.
    */
   public function assessNode(NodeInterface $node, array $options = []): array {
-    $logger = $this->loggerFactory->get('ai_content_audit');
+    $logger = $this->loggerFactory->get('ai_content_audit_scoring');
 
     // Check that a chat provider is available.
     if (!$this->aiProvider->hasProvidersForOperationType('chat')) {

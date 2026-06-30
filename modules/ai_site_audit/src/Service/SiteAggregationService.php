@@ -8,6 +8,7 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Tier 1: SQL-based aggregation service for sitewide content audit stats.
@@ -34,7 +35,8 @@ class SiteAggregationService {
 
   public function __construct(
     protected Connection $database,
-    protected CacheBackendInterface $cache,
+    #[Autowire(service: 'cache.data')]
+    protected CacheBackendInterface $cacheBackend,
     protected LoggerInterface $logger,
   ) {}
 
@@ -277,7 +279,7 @@ class SiteAggregationService {
    * Invalidate all cached aggregation data.
    */
   public function invalidateCache(): void {
-    $this->cache->deleteAll();
+    $this->cacheBackend->deleteAll();
   }
 
   /**
@@ -351,14 +353,14 @@ class SiteAggregationService {
    *   The cached or freshly computed value.
    */
   protected function getCachedOrCompute(string $cid, callable $compute, int $maxAge = self::DEFAULT_CACHE_MAX_AGE): mixed {
-    $cached = $this->cache->get($cid);
+    $cached = $this->cacheBackend->get($cid);
     if ($cached) {
       return $cached->data;
     }
 
     try {
       $data = $compute();
-      $this->cache->set($cid, $data, time() + $maxAge, [
+      $this->cacheBackend->set($cid, $data, time() + $maxAge, [
         'ai_content_assessment_list',
         'ai_site_audit:summary',
       ]);

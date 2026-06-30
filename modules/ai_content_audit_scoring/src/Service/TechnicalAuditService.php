@@ -15,6 +15,7 @@ use Drupal\node\NodeInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -55,7 +56,8 @@ class TechnicalAuditService {
     protected ClientInterface $httpClient,
     protected ConfigFactoryInterface $configFactory,
     protected LoggerInterface $logger,
-    protected CacheBackendInterface $cacheData,
+    #[Autowire(service: 'cache.data')]
+    protected CacheBackendInterface $cacheBackend,
     protected RequestStack $requestStack,
     protected ModuleHandlerInterface $moduleHandler,
     protected EntityTypeManagerInterface $entityTypeManager,
@@ -1767,7 +1769,7 @@ TXT;
    *   Cached check results keyed by check ID, or NULL if none.
    */
   protected function getCachedResults(): ?array {
-    $cached = $this->cacheData->get('ai_content_audit:technical_audit');
+    $cached = $this->cacheBackend->get('ai_content_audit_scoring:technical_audit');
     if (!$cached) {
       return NULL;
     }
@@ -1797,7 +1799,7 @@ TXT;
    */
   protected function cacheResults(array $results): void {
     $serialized = array_map(fn(TechnicalAuditResult $r) => $r->toArray(), $results);
-    $this->cacheData->set('ai_content_audit:technical_audit', $serialized, time() + static::CACHE_TTL);
+    $this->cacheBackend->set('ai_content_audit_scoring:technical_audit', $serialized, time() + static::CACHE_TTL);
   }
 
 }

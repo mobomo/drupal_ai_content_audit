@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit_scoring\Service;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\StringTranslation\TranslationInterface;
 
 /**
  * Builds score tier metadata (CSS class, hex color, qualitative label).
@@ -13,10 +12,6 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 final class ScoreMetaBuilder {
 
   use StringTranslationTrait;
-
-  public function __construct(TranslationInterface $string_translation) {
-    $this->stringTranslation = $string_translation;
-  }
 
   /**
    * Builds score tier metadata for display.

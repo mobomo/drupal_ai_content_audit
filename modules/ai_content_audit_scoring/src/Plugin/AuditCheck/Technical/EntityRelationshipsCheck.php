@@ -50,7 +50,7 @@ class EntityRelationshipsCheck extends AuditCheckBase implements ContainerFactor
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 

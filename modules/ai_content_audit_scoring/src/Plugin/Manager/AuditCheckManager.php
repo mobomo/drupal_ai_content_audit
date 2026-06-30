@@ -12,6 +12,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Plugin manager for AuditCheck plugins (#[AuditCheck] attribute discovery).
@@ -35,7 +36,9 @@ class AuditCheckManager extends DefaultPluginManager {
    *   The config factory, used to read disabled check IDs from settings.
    */
   public function __construct(
+    #[Autowire(service: 'container.namespaces')]
     \Traversable $namespaces,
+    #[Autowire(service: 'cache.discovery')]
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler,
     protected ConfigFactoryInterface $configFactory,

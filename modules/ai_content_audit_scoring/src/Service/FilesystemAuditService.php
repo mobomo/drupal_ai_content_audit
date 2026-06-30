@@ -10,6 +10,7 @@ use Drupal\ai_content_audit_scoring\ValueObject\TechnicalAuditResult;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Runs filesystem-scoped audit checks via the AuditCheck plugin system.
@@ -24,7 +25,8 @@ final class FilesystemAuditService implements FilesystemAuditRunnerInterface {
 
   public function __construct(
     private readonly LoggerInterface $logger,
-    private readonly CacheBackendInterface $cacheData,
+    #[Autowire(service: 'cache.data')]
+    private readonly CacheBackendInterface $cacheBackend,
     private readonly AuditCheckManager $auditCheckManager,
     private readonly TimeInterface $time,
   ) {}
@@ -42,7 +44,7 @@ final class FilesystemAuditService implements FilesystemAuditRunnerInterface {
    */
   public function runAllChecks(bool $force_refresh = FALSE): array {
     if (!$force_refresh) {
-      $cached = $this->cacheData->get(self::CACHE_ID);
+      $cached = $this->cacheBackend->get(self::CACHE_ID);
       if ($cached !== FALSE && isset($cached->data)) {
         return $cached->data;
       }
@@ -83,7 +85,7 @@ final class FilesystemAuditService implements FilesystemAuditRunnerInterface {
       }
     }
 
-    $this->cacheData->set(
+    $this->cacheBackend->set(
       self::CACHE_ID,
       $results,
       $this->time->getRequestTime() + self::CACHE_TTL,
@@ -96,7 +98,7 @@ final class FilesystemAuditService implements FilesystemAuditRunnerInterface {
    * Invalidates the filesystem audit cache entry.
    */
   public function invalidateCache(): void {
-    $this->cacheData->delete(self::CACHE_ID);
+    $this->cacheBackend->delete(self::CACHE_ID);
   }
 
 }

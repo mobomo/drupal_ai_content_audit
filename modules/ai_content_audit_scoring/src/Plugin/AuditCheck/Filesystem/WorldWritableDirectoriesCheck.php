@@ -43,7 +43,7 @@ class WorldWritableDirectoriesCheck extends FilesystemCheckBase implements Conta
       $plugin_id,
       $plugin_definition,
       $container->getParameter('app.root'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 

@@ -69,7 +69,7 @@ class SchemaMarkupCheck extends AuditCheckBase implements ContainerFactoryPlugin
       $plugin_definition,
       $container->get('ai_content_audit.html_fetch'),
       $container->get('module_handler'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 
