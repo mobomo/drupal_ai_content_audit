@@ -3,8 +3,6 @@
  * Provider tabs — collapsible compare section with ARIA-accessible tab panels.
  */
 (function (Drupal, once) {
-  'use strict';
-
   /**
    * @param {Element} tab
    * @param {NodeList|Array} tabs
@@ -20,7 +18,7 @@
       }
     });
 
-    var panels = compare.querySelectorAll('[role="tabpanel"]');
+    const panels = compare.querySelectorAll('[role="tabpanel"]');
     panels.forEach(function (p) {
       p.setAttribute('hidden', '');
     });
@@ -32,8 +30,8 @@
       tab.parentElement.classList.add('is-active');
     }
 
-    var targetKey = tab.getAttribute('data-ai-tab-target');
-    var panel = compare.querySelector('[data-ai-tab="' + targetKey + '"]');
+    const targetKey = tab.getAttribute('data-ai-tab-target');
+    const panel = compare.querySelector(`[data-ai-tab="${targetKey}"]`);
     if (panel) {
       panel.removeAttribute('hidden');
     }
@@ -44,7 +42,7 @@
    * @param {Element} compare  Element containing [role="tabpanel"] panels.
    */
   function wireProviderTabs(tabsRoot, compare) {
-    var tabs = tabsRoot.querySelectorAll('[role="tab"]');
+    const tabs = tabsRoot.querySelectorAll('[role="tab"]');
     if (!tabs.length || !compare) {
       return;
     }
@@ -56,22 +54,19 @@
       });
 
       tab.addEventListener('keydown', function (e) {
-        var idx = Array.prototype.indexOf.call(tabs, tab);
-        var target = null;
+        const idx = Array.prototype.indexOf.call(tabs, tab);
+        let target = null;
 
         if (e.key === 'ArrowRight') {
           e.preventDefault();
           target = tabs[(idx + 1) % tabs.length];
-        }
-        else if (e.key === 'ArrowLeft') {
+        } else if (e.key === 'ArrowLeft') {
           e.preventDefault();
           target = tabs[(idx - 1 + tabs.length) % tabs.length];
-        }
-        else if (e.key === 'Home') {
+        } else if (e.key === 'Home') {
           e.preventDefault();
           target = tabs[0];
-        }
-        else if (e.key === 'End') {
+        } else if (e.key === 'End') {
           e.preventDefault();
           target = tabs[tabs.length - 1];
         }
@@ -85,23 +80,28 @@
   }
 
   Drupal.behaviors.aiContentAuditProviderTabs = {
-    attach: function (context) {
-      once('ai-content-audit-provider-tabs', '.ai-content-audit-compare--results', context)
-        .forEach(function (compare) {
-          wireProviderTabs(compare, compare);
-        });
+    attach(context) {
+      once(
+        'ai-content-audit-provider-tabs',
+        '.ai-content-audit-compare--results',
+        context,
+      ).forEach(function (compare) {
+        wireProviderTabs(compare, compare);
+      });
 
-      once('ai-content-audit-provider-tabs-nav', '.airo-preview__provider-tabs-nav', context)
-        .forEach(function (nav) {
-          var host = nav.closest('.airo-preview__provider-tabs-host');
-          if (!host) {
-            return;
-          }
-          var compareId = host.getAttribute('data-compare-id');
-          var compare = compareId ? document.getElementById(compareId) : null;
-          wireProviderTabs(nav, compare);
-        });
+      once(
+        'ai-content-audit-provider-tabs-nav',
+        '.airo-preview__provider-tabs-nav',
+        context,
+      ).forEach(function (nav) {
+        const host = nav.closest('.airo-preview__provider-tabs-host');
+        if (!host) {
+          return;
+        }
+        const compareId = host.getAttribute('data-compare-id');
+        const compare = compareId ? document.getElementById(compareId) : null;
+        wireProviderTabs(nav, compare);
+      });
     },
   };
-
 })(Drupal, once);

@@ -7,6 +7,8 @@ namespace Drupal\Tests\ai_content_audit\Unit\Service;
 use Drupal\ai_content_audit\Service\HtmlFetchService;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -15,10 +17,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Unit tests for HtmlFetchService.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\HtmlFetchService
  */
+#[Group('ai_content_audit')]
+#[CoversClass(HtmlFetchService::class)]
 class HtmlFetchServiceTest extends TestCase {
 
   /*
@@ -85,8 +86,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * GetBaseUrl() returns scheme + host from the current request.
-   *
-   * @covers ::getBaseUrl
    */
   public function testGetBaseUrlReturnsSchemeAndHttpHostFromRequest(): void {
     $request = $this->createMock(Request::class);
@@ -99,8 +98,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * GetBaseUrl() falls back to 'http://localhost' when no request is available.
-   *
-   * @covers ::getBaseUrl
    */
   public function testGetBaseUrlFallsBackToLocalhostWhenNoRequest(): void {
     $service = $this->buildService($this->createMock(ClientInterface::class), NULL);
@@ -116,8 +113,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * FetchPageHtml() returns the response body string on HTTP 200.
-   *
-   * @covers ::fetchPageHtml
    */
   public function testFetchPageHtmlReturnsBodyStringOnSuccess(): void {
     $html       = '<html><body>Hello World</body></html>';
@@ -131,8 +126,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * FetchPageHtml() returns NULL when Guzzle throws an exception.
-   *
-   * @covers ::fetchPageHtml
    */
   public function testFetchPageHtmlReturnsNullOnGuzzleException(): void {
     $httpClient = $this->createMock(ClientInterface::class);
@@ -147,8 +140,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * FetchPageHtml() returns NULL when a generic exception is thrown.
-   *
-   * @covers ::fetchPageHtml
    */
   public function testFetchPageHtmlReturnsNullOnGenericException(): void {
     $httpClient = $this->createMock(ClientInterface::class);
@@ -165,8 +156,6 @@ class HtmlFetchServiceTest extends TestCase {
    * Verifies fetchPageHtml() caches results per URL.
    *
    * Two calls for the same URL should issue only one HTTP request.
-   *
-   * @covers ::fetchPageHtml
    */
   public function testFetchPageHtmlCachesResultAndMakesOnlyOneHttpRequest(): void {
     $html       = '<html><body>Cached page</body></html>';
@@ -188,8 +177,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * FetchPageHtml() caches a NULL result — a failed fetch is not retried.
-   *
-   * @covers ::fetchPageHtml
    */
   public function testFetchPageHtmlCachesNullOnFailureAndDoesNotRetry(): void {
     $httpClient = $this->createMock(ClientInterface::class);
@@ -210,8 +197,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * Different URLs each trigger their own HTTP request (cache is URL-keyed).
-   *
-   * @covers ::fetchPageHtml
    */
   public function testFetchPageHtmlIssuesSeparateRequestsForDifferentUrls(): void {
     $httpClient = $this->createMock(ClientInterface::class);
@@ -229,8 +214,6 @@ class HtmlFetchServiceTest extends TestCase {
 
   /**
    * ClearCache() causes the next fetchPageHtml() call to re-issue a request.
-   *
-   * @covers ::fetchPageHtml
    */
   public function testClearCacheForcesFreshRequestOnNextFetch(): void {
     $html       = '<html><body>Fresh</body></html>';

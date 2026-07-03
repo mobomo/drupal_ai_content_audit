@@ -348,7 +348,7 @@ class AiContentAssessment extends ContentEntityBase {
       ->setDefaultValue(NULL)
       ->addPropertyConstraints('value', ['ValidJson' => []]);
 
-    // JSON array of prioritised action items (v2 schema).
+    // JSON array of prioritized action items (v2 schema).
     $fields['action_items'] = BaseFieldDefinition::create('string_long')
       ->setLabel(new TranslatableMarkup('Action items'))
       ->setDescription(new TranslatableMarkup('JSON array of recommended action items.'))

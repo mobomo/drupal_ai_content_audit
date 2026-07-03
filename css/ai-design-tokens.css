@@ -16,43 +16,31 @@
  * Claro token source: web/core/themes/claro/css/base/
  */
 :root {
-
   /* ── Brand / Action ─────────────────────────────────────────────────────
    * Gin:   --gin-color-primary (accent-dependent, set per Gin settings)
    * Claro: --color-absolutezero (#0036b1)
    */
-  --airo-primary:      var(--gin-color-primary,
-                           var(--color-absolutezero, #0036b1));
-  --airo-primary-dark: var(--gin-color-primary-active,
-                           var(--color-absolutezero-active, #0028c2));
+  --airo-primary: var(--gin-color-primary, var(--color-absolutezero, #0036b1));
+  --airo-primary-dark: var(--gin-color-primary-active, var(--color-absolutezero-active, #0028c2));
 
-  /* ── Status / Semantic colours ──────────────────────────────────────────
+  /* ── Status / Semantic colors ──────────────────────────────────────────
    * Gin:   --gin-color-green / warning / danger
    * Claro: --color-positive / --color-warning-dark / --color-error-dark
    */
-  --airo-success:      var(--gin-color-green,
-                           var(--color-positive, #058260));
-  --airo-success-dark: var(--gin-color-green,
-                           var(--color-positive, #058260));
-
-  --airo-score-good:    var(--gin-color-green,
-                            var(--color-positive, #058260));
-  --airo-score-warning: var(--gin-color-warning,
-                            var(--color-warning-dark, #d8b234));
-  --airo-score-danger:  var(--gin-color-danger,
-                            var(--color-error-dark, #cc3d3d));
+  --airo-success: var(--gin-color-green, var(--color-positive, #058260));
+  --airo-success-dark: var(--gin-color-green, var(--color-positive, #058260));
+  --airo-score-good: var(--gin-color-green, var(--color-positive, #058260));
+  --airo-score-warning: var(--gin-color-warning, var(--color-warning-dark, #d8b234));
+  --airo-score-danger: var(--gin-color-danger, var(--color-error-dark, #cc3d3d));
 
   /* ── Text ───────────────────────────────────────────────────────────────
    * Gin:   --gin-color-text / --gin-color-title / --gin-color-text-light
    * Claro: --color-text / --color-text-neutral
    * Note: Claro doesn't distinguish title from text; both fall back the same.
    */
-  --airo-text:       var(--gin-color-text,
-                         var(--color-text, #222330));
-  --airo-title:      var(--gin-color-title,
-                         var(--color-text, #222330));
-  --airo-text-light: var(--gin-color-text-light,
-                         var(--color-text-neutral, #545560));
+  --airo-text: var(--gin-color-text, var(--color-text, #222330));
+  --airo-title: var(--gin-color-title, var(--color-text, #222330));
+  --airo-text-light: var(--gin-color-text-light, var(--color-text-neutral, #545560));
 
   /* ── Backgrounds ────────────────────────────────────────────────────────
    * Gin:   --gin-bg-layer  (white light / #2a2a2d dark)
@@ -61,10 +49,10 @@
    *        --gin-bg-header (eeeff3 light / #2a2a2d dark)
    * Claro: --color-bgcontent, --color-bgwash (no bg-app/header equivalent)
    */
-  --airo-bg:         var(--gin-bg-layer,   var(--color-bgcontent, #fff));
-  --airo-bg-wash:    var(--gin-bg-layer2,  var(--color-bgwash, #edeff5));
-  --airo-bg-app:     var(--gin-bg-app,     var(--color-bgcontent, #fff));
-  --airo-bg-header:  var(--gin-bg-header,  #eeeff3);
+  --airo-bg: var(--gin-bg-layer, var(--color-bgcontent, #fff));
+  --airo-bg-wash: var(--gin-bg-layer2, var(--color-bgwash, #edeff5));
+  --airo-bg-app: var(--gin-bg-app, var(--color-bgcontent, #fff));
+  --airo-bg-header: var(--gin-bg-header, #eeeff3);
 
   /* ── Borders ────────────────────────────────────────────────────────────
    * Gin:   --gin-border-color-layer2 (solid border)
@@ -72,47 +60,36 @@
    *        --gin-border-color        (general border)
    * Claro: --color-gray-200 (approximate equivalent)
    */
-  --airo-border:        var(--gin-border-color-layer2,
-                             var(--color-gray-200, #d4d4d8));
-  --airo-border-subtle: var(--gin-border-color-layer,
-                             rgba(0, 0, 0, 0.08));
-  --airo-border-base:   var(--gin-border-color,
-                             var(--color-gray-300, #d4d4d8));
+  --airo-border: var(--gin-border-color-layer2, var(--color-gray-200, #d4d4d8));
+  --airo-border-subtle: var(--gin-border-color-layer, rgb(0, 0, 0, 0.08));
+  --airo-border-base: var(--gin-border-color, var(--color-gray-300, #d4d4d8));
 
   /* ── Elevation / Shadows ────────────────────────────────────────────────
    * Gin:   --gin-shadow-l1 (card), --gin-shadow-l2 (elevated/sticky)
    * Claro: no shadow tokens
    */
-  --airo-shadow-sm: var(--gin-shadow-l1, 0 1px 2px rgba(0, 0, 0, 0.05));
-  --airo-shadow:    var(--gin-shadow-l1, 0 1px 3px rgba(0, 0, 0, 0.1));
-  --airo-shadow-lg: var(--gin-shadow-l2, 0 10px 15px rgba(0, 0, 0, 0.1));
+  --airo-shadow-sm: var(--gin-shadow-l1, 0 1px 2px rgb(0, 0, 0, 0.05));
+  --airo-shadow: var(--gin-shadow-l1, 0 1px 3px rgb(0, 0, 0, 0.1));
+  --airo-shadow-lg: var(--gin-shadow-l2, 0 10px 15px rgb(0, 0, 0, 0.1));
 
   /* ── Focus rings ────────────────────────────────────────────────────────
    * Gin:   --gin-color-focus / --gin-color-focus-border
    * Claro: --color-focus / --color-focus-border (same concept, same names)
    */
-  --airo-focus:        var(--gin-color-focus,
-                           var(--color-focus, rgba(0, 125, 250, 0.6)));
-  --airo-focus-border: var(--gin-color-focus-border,
-                           var(--color-focus-border, rgba(0, 0, 0, 0.2)));
+  --airo-focus: var(--gin-color-focus, var(--color-focus, rgb(0, 125, 250, 0.6)));
+  --airo-focus-border: var(--gin-color-focus-border, var(--color-focus-border, rgb(0, 0, 0, 0.2)));
 
   /* ── Status chip/badge backgrounds ─────────────────────────────────────
    * Gin:   --gin-status-{severity}-bg / --gin-status-{severity}-text
    * Claro: no equivalent tokens → WCAG-safe hardcoded fallbacks only
    */
-  --airo-status-success-bg:   var(--gin-status-success-bg,
-                                   rgba(5, 130, 96, 0.12));
+  --airo-status-success-bg: var(--gin-status-success-bg, rgb(5, 130, 96, 0.12));
   --airo-status-success-text: var(--gin-status-success-text, #058260);
-
-  --airo-status-warning-bg:   var(--gin-status-warning-bg,
-                                   rgba(216, 178, 52, 0.15));
+  --airo-status-warning-bg: var(--gin-status-warning-bg, rgb(216, 178, 52, 0.15));
   --airo-status-warning-text: var(--gin-status-warning-text, #734c00);
-
-  --airo-status-danger-bg:    var(--gin-status-danger-bg,
-                                   rgba(204, 61, 61, 0.12));
-  --airo-status-danger-text:  var(--gin-status-danger-text, #cc3d3d);
-
-  --airo-status-info-bg:   var(--gin-bg-layer2,  #edeff5);
+  --airo-status-danger-bg: var(--gin-status-danger-bg, rgb(204, 61, 61, 0.12));
+  --airo-status-danger-text: var(--gin-status-danger-text, #cc3d3d);
+  --airo-status-info-bg: var(--gin-bg-layer2, #edeff5);
   --airo-status-info-text: var(--gin-color-primary, var(--color-absolutezero, #0036b1));
 
   /* ── Typography ─────────────────────────────────────────────────────────
@@ -120,16 +97,16 @@
    *        --gin-font-weight-bold / semibold / normal
    * Claro: no equivalent tokens → system-ui fallbacks
    */
-  --airo-font:              var(--gin-font, system-ui, -apple-system, sans-serif);
-  --airo-font-size:         var(--gin-font-size, 0.9375rem);
-  --airo-font-size-s:       var(--gin-font-size-s, 0.875rem);
-  --airo-font-size-xs:      var(--gin-font-size-xxs, 0.8125rem);
-  --airo-font-size-xxs:     var(--gin-font-size-xxs, 0.75rem);
-  --airo-font-weight-bold:     var(--gin-font-weight-bold, 600);
+  --airo-font: var(--gin-font, system-ui, -apple-system, sans-serif);
+  --airo-font-size: var(--gin-font-size, 0.9375rem);
+  --airo-font-size-s: var(--gin-font-size-s, 0.875rem);
+  --airo-font-size-xs: var(--gin-font-size-xxs, 0.8125rem);
+  --airo-font-size-xxs: var(--gin-font-size-xxs, 0.75rem);
+  --airo-font-weight-bold: var(--gin-font-weight-bold, 600);
   --airo-font-weight-semibold: var(--gin-font-weight-semibold, 500);
-  --airo-font-weight-normal:   var(--gin-font-weight-normal, 400);
+  --airo-font-weight-normal: var(--gin-font-weight-normal, 400);
 
-  /* ── Colour for text on primary-coloured surfaces ───────────────────────
+  /* ── Color for text on primary-colored surfaces ───────────────────────
    * Used for checkmark in checked state (always white regardless of mode).
    * Gin:   --gin-color-button-text
    * Claro: no equivalent → hardcoded white is always correct here
@@ -146,29 +123,29 @@
    * Claro: no radius tokens → generic rem fallbacks
    */
   --airo-radius-xxs: var(--gin-border-xxs, 2px);
-  --airo-radius-xs:  var(--gin-border-xs,  0.25rem);
-  --airo-radius-sm:  var(--gin-border-s,   0.375rem);
-  --airo-radius:     var(--gin-border-m,   0.5rem);
-  --airo-radius-lg:  var(--gin-border-l,   0.75rem);
-  --airo-radius-xl:  var(--gin-border-xl,  9999px);
+  --airo-radius-xs: var(--gin-border-xs, 0.25rem);
+  --airo-radius-sm: var(--gin-border-s, 0.375rem);
+  --airo-radius: var(--gin-border-m, 0.5rem);
+  --airo-radius-lg: var(--gin-border-l, 0.75rem);
+  --airo-radius-xl: var(--gin-border-xl, 9999px);
 
   /* ── Spacing ────────────────────────────────────────────────────────────
    * Gin:   --gin-spacing-xxs / xs / s / m / l / xl
    * Claro: no spacing scale tokens → generic rem fallbacks
    */
   --airo-spacing-xxs: var(--gin-spacing-xxs, 0.25rem);
-  --airo-spacing-xs:  var(--gin-spacing-xs,  0.5rem);
-  --airo-spacing-s:   var(--gin-spacing-s,   0.75rem);
-  --airo-spacing-m:   var(--gin-spacing-m,   1rem);
-  --airo-spacing-l:   var(--gin-spacing-l,   1.5rem);
-  --airo-spacing-xl:  var(--gin-spacing-xl,  2rem);
+  --airo-spacing-xs: var(--gin-spacing-xs, 0.5rem);
+  --airo-spacing-s: var(--gin-spacing-s, 0.75rem);
+  --airo-spacing-m: var(--gin-spacing-m, 1rem);
+  --airo-spacing-l: var(--gin-spacing-l, 1.5rem);
+  --airo-spacing-xl: var(--gin-spacing-xl, 2rem);
 
-  /* ── Legacy grey-scale aliases ──────────────────────────────────────────
+  /* ── Legacy gray-scale aliases ──────────────────────────────────────────
    * These map to the semantic tokens above so any template/CSS that still
    * references --airo-gray-* continues to work. New code should use the
    * semantic tokens (--airo-bg-wash, --airo-border, etc.) directly.
    */
-  --airo-gray-50:  var(--airo-bg-wash);
+  --airo-gray-50: var(--airo-bg-wash);
   --airo-gray-100: var(--airo-bg-wash);
   --airo-gray-200: var(--airo-border);
   --airo-gray-300: var(--airo-border-base);

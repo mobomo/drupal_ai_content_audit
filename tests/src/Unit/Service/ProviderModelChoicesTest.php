@@ -8,23 +8,20 @@ use Drupal\ai\AiProviderInterface;
 use Drupal\ai\Enum\AiModelCapability;
 use Drupal\ai_content_audit\Ai\AiProviderRegistryInterface;
 use Drupal\ai_content_audit\Service\ProviderModelChoices;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests Drupal AI provider/model choice handling.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\ProviderModelChoices
  */
+#[Group('ai_content_audit')]
+#[CoversClass(ProviderModelChoices::class)]
 final class ProviderModelChoicesTest extends TestCase {
 
   /**
    * Tests choices are sourced from Drupal AI simple options.
-   *
-   * @covers ::forOperationType
-   * @covers ::getSelectOptions
-   * @covers ::parseKey
    */
   public function testForOperationTypeUsesSimpleProviderModelOptions(): void {
     $provider = $this->createMock(AiProviderInterface::class);
@@ -52,9 +49,6 @@ final class ProviderModelChoicesTest extends TestCase {
 
   /**
    * Tests unavailable providers are skipped gracefully.
-   *
-   * @covers ::forOperationType
-   * @covers ::parseKey
    */
   public function testUnavailableSimpleOptionIsSkipped(): void {
     $aiProvider = $this->createMock(AiProviderRegistryInterface::class);
@@ -70,9 +64,6 @@ final class ProviderModelChoicesTest extends TestCase {
 
   /**
    * Tests grouped Drupal AI options are flattened for AIRO runtime choices.
-   *
-   * @covers ::forOperationType
-   * @covers ::getGroupedSelectOptions
    */
   public function testGroupedOptionsAreFlattenedForRuntimeChoices(): void {
     $provider = $this->createMock(AiProviderInterface::class);
@@ -95,8 +86,6 @@ final class ProviderModelChoicesTest extends TestCase {
 
   /**
    * Tests legacy provider/model lookup.
-   *
-   * @covers ::findKeyForProviderModel
    */
   public function testFindKeyForProviderModel(): void {
     $provider = $this->createMock(AiProviderInterface::class);
@@ -115,9 +104,6 @@ final class ProviderModelChoicesTest extends TestCase {
 
   /**
    * Tests OpenAI catalog entries that leak through chat helpers are hidden.
-   *
-   * @covers ::forOperationType
-   * @covers ::getGroupedSelectOptions
    */
   public function testOpenAiNonConversationalCatalogEntriesAreFiltered(): void {
     $provider = $this->createMock(AiProviderInterface::class);

@@ -155,7 +155,7 @@ class SiteAuditDashboardController extends ControllerBase {
 
     return new JsonResponse([
       'success' => FALSE,
-      'message' => 'Analysis is already in progress. Please wait for it to complete.',
+      'message' => 'Analysis is already in progress. Wait for it to complete.',
     ], 409);
   }
 

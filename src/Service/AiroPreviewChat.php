@@ -15,6 +15,7 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
@@ -23,12 +24,14 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 final class AiroPreviewChat {
 
   public function __construct(
+    #[Autowire(service: 'ai.provider')]
     protected AiProviderPluginManager $aiProviderManager,
     protected ContentExtractorManager $contentExtractorManager,
     protected ProviderModelChoices $providerModelChoices,
     protected PrivateTempStoreFactory $tempStoreFactory,
     protected AiContentAuditPromptResolver $promptResolver,
     protected AccountInterface $currentUser,
+    #[Autowire(service: 'logger.channel.ai_content_audit')]
     protected LoggerChannelInterface $logger,
   ) {}
 
@@ -43,7 +46,7 @@ final class AiroPreviewChat {
   public function submit(NodeInterface $node, array $body): JsonResponse {
     $question = trim((string) ($body['question'] ?? ''));
     if ($question === '') {
-      return new JsonResponse(['error' => 'Please enter a question.'], 400);
+      return new JsonResponse(['error' => 'Enter a question.'], 400);
     }
 
     $requestedKeys = array_filter((array) ($body['provider_models'] ?? []));
@@ -193,7 +196,7 @@ final class AiroPreviewChat {
     if (str_contains($lower, 'no ai chat provider')) {
       return 'No AI provider is configured for this site.';
     }
-    return 'The AI model could not generate a response. Please try again or check your provider configuration.';
+    return 'The AI model could not generate a response. Try again or check your provider configuration.';
   }
 
   /**

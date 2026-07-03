@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 #[AuditCheck(
   id: 'fs_orphaned_modules',
   label: new TranslatableMarkup('Orphaned Modules'),
-  description: new TranslatableMarkup('Scans contrib and custom module directories for .info.yml files not recognised by ModuleHandler.'),
+  description: new TranslatableMarkup('Scans contrib and custom module directories for .info.yml files not recognized by ModuleHandler.'),
   scope: 'site',
   category: 'Filesystem Health',
 )]

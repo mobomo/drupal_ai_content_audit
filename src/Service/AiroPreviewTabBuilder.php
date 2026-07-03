@@ -9,6 +9,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Builds the AIRO Preview tab render array.
@@ -16,6 +17,7 @@ use Drupal\node\NodeInterface;
 final class AiroPreviewTabBuilder {
 
   public function __construct(
+    #[Autowire(service: 'ai.provider')]
     private readonly AiProviderPluginManager $aiProviderManager,
     private readonly PrivateTempStoreFactory $tempStoreFactory,
     private readonly ProviderModelChoices $providerModelChoices,

@@ -44,7 +44,7 @@ commit unless agreed with maintainers.
 
 PHPUnit tests live under `tests/`. Run them using the same configuration as
 your host project (for example `phpunit.xml` at the repository root or inside
-`core/`). Add or extend tests when you fix behaviour that can regress.
+`core/`). Add or extend tests when you fix behavior that can regress.
 
 ---
 

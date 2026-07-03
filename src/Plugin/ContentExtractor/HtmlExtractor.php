@@ -311,7 +311,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
    *   The rendered HTML string to convert.
    *
    * @return string
-   *   Structured plain text with whitespace normalised, or an empty string
+   *   Structured plain text with whitespace normalized, or an empty string
    *   when the HTML contains no extractable content.
    */
   protected function convertHtmlToStructuredText(string $html): string {
@@ -396,7 +396,7 @@ class HtmlExtractor extends PluginBase implements ContentExtractorInterface, Con
         continue;
       }
 
-      // Skip common non-content metas.
+      // Skip common non-content meta tags.
       if (in_array(strtolower($label), ['viewport', 'charset', 'generator'], TRUE)) {
         continue;
       }

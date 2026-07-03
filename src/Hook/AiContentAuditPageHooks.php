@@ -11,7 +11,6 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Page-level hooks for AIRO routes and attachments.
@@ -20,11 +19,9 @@ final class AiContentAuditPageHooks {
 
   public function __construct(
     protected RouteMatchInterface $routeMatch,
-    #[Autowire(service: 'ai_content_audit.node_layout_builder_detector')]
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
     protected ConfigFactoryInterface $configFactory,
     protected readonly ModuleHandlerInterface $moduleHandler,
-    #[Autowire(service: 'ai_content_audit.airo_node_analysis_form_alterer')]
     protected AiroNodeAnalysisFormAlterer $formAlterer,
   ) {}
 

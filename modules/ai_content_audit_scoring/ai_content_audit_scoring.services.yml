@@ -1,112 +1,74 @@
 services:
+  _defaults:
+    autowire: true
+
+  logger.channel.ai_content_audit_scoring:
+    parent: logger.channel_base
+    arguments: ['ai_content_audit_scoring']
+  Psr\Log\LoggerInterface: '@logger.channel.ai_content_audit_scoring'
+
   ai_content_audit_scoring.assessment_repository:
     class: Drupal\ai_content_audit_scoring\Repository\AiContentAssessmentRepository
-    arguments:
-      - '@entity_type.manager'
+  Drupal\ai_content_audit_scoring\Repository\AiContentAssessmentRepository: '@ai_content_audit_scoring.assessment_repository'
 
   ai_content_audit_scoring.audit_check_manager:
     class: Drupal\ai_content_audit_scoring\Plugin\Manager\AuditCheckManager
-    arguments:
-      - '@container.namespaces'
-      - '@cache.discovery'
-      - '@module_handler'
-      - '@config.factory'
+  Drupal\ai_content_audit_scoring\Plugin\Manager\AuditCheckManager: '@ai_content_audit_scoring.audit_check_manager'
 
   ai_content_audit_scoring.technical_audit:
     class: Drupal\ai_content_audit_scoring\Service\TechnicalAuditService
-    arguments:
-      - '@http_client'
-      - '@config.factory'
-      - '@logger.channel.ai_content_audit'
-      - '@cache.data'
-      - '@request_stack'
-      - '@module_handler'
-      - '@entity_type.manager'
-      - '@ai_content_audit_scoring.audit_check_manager'
+  Drupal\ai_content_audit_scoring\Service\TechnicalAuditService: '@ai_content_audit_scoring.technical_audit'
 
   ai_content_audit_scoring.assessment_service:
     class: Drupal\ai_content_audit_scoring\Service\AiAssessmentService
-    arguments:
-      - '@ai_content_audit.ai_provider_registry'
-      - '@ai_content_audit.extractor_manager'
-      - '@logger.factory'
-      - '@config.factory'
-      - '@entity_type.manager'
-      - '@ai_content_audit_scoring.prompt_resolver'
-      - '@ai_content_audit.provider_model_choices'
+  Drupal\ai_content_audit_scoring\Service\AiAssessmentService: '@ai_content_audit_scoring.assessment_service'
 
   ai_content_audit_scoring.prompt_resolver:
     class: Drupal\ai_content_audit_scoring\Service\ScoringPromptResolver
-    arguments:
-      - '@config.factory'
-      - '@entity_type.manager'
+  Drupal\ai_content_audit_scoring\Service\ScoringPromptResolver: '@ai_content_audit_scoring.prompt_resolver'
 
   ai_content_audit_scoring.lifecycle:
     class: Drupal\ai_content_audit_scoring\Service\AiContentAuditLifecycle
-    arguments:
-      - '@config.factory'
-      - '@entity_type.manager'
-      - '@queue'
-      - '@database'
-      - '@logger.channel.ai_content_audit'
-      - '@module_handler'
+  Drupal\ai_content_audit_scoring\Service\AiContentAuditLifecycle: '@ai_content_audit_scoring.lifecycle'
 
   ai_content_audit_scoring.score_meta:
     class: Drupal\ai_content_audit_scoring\Service\ScoreMetaBuilder
-    arguments: ['@string_translation']
+  Drupal\ai_content_audit_scoring\Service\ScoreMetaBuilder: '@ai_content_audit_scoring.score_meta'
 
   ai_content_audit_scoring.airo_action_item_command:
     class: Drupal\ai_content_audit_scoring\Service\AiroActionItemCommand
-    arguments:
-      - '@ai_content_audit_scoring.assessment_repository'
-      - '@current_user'
-      - '@datetime.time'
+  Drupal\ai_content_audit_scoring\Service\AiroActionItemCommand: '@ai_content_audit_scoring.airo_action_item_command'
 
   ai_content_audit_scoring.airo_inline_score_widget_builder:
     class: Drupal\ai_content_audit_scoring\Service\AiroInlineScoreWidgetBuilder
-    arguments:
-      - '@ai_content_audit_scoring.assessment_repository'
+  Drupal\ai_content_audit_scoring\Service\AiroInlineScoreWidgetBuilder: '@ai_content_audit_scoring.airo_inline_score_widget_builder'
 
   ai_content_audit_scoring.filesystem_audit:
     class: Drupal\ai_content_audit_scoring\Service\FilesystemAuditService
-    arguments:
-      - '@logger.channel.ai_content_audit'
-      - '@cache.data'
-      - '@ai_content_audit_scoring.audit_check_manager'
-      - '@datetime.time'
+  Drupal\ai_content_audit_scoring\Service\FilesystemAuditService: '@ai_content_audit_scoring.filesystem_audit'
+  Drupal\ai_content_audit_scoring\Audit\FilesystemAuditRunnerInterface: '@ai_content_audit_scoring.filesystem_audit'
 
   ai_content_audit_scoring.airo_panel_tab_builder:
     class: Drupal\ai_content_audit_scoring\Service\AiroPanelTabBuilder
-    arguments:
-      - '@ai_content_audit_scoring.assessment_repository'
-      - '@ai_content_audit_scoring.technical_audit'
-      - '@request_stack'
+  Drupal\ai_content_audit_scoring\Service\AiroPanelTabBuilder: '@ai_content_audit_scoring.airo_panel_tab_builder'
 
   ai_content_audit_scoring.airo_panel_tab.score:
     class: Drupal\ai_content_audit_scoring\AiroPanel\Tab\ScoreTab
-    arguments:
-      - '@ai_content_audit_scoring.airo_panel_tab_builder'
-      - '@ai_content_audit_scoring.assessment_repository'
     tags:
       - { name: ai_content_audit.airo_panel_tab }
+  Drupal\ai_content_audit_scoring\AiroPanel\Tab\ScoreTab: '@ai_content_audit_scoring.airo_panel_tab.score'
 
   ai_content_audit_scoring.airo_panel_tab.action_items:
     class: Drupal\ai_content_audit_scoring\AiroPanel\Tab\ActionItemsTab
-    arguments:
-      - '@ai_content_audit_scoring.airo_panel_tab_builder'
     tags:
       - { name: ai_content_audit.airo_panel_tab }
+  Drupal\ai_content_audit_scoring\AiroPanel\Tab\ActionItemsTab: '@ai_content_audit_scoring.airo_panel_tab.action_items'
 
   ai_content_audit_scoring.airo_panel_tab.technical_audit:
     class: Drupal\ai_content_audit_scoring\AiroPanel\Tab\TechnicalAuditTab
-    arguments:
-      - '@ai_content_audit_scoring.airo_panel_tab_builder'
     tags:
       - { name: ai_content_audit.airo_panel_tab }
+  Drupal\ai_content_audit_scoring\AiroPanel\Tab\TechnicalAuditTab: '@ai_content_audit_scoring.airo_panel_tab.technical_audit'
 
   Drupal\ai_content_audit_scoring\Hook\ScoringThemeHooks:
-    arguments:
-      - '@ai_content_audit_scoring.score_meta'
-      - '@date.formatter'
-      - '@url_generator'
-      - '@module_handler'
+    class: Drupal\ai_content_audit_scoring\Hook\ScoringThemeHooks

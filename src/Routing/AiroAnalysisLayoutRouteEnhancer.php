@@ -14,6 +14,7 @@ use Drupal\layout_builder\LayoutTempstoreRepositoryInterface;
 use Drupal\layout_builder\Routing\LayoutSectionStorageParamConverter;
 use Drupal\layout_builder\SectionStorageInterface;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
@@ -24,7 +25,9 @@ final class AiroAnalysisLayoutRouteEnhancer implements EnhancerInterface {
 
   public function __construct(
     protected NodeLayoutBuilderDetector $layoutBuilderDetector,
+    #[Autowire(service: 'layout_builder.param_converter')]
     protected LayoutSectionStorageParamConverter $sectionStorageParamConverter,
+    #[Autowire(service: 'layout_builder.tempstore_repository')]
     protected LayoutTempstoreRepositoryInterface $layoutTempstoreRepository,
     protected ConfigFactoryInterface $configFactory,
     protected EntityTypeManagerInterface $entityTypeManager,

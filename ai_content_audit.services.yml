@@ -1,138 +1,97 @@
 services:
+  _defaults:
+    autowire: true
+
   logger.channel.ai_content_audit:
     parent: logger.channel_base
     arguments: ['ai_content_audit']
 
   ai_content_audit.extractor_manager:
     class: Drupal\ai_content_audit\Extractor\ContentExtractorManager
-    arguments:
-      - '@container.namespaces'
-      - '@cache.discovery'
-      - '@module_handler'
+  Drupal\ai_content_audit\Extractor\ContentExtractorManager: '@ai_content_audit.extractor_manager'
 
   ai_content_audit.prompt_resolver:
     class: Drupal\ai_content_audit\Service\AiContentAuditPromptResolver
-    arguments:
-      - '@config.factory'
-      - '@entity_type.manager'
+  Drupal\ai_content_audit\Service\AiContentAuditPromptResolver: '@ai_content_audit.prompt_resolver'
 
   ai_content_audit.html_fetch:
     class: Drupal\ai_content_audit\Service\HtmlFetchService
-    arguments:
-      - '@http_client'
-      - '@request_stack'
+  Drupal\ai_content_audit\Service\HtmlFetchService: '@ai_content_audit.html_fetch'
 
   ai_content_audit.ai_provider_registry:
-    class: Drupal\ai_content_audit\Ai\AiProviderPluginManagerRegistry
-    arguments: ['@ai.provider']
+    class: Drupal\ai_content_audit\Ai\AiProviderRegistry
+  Drupal\ai_content_audit\Ai\AiProviderRegistryInterface: '@ai_content_audit.ai_provider_registry'
+  Drupal\ai_content_audit\Ai\AiProviderRegistry: '@ai_content_audit.ai_provider_registry'
 
   ai_content_audit.provider_model_choices:
     class: Drupal\ai_content_audit\Service\ProviderModelChoices
-    arguments:
-      - '@ai_content_audit.ai_provider_registry'
+  Drupal\ai_content_audit\Service\ProviderModelChoices: '@ai_content_audit.provider_model_choices'
 
   ai_content_audit.ai_response_subscriber:
     class: Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber
-    arguments:
-      - '@logger.factory'
     tags:
       - { name: event_subscriber }
 
   ai_content_audit.airo_analysis_route_subscriber:
     class: Drupal\ai_content_audit\EventSubscriber\AiroAnalysisRouteSubscriber
-    arguments:
-      - '@ai_content_audit.node_layout_builder_detector'
-      - '@config.factory'
-      - '@entity_type.manager'
     tags:
       - { name: event_subscriber }
+  Drupal\ai_content_audit\EventSubscriber\AiroAnalysisRouteSubscriber: '@ai_content_audit.airo_analysis_route_subscriber'
 
   ai_content_audit.airo_entity_form_controller:
     class: Drupal\ai_content_audit\Controller\AiroEntityFormController
-    arguments:
-      - '@http_kernel.controller.argument_resolver'
-      - '@form_builder'
-      - '@entity_type.manager'
-      - '@ai_content_audit.node_layout_builder_detector'
-      - '@ai_content_audit.airo_analysis_panel_builder'
+  Drupal\ai_content_audit\Controller\AiroEntityFormController: '@ai_content_audit.airo_entity_form_controller'
 
   ai_content_audit.airo_analysis_layout_route_enhancer:
     class: Drupal\ai_content_audit\Routing\AiroAnalysisLayoutRouteEnhancer
-    arguments:
-      - '@ai_content_audit.node_layout_builder_detector'
-      - '@layout_builder.param_converter'
-      - '@layout_builder.tempstore_repository'
-      - '@config.factory'
-      - '@entity_type.manager'
     tags:
       - { name: route_enhancer, priority: 4900 }
+  Drupal\ai_content_audit\Routing\AiroAnalysisLayoutRouteEnhancer: '@ai_content_audit.airo_analysis_layout_route_enhancer'
 
   ai_content_audit.airo_panel_controller:
     class: Drupal\ai_content_audit\Controller\AiroPanelController
-    factory: ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
+    factory:
+      ['Drupal\ai_content_audit\Controller\AiroPanelController', 'create']
     arguments: ['@service_container']
 
   ai_content_audit.airo_preview_tab_builder:
     class: Drupal\ai_content_audit\Service\AiroPreviewTabBuilder
-    arguments:
-      - '@ai.provider'
-      - '@tempstore.private'
-      - '@ai_content_audit.provider_model_choices'
-      - '@current_user'
+  Drupal\ai_content_audit\Service\AiroPreviewTabBuilder: '@ai_content_audit.airo_preview_tab_builder'
 
   ai_content_audit.airo_panel_tab_manager:
     class: Drupal\ai_content_audit\Service\AiroPanelTabManager
     tags:
-      -
-        name: service_collector
+      - name: service_collector
         tag: ai_content_audit.airo_panel_tab
         call: addTab
+  Drupal\ai_content_audit\Service\AiroPanelTabManager: '@ai_content_audit.airo_panel_tab_manager'
 
   ai_content_audit.airo_panel_tab.preview:
     class: Drupal\ai_content_audit\AiroPanel\Tab\PreviewTab
-    arguments:
-      - '@ai_content_audit.airo_preview_tab_builder'
     tags:
       - { name: ai_content_audit.airo_panel_tab }
+  Drupal\ai_content_audit\AiroPanel\Tab\PreviewTab: '@ai_content_audit.airo_panel_tab.preview'
 
   ai_content_audit.airo_node_revision_resolver:
     class: Drupal\ai_content_audit\Service\AiroNodeRevisionResolver
-    arguments:
-      - '@entity_type.manager'
-      - '@current_user'
+  Drupal\ai_content_audit\Service\AiroNodeRevisionResolver: '@ai_content_audit.airo_node_revision_resolver'
 
   ai_content_audit.airo_preview_chat:
     class: Drupal\ai_content_audit\Service\AiroPreviewChat
-    arguments:
-      - '@ai.provider'
-      - '@ai_content_audit.extractor_manager'
-      - '@ai_content_audit.provider_model_choices'
-      - '@tempstore.private'
-      - '@ai_content_audit.prompt_resolver'
-      - '@current_user'
-      - '@logger.channel.ai_content_audit'
+  Drupal\ai_content_audit\Service\AiroPreviewChat: '@ai_content_audit.airo_preview_chat'
 
   ai_content_audit.node_layout_builder_detector:
     class: Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector
-    arguments:
-      - '@entity_type.manager'
+  Drupal\ai_content_audit\Service\NodeLayoutBuilderDetector: '@ai_content_audit.node_layout_builder_detector'
 
   ai_content_audit.airo_analysis_panel_builder:
     class: Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder
-    arguments:
-      - '@ai_content_audit.airo_panel_tab_manager'
-      - '@module_handler'
+  Drupal\ai_content_audit\Service\AiroAnalysisPanelBuilder: '@ai_content_audit.airo_analysis_panel_builder'
 
   ai_content_audit.airo_node_analysis_form_alterer:
     class: Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer
-    arguments:
-      - '@ai_content_audit.airo_analysis_panel_builder'
-      - '@current_route_match'
-      - '@ai_content_audit.node_layout_builder_detector'
-      - '@ai_content_audit.airo_gin_layout_builder_adapter'
-      - '@string_translation'
+  Drupal\ai_content_audit\Service\AiroNodeAnalysisFormAlterer: '@ai_content_audit.airo_node_analysis_form_alterer'
 
   ai_content_audit.airo_gin_layout_builder_adapter:
     class: Drupal\ai_content_audit\Service\AiroGinLayoutBuilderAdapter
-    arguments:
-      - '@config.factory'
+  Drupal\ai_content_audit\Service\AiroGinLayoutBuilderAdapter: '@ai_content_audit.airo_gin_layout_builder_adapter'

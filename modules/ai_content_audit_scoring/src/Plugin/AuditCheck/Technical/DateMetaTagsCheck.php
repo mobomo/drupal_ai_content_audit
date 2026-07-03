@@ -46,7 +46,7 @@ class DateMetaTagsCheck extends AuditCheckBase implements ContainerFactoryPlugin
       $plugin_id,
       $plugin_definition,
       $container->get('ai_content_audit.html_fetch'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 

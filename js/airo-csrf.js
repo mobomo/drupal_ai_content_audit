@@ -3,9 +3,7 @@
  * Shared helpers for AIRO authenticated JSON requests.
  */
 (function (Drupal) {
-  'use strict';
-
-  var csrfTokenPromise;
+  let csrfTokenPromise;
 
   function getCsrfToken() {
     if (!csrfTokenPromise) {
@@ -33,9 +31,8 @@
           'X-CSRF-Token': token,
         },
         credentials: 'same-origin',
-        body: body,
+        body,
       });
     });
   };
-
 })(Drupal);

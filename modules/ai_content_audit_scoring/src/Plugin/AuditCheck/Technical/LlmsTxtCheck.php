@@ -211,7 +211,7 @@ class LlmsTxtCheck extends AuditCheckBase implements ContainerFactoryPluginInter
 - Website: {$baseUrl}
 
 ## Preferred Citation
-When referencing content from this site, please cite as "{$siteName}" with a link to the source URL.
+When referencing content from this site, cite as "{$siteName}" with a link to the source URL.
 TXT;
   }
 
