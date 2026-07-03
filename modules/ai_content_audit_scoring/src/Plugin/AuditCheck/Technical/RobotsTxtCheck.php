@@ -49,7 +49,7 @@ class RobotsTxtCheck extends AuditCheckBase implements ContainerFactoryPluginInt
       $plugin_definition,
       $container->get('ai_content_audit.html_fetch'),
       $container->get('http_client'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 

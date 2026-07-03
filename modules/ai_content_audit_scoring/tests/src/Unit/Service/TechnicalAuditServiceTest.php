@@ -199,7 +199,7 @@ class TechnicalAuditServiceTest extends TestCase {
    * @covers ::checkSchemaMarkup
    */
   public function testCheckSchemaMarkupWarnsWithFewTypes(): void {
-    // Arrange — Only one recognised schema type.
+    // Arrange — Only one recognized schema type.
     $html = '<html><head>'
       . '<script type="application/ld+json">{"@type":"Article"}</script>'
       . '</head><body></body></html>';
@@ -301,12 +301,12 @@ class TechnicalAuditServiceTest extends TestCase {
   }
 
   /**
-   * Tests that JSON script blocks with unrecognised types still count scripts.
+   * Tests that JSON script blocks with unrecognized types still count scripts.
    *
    * @covers ::checkSchemaMarkup
    */
-  public function testCheckSchemaMarkupCountsScriptsEvenWithUnrecognisedTypes(): void {
-    // Arrange — One ld+json script but with an unrecognised @type.
+  public function testCheckSchemaMarkupCountsScriptsEvenWithUnrecognizedTypes(): void {
+    // Arrange — One ld+json script but with an unrecognized @type.
     $html = '<html><head>'
       . '<script type="application/ld+json">{"@type":"CustomSchema","name":"test"}</script>'
       . '</head><body></body></html>';
@@ -322,7 +322,7 @@ class TechnicalAuditServiceTest extends TestCase {
 
     // Assert — 0 desired types with scripts found → fail message.
     $this->assertSame('fail', $result->status);
-    $this->assertStringContainsString('JSON-LD scripts found but no recognised', $result->description);
+    $this->assertStringContainsString('JSON-LD scripts found but no recognized', $result->description);
     $this->assertSame(1, $result->details['total_scripts']);
   }
 
@@ -657,7 +657,7 @@ class TechnicalAuditServiceTest extends TestCase {
   }
 
   /**
-   * Tests that a null owner also triggers anonymous / fail behaviour.
+   * Tests that a null owner also triggers anonymous / fail behavior.
    *
    * @covers ::checkEntityRelationships
    */

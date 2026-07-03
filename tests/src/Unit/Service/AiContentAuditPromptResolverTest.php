@@ -10,20 +10,19 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests AI Content Audit prompt resolution.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\AiContentAuditPromptResolver
  */
+#[Group('ai_content_audit')]
+#[CoversClass(AiContentAuditPromptResolver::class)]
 final class AiContentAuditPromptResolverTest extends TestCase {
 
   /**
    * Tests preview prompt variable replacement.
-   *
-   * @covers ::resolvePreviewPrompts
    */
   public function testResolvePreviewPromptsReplacesVariables(): void {
     $resolver = $this->createResolver([
@@ -42,8 +41,6 @@ final class AiContentAuditPromptResolverTest extends TestCase {
 
   /**
    * Tests required prompt variables must be present in the prompt text.
-   *
-   * @covers ::resolvePreviewPrompts
    */
   public function testResolvePreviewPromptsRequiresVariablesInPromptText(): void {
     $resolver = $this->createResolver([

@@ -10,14 +10,15 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for FieldExtractor plugin.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Plugin\ContentExtractor\FieldExtractor
  */
+#[Group('ai_content_audit')]
+#[CoversClass(FieldExtractor::class)]
 class FieldExtractorTest extends TestCase {
 
   /**
@@ -50,8 +51,6 @@ class FieldExtractorTest extends TestCase {
    * Tests that the title field is skipped in extractForNode output.
    *
    * Title is emitted via buildContentMetadataBlock() in extract(), not here.
-   *
-   * @covers ::extractForNode
    */
   public function testTitleFieldIsSkippedInExtractForNode(): void {
     $node = $this->createMockNode('Test Article Title', []);
@@ -66,8 +65,6 @@ class FieldExtractorTest extends TestCase {
 
   /**
    * Tests that non-extractable field types are skipped.
-   *
-   * @covers ::extractForNode
    */
   public function testNonExtractableFieldsAreSkipped(): void {
     $intDefinition = $this->createMock(FieldDefinitionInterface::class);
@@ -86,8 +83,6 @@ class FieldExtractorTest extends TestCase {
 
   /**
    * Tests stripHtml removes tags and normalizes whitespace.
-   *
-   * @covers ::stripHtml
    */
   public function testStripHtmlRemovesTagsAndNormalizesWhitespace(): void {
     $reflection = new \ReflectionMethod(FieldExtractor::class, 'stripHtml');
@@ -100,8 +95,6 @@ class FieldExtractorTest extends TestCase {
 
   /**
    * Tests a node with only unsupported field types yields empty body text.
-   *
-   * @covers ::extractForNode
    */
   public function testExtractForNodeReturnsOnlyTitleForUnsupportedFieldType(): void {
     // An 'integer' field is not in EXTRACTABLE_FIELD_TYPES.
@@ -130,8 +123,6 @@ class FieldExtractorTest extends TestCase {
    *
    * To avoid mocking FieldItemList iterators, an anonymous subclass
    * overrides extractFieldText() so concatenation logic is tested in isolation.
-   *
-   * @covers ::extractForNode
    */
   public function testExtractForNodeConcatenatesMultipleFields(): void {
     // --- field definitions ---

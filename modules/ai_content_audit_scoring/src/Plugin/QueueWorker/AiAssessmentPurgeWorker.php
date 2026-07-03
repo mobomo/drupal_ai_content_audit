@@ -84,7 +84,7 @@ class AiAssessmentPurgeWorker extends QueueWorkerBase implements ContainerFactor
     }
 
     $storage->delete($entities);
-    $this->loggerFactory->get('ai_content_audit')->info(
+    $this->loggerFactory->get('ai_content_audit_scoring')->info(
       'Purge queue worker deleted @count excess assessment(s).',
       ['@count' => count($entities)],
     );

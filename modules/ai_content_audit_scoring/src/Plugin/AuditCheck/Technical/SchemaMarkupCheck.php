@@ -69,7 +69,7 @@ class SchemaMarkupCheck extends AuditCheckBase implements ContainerFactoryPlugin
       $plugin_definition,
       $container->get('ai_content_audit.html_fetch'),
       $container->get('module_handler'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 
@@ -125,7 +125,7 @@ class SchemaMarkupCheck extends AuditCheckBase implements ContainerFactoryPlugin
     $foundTypes = $this->extractSchemaTypes($html);
     $totalScripts = $this->countJsonLdScripts($html);
 
-    // Categorise found types for details.
+    // Categorize found types for details.
     $articleTypes = ['Article', 'NewsArticle', 'BlogPosting'];
     $webPageTypes = ['WebPage', 'WebSite'];
     $hasArticle = !empty(array_intersect($foundTypes, $articleTypes));
@@ -184,7 +184,7 @@ class SchemaMarkupCheck extends AuditCheckBase implements ContainerFactoryPlugin
     }
 
     $description = $totalScripts > 0
-      ? 'JSON-LD scripts found but no recognised Schema.org types detected.'
+      ? 'JSON-LD scripts found but no recognized Schema.org types detected.'
       : 'No Schema.org structured data (application/ld+json) found on this page.';
 
     return $this->fail(

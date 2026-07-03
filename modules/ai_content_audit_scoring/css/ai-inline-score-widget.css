@@ -7,12 +7,12 @@
 
 /* ── Widget card wrapper ────────────────────────────────────────────────── */
 .airo-widget {
+  margin: var(--airo-spacing-m, 1rem) 0;
+  padding: var(--airo-spacing-m, 1rem) var(--airo-spacing-l, 1.5rem);
   border: 1px solid var(--airo-border, #d4d4d8);
   border-radius: var(--airo-radius, 0.5rem);
-  padding: var(--airo-spacing-m, 1rem) var(--airo-spacing-l, 1.5rem);
-  margin: var(--airo-spacing-m, 1rem) 0;
   background-color: var(--airo-bg, #fff);
-  box-shadow: var(--airo-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
+  box-shadow: var(--airo-shadow, 0 1px 3px rgb(0, 0, 0, 0.1));
 }
 
 /* ── State wrappers ─────────────────────────────────────────────────────── */
@@ -37,26 +37,26 @@
   display: inline-flex;
   align-items: center;
   padding: 0.2em 0.6em;
+  white-space: nowrap;
   border-radius: var(--airo-radius-xl, 9999px);
   font-size: var(--airo-font-size-xxs, 0.75rem);
   font-weight: var(--airo-font-weight-semibold, 500);
   line-height: 1.4;
-  white-space: nowrap;
 }
 
 .airo-badge--success {
-  background: var(--airo-status-success-bg, rgba(5, 130, 96, 0.12));
   color: var(--airo-status-success-text, #058260);
+  background: var(--airo-status-success-bg, rgb(5, 130, 96, 0.12));
 }
 
 .airo-badge--warning {
-  background: var(--airo-status-warning-bg, rgba(216, 178, 52, 0.15));
   color: var(--airo-status-warning-text, #734c00);
+  background: var(--airo-status-warning-bg, rgb(216, 178, 52, 0.15));
 }
 
 .airo-badge--danger {
-  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
   color: var(--airo-status-danger-text, #cc3d3d);
+  background: var(--airo-status-danger-bg, rgb(204, 61, 61, 0.12));
 }
 
 /* ── Donut SVG ──────────────────────────────────────────────────────────── */
@@ -78,9 +78,15 @@
 }
 
 /* Fill arc per score_color — CSS classes set by the template */
-.airo-widget__donut-fill--good    { stroke: var(--airo-score-good, #058260); }
-.airo-widget__donut-fill--warning { stroke: var(--airo-score-warning, #d8b234); }
-.airo-widget__donut-fill--danger  { stroke: var(--airo-score-danger, #cc3d3d); }
+.airo-widget__donut-fill--good {
+  stroke: var(--airo-score-good, #058260);
+}
+.airo-widget__donut-fill--warning {
+  stroke: var(--airo-score-warning, #d8b234);
+}
+.airo-widget__donut-fill--danger {
+  stroke: var(--airo-score-danger, #cc3d3d);
+}
 
 .airo-widget__donut-fill {
   transition: stroke-dashoffset 0.8s ease-in-out;
@@ -95,40 +101,46 @@
 
 /* ── Info column ────────────────────────────────────────────────────────── */
 .airo-widget__info {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--airo-spacing-xxs, 0.25rem);
 }
 
 /* Legacy status color classes — kept for backward compatibility */
 .airo-widget__status {
-  font-weight: var(--airo-font-weight-semibold, 500);
   font-size: var(--airo-font-size, 1rem);
+  font-weight: var(--airo-font-weight-semibold, 500);
 }
 
-.airo-widget__status--good    { color: var(--airo-score-good, #058260); }
-.airo-widget__status--warning { color: var(--airo-score-warning, #d8b234); }
-.airo-widget__status--danger  { color: var(--airo-score-danger, #cc3d3d); }
+.airo-widget__status--good {
+  color: var(--airo-score-good, #058260);
+}
+.airo-widget__status--warning {
+  color: var(--airo-score-warning, #d8b234);
+}
+.airo-widget__status--danger {
+  color: var(--airo-score-danger, #cc3d3d);
+}
 
 /* Legacy priority badge — kept for cached / older rendered markup */
 .airo-widget__priority-badge {
   display: inline-block;
-  background: var(--airo-status-danger-bg, rgba(204, 61, 61, 0.12));
+  width: fit-content;
+  padding: var(--airo-spacing-xxs, 0.125rem) var(--airo-spacing-xs, 0.5rem);
   color: var(--airo-status-danger-text, #cc3d3d);
+  border-radius: var(--airo-radius-lg, 0.75rem);
+  background: var(--airo-status-danger-bg, rgb(204, 61, 61, 0.12));
   font-size: var(--airo-font-size-xxs, 0.75rem);
   font-weight: var(--airo-font-weight-semibold, 500);
-  padding: var(--airo-spacing-xxs, 0.125rem) var(--airo-spacing-xs, 0.5rem);
-  border-radius: var(--airo-radius-lg, 0.75rem);
-  width: fit-content;
 }
 
 /* ── Actions column ─────────────────────────────────────────────────────── */
 .airo-widget__actions {
   display: flex;
-  gap: var(--airo-spacing-xs, 0.5rem);
-  align-items: center;
   flex-shrink: 0;
+  align-items: center;
+  gap: var(--airo-spacing-xs, 0.5rem);
 }
 
 .airo-widget__reanalyze {
@@ -137,35 +149,35 @@
 
 /* ── Empty state ────────────────────────────────────────────────────────── */
 .airo-widget__empty-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  background: var(--airo-bg-wash, #edeff5);
-  border-radius: var(--airo-radius, 0.5rem);
+  width: 40px;
+  height: 40px;
   color: var(--airo-text-light, #545560);
+  border-radius: var(--airo-radius, 0.5rem);
+  background: var(--airo-bg-wash, #edeff5);
 }
 
 .airo-widget__empty-text {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--airo-spacing-xxs, 0.125rem);
 }
 
 .airo-widget__empty-title,
 .airo-widget__state-title {
-  font-weight: var(--airo-font-weight-semibold, 500);
-  font-size: var(--airo-font-size, 1rem);
   color: var(--airo-title, #222330);
+  font-size: var(--airo-font-size, 1rem);
+  font-weight: var(--airo-font-weight-semibold, 500);
 }
 
 .airo-widget__empty-subtitle,
 .airo-widget__state-sub {
-  font-size: var(--airo-font-size-xxs, 0.75rem);
   color: var(--airo-text-light, #545560);
+  font-size: var(--airo-font-size-xxs, 0.75rem);
 }
 
 /* State-text wrapper alignment */
@@ -178,14 +190,14 @@
 
 /* Legacy analyzing text class names for JS-injected markup */
 .airo-widget__analyzing-title {
-  font-weight: var(--airo-font-weight-semibold, 500);
-  font-size: var(--airo-font-size, 1rem);
   color: var(--airo-title, #222330);
+  font-size: var(--airo-font-size, 1rem);
+  font-weight: var(--airo-font-weight-semibold, 500);
 }
 
 .airo-widget__analyzing-subtitle {
-  font-size: var(--airo-font-size-xxs, 0.75rem);
   color: var(--airo-text-light, #545560);
+  font-size: var(--airo-font-size-xxs, 0.75rem);
 }
 
 /* ── Spinner ────────────────────────────────────────────────────────────── */
@@ -193,14 +205,16 @@
   flex-shrink: 0;
   width: 32px;
   height: 32px;
+  animation: airo-widget-spin 0.8s linear infinite;
   border: 3px solid var(--airo-border, #d4d4d8);
   border-top-color: var(--airo-primary, #0036b1);
   border-radius: 50%;
-  animation: airo-widget-spin 0.8s linear infinite;
 }
 
 @keyframes airo-widget-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Respect user preference for reduced motion */
@@ -228,14 +242,14 @@
   }
 
   .airo-widget__donut {
+    align-self: center;
     width: 48px;
     height: 48px;
-    align-self: center;
   }
 
   .airo-widget__actions {
-    width: 100%;
     justify-content: flex-end;
+    width: 100%;
   }
 
   .airo-widget__actions .button {

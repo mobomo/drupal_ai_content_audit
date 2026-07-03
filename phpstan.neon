@@ -1,19 +1,23 @@
 includes:
-  - %currentWorkingDirectory%/vendor/phpstan/phpstan/conf/bleedingEdge.neon
+  - phar://phpstan.phar/conf/bleedingEdge.neon
 parameters:
   level: 4
-  reportUnmatchedIgnoredErrors: false
+  # PHPDoc types in Drupal interfaces are often narrower than the runtime
+  # contract (e.g. methods documented as returning string may return
+  # MarkupInterface). Without this, PHPStan flags every defensive
+  # is_object()/method_exists()/!== null check as redundant.
   treatPhpDocTypesAsCertain: false
-  parallel:
-    processTimeout: 300.0
-  fileExtensions:
-      - php
-      - module
-      - install
-  paths:
-    - .
   ignoreErrors:
     - '#Unsafe usage of new static\(\)#'
-    - identifier: missingType.iterableValue
-  scanDirectories:
-    - %currentWorkingDirectory%/vendor/drush/drush/src-symfony-compatibility
+    # Metatag is an optional dependency; the typehint is nullable and only
+    # used when the metatag module is enabled.
+    - '#Drupal\\metatag\\MetatagManagerInterface#'
+    # ProviderProxy::chat() is added via the AI module's runtime magic; the
+    # mock needs addMethods() until ai_content_audit can depend on a stable
+    # AI-side interface that declares chat() directly.
+    -
+      message: '#Call to deprecated method addMethods\(\) of class PHPUnit\\Framework\\MockObject\\MockBuilder#'
+      path: modules/ai_content_audit_scoring/tests/src/Unit/Service/AiAssessmentServiceTest.php
+    -
+      message: '#Trying to mock an undefined method chat\(\) on class Drupal\\ai\\Plugin\\ProviderProxy#'
+      path: modules/ai_content_audit_scoring/tests/src/Unit/Service/AiAssessmentServiceTest.php

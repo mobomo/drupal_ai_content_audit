@@ -9,5 +9,5 @@ ai_site_audit.settings:
   title: 'AI Site Audit'
   description: 'Configure sitewide audit dashboard and budget controls.'
   route_name: ai_site_audit.settings
-  parent: system.admin_config
+  parent: ai.admin_settings
   weight: 11

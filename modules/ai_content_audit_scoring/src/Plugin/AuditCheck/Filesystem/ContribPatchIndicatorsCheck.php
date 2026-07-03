@@ -54,7 +54,7 @@ class ContribPatchIndicatorsCheck extends FilesystemCheckBase {
             // Track the immediate subdirectory of baseDir as the module name.
             $relPath = substr($file->getPathname(), strlen($baseDir) + 1);
             $parts = explode(\DIRECTORY_SEPARATOR, $relPath);
-            if (isset($parts[0])) {
+            if ($parts[0] !== '') {
               $patchedModules[$parts[0]] = TRUE;
             }
           }

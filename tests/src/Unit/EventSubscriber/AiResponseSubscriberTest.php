@@ -8,14 +8,15 @@ use Drupal\ai\Event\PostGenerateResponseEvent;
 use Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for AiResponseSubscriber.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\EventSubscriber\AiResponseSubscriber
  */
+#[Group('ai_content_audit')]
+#[CoversClass(AiResponseSubscriber::class)]
 class AiResponseSubscriberTest extends TestCase {
 
   /**
@@ -59,8 +60,6 @@ class AiResponseSubscriberTest extends TestCase {
    *
    * This is a smoke test confirming the subscriber is wired to at least one
    * event, without depending on specific event class constants.
-   *
-   * @covers ::getSubscribedEvents
    */
   public function testGetSubscribedEventsReturnsNonEmptyArray(): void {
     $events = AiResponseSubscriber::getSubscribedEvents();
@@ -74,8 +73,6 @@ class AiResponseSubscriberTest extends TestCase {
    *
    * When 'ai_content_audit' appears in the event tags the subscriber must call
    * LoggerChannelInterface::debug() exactly once.
-   *
-   * @covers ::onPostGenerateResponse
    */
   public function testOnPostGenerateResponseLogsWhenTagged(): void {
     // Build a mock PostGenerateResponseEvent that reports the module tag.
@@ -103,8 +100,6 @@ class AiResponseSubscriberTest extends TestCase {
    *
    * If 'ai_content_audit' is not in the event tags, the subscriber must return
    * early without calling the logger.
-   *
-   * @covers ::onPostGenerateResponse
    */
   public function testOnPostGenerateResponseSkipsWhenNotTagged(): void {
     $event = $this->getMockBuilder(PostGenerateResponseEvent::class)

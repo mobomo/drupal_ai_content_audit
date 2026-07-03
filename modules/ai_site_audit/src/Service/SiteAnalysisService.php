@@ -84,7 +84,7 @@ class SiteAnalysisService {
       $modelId    = $options['model_id'] ?? $central['model_id'] ?? NULL;
 
       if (!$providerId || !$modelId) {
-        return ['error' => 'No AI chat provider configured. Please configure a default chat provider at /admin/config/ai/providers.'];
+        return ['error' => 'No AI chat provider configured. Configure a default chat provider at /admin/config/ai/providers.'];
       }
 
       $input = new ChatInput([
@@ -379,7 +379,7 @@ PROMPT;
       }
     }
 
-    $parts[] = "\nPlease analyze these statistics and provide your strategic assessment as JSON.";
+    $parts[] = "\nAnalyze these statistics and provide your strategic assessment as JSON.";
 
     return implode("\n", $parts);
   }

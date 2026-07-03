@@ -2,7 +2,7 @@ name: 'AIRO Preview'
 type: module
 description: 'Adds an AIRO Preview chat panel for Drupal node content using the Drupal AI module.'
 package: 'AI'
-core_version_requirement: ^11.1
+core_version_requirement: ^11.3
 dependencies:
   - drupal:node
   - drupal:layout_builder

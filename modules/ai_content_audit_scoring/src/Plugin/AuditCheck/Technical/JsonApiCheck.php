@@ -51,7 +51,7 @@ class JsonApiCheck extends AuditCheckBase implements ContainerFactoryPluginInter
       $container->get('http_client'),
       $container->get('module_handler'),
       $container->get('ai_content_audit.html_fetch'),
-      $container->get('logger.factory')->get('ai_content_audit'),
+      $container->get('logger.factory')->get('ai_content_audit_scoring'),
     );
   }
 

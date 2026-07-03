@@ -11,6 +11,8 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Render\AttachmentsResponseProcessorInterface;
 use Drupal\Core\Render\MainContent\HtmlRenderer;
 use Drupal\Core\Render\RendererInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Theme\ThemeManagerInterface;
@@ -25,10 +27,9 @@ use Drupal\Core\Theme\ThemeInitializationInterface;
  * factory) are replaced with light mocks; only the request stack needs real
  * configuration because convertHtmlToStructuredText() internally calls
  * getSiteHost() to classify links as internal or external.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Plugin\ContentExtractor\HtmlExtractor
  */
+#[Group('ai_content_audit')]
+#[CoversClass(HtmlExtractor::class)]
 class HtmlExtractorTest extends TestCase {
 
   /**
@@ -108,7 +109,7 @@ class HtmlExtractorTest extends TestCase {
    *   Optional extractor override (for host-specific tests).
    *
    * @return string
-   *   Structured plain text with whitespace normalised, or an empty string.
+   *   Structured plain text with whitespace normalized, or an empty string.
    */
   private function convert(string $html, ?HtmlExtractor $extractor = NULL): string {
     return $this->convertMethod->invoke($extractor ?? $this->extractor, $html);
@@ -122,8 +123,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that h1–h6 elements are converted to markdown-style markers.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlPreservesHeadingHierarchy(): void {
     // Arrange.
@@ -154,8 +153,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that img elements become [Image: alt text] markers.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlExtractsImageAltText(): void {
     // Arrange.
@@ -171,8 +168,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that img elements without alt become [Image: no alt text].
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesImagesWithoutAlt(): void {
     // Arrange.
@@ -193,8 +188,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that path-relative links are classified as internal.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlClassifiesInternalLinks(): void {
     // Arrange — href starts with "/", site host is 'example.com'.
@@ -209,8 +202,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that fragment-only hrefs are classified as internal.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlClassifiesFragmentLinksAsInternal(): void {
     // Arrange.
@@ -225,8 +216,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that same-host absolute URLs are classified as internal.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlClassifiesSameHostLinksAsInternal(): void {
     // Arrange — extractor's site host is 'example.com'.
@@ -241,8 +230,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that cross-domain links are classified as external.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlClassifiesExternalLinks(): void {
     // Arrange.
@@ -257,8 +244,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Without a request (CLI), all non-path links are treated as external.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlTreatsAllLinksAsExternalWhenNoHost(): void {
     // Arrange — build extractor whose requestStack returns NULL (CLI mode).
@@ -280,8 +265,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that table elements are converted to [Table]...[/Table] format.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesTables(): void {
     // Arrange.
@@ -306,8 +289,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that nested tables are processed innermost-first.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesNestedTables(): void {
     // Arrange — inner table nested inside outer table cell.
@@ -332,8 +313,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that ul/li elements are converted to bullet markers.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesUnorderedLists(): void {
     // Arrange.
@@ -351,8 +330,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that ol/li elements are converted to numbered markers.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesOrderedLists(): void {
     // Arrange.
@@ -375,8 +352,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Nav is stripped while header/footer content is retained for LB markup.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlStripsNavKeepsHeaderFooter(): void {
     // Arrange.
@@ -398,8 +373,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that script and style elements (and their text) are stripped.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlStripsScriptsAndStyles(): void {
     // Arrange.
@@ -418,8 +391,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that visually-hidden elements are stripped.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlStripsVisuallyHiddenElements(): void {
     // Arrange.
@@ -442,8 +413,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that an empty string input returns an empty string.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesEmptyInput(): void {
     // Act.
@@ -455,8 +424,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that whitespace-only input returns an empty string.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlHandlesWhitespaceOnlyInput(): void {
     // Act.
@@ -468,8 +435,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that consecutive newlines in output are collapsed to at most two.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlNormalizesConsecutiveNewlines(): void {
     // Arrange — multiple headings produce newlines between them.
@@ -487,8 +452,6 @@ class HtmlExtractorTest extends TestCase {
 
   /**
    * Tests that HTML entities in text content are decoded.
-   *
-   * @covers ::convertHtmlToStructuredText
    */
   public function testConvertHtmlDecodesHtmlEntities(): void {
     // Arrange.

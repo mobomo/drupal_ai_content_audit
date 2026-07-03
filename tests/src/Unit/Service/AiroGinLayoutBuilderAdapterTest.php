@@ -7,21 +7,19 @@ namespace Drupal\Tests\ai_content_audit\Unit\Service;
 use Drupal\ai_content_audit\Service\AiroGinLayoutBuilderAdapter;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the optional Gin Layout Builder adapter.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Service\AiroGinLayoutBuilderAdapter
  */
+#[Group('ai_content_audit')]
+#[CoversClass(AiroGinLayoutBuilderAdapter::class)]
 final class AiroGinLayoutBuilderAdapterTest extends TestCase {
 
   /**
    * Verifies the adapter is disabled when Gin is not the admin theme.
-   *
-   * @covers ::applies
-   * @covers ::attachForm
    */
   public function testAdapterDoesNotApplyWithoutGinAdminTheme(): void {
     $config = $this->createMock(ImmutableConfig::class);

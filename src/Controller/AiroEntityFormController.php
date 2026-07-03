@@ -14,6 +14,7 @@ use Drupal\Core\Entity\HtmlEntityFormController;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\node\NodeInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
@@ -24,6 +25,7 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 final class AiroEntityFormController extends HtmlEntityFormController implements ContainerInjectionInterface {
 
   public function __construct(
+    #[Autowire(service: 'http_kernel.controller.argument_resolver')]
     ArgumentResolverInterface $argument_resolver,
     FormBuilderInterface $form_builder,
     EntityTypeManagerInterface $entity_type_manager,

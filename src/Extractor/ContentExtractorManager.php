@@ -8,6 +8,7 @@ use Drupal\ai_content_audit\Enum\RenderMode;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Plugin manager for ContentExtractor plugins.
@@ -29,7 +30,9 @@ class ContentExtractorManager extends DefaultPluginManager {
    *   The module handler to invoke the alter hook with.
    */
   public function __construct(
+    #[Autowire(service: 'container.namespaces')]
     \Traversable $namespaces,
+    #[Autowire(service: 'cache.discovery')]
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler,
   ) {

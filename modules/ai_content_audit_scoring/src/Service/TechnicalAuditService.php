@@ -15,6 +15,7 @@ use Drupal\node\NodeInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -55,7 +56,8 @@ class TechnicalAuditService {
     protected ClientInterface $httpClient,
     protected ConfigFactoryInterface $configFactory,
     protected LoggerInterface $logger,
-    protected CacheBackendInterface $cacheData,
+    #[Autowire(service: 'cache.data')]
+    protected CacheBackendInterface $cacheBackend,
     protected RequestStack $requestStack,
     protected ModuleHandlerInterface $moduleHandler,
     protected EntityTypeManagerInterface $entityTypeManager,
@@ -682,7 +684,7 @@ class TechnicalAuditService {
     $foundTypes = $this->extractSchemaTypes($html);
     $totalScripts = $this->countJsonLdScripts($html);
 
-    // Categorise found types for details.
+    // Categorize found types for details.
     $articleTypes = ['Article', 'NewsArticle', 'BlogPosting'];
     $webPageTypes = ['WebPage', 'WebSite'];
     $hasArticle = !empty(array_intersect($foundTypes, $articleTypes));
@@ -714,7 +716,7 @@ class TechnicalAuditService {
     else {
       $status = 'fail';
       $description = $totalScripts > 0
-        ? 'JSON-LD scripts found but no recognised Schema.org types detected.'
+        ? 'JSON-LD scripts found but no recognized Schema.org types detected.'
         : 'No Schema.org structured data (application/ld+json) found on this page.';
     }
 
@@ -750,7 +752,7 @@ class TechnicalAuditService {
    * Checks entity relationship richness for a given node or the site at-large.
    *
    * For a node: inspects taxonomy term references, authorship, and entity
-   * reference fields to evaluate how well the content is contextualised.
+   * reference fields to evaluate how well the content is contextualized.
    *
    * For a site-level check (no node): verifies that the Taxonomy module is
    * enabled and that vocabularies exist.
@@ -1429,7 +1431,7 @@ class TechnicalAuditService {
           continue;
         }
 
-        // Normalise @type to an array for uniform handling.
+        // Normalize @type to an array for uniform handling.
         $types = is_array($item['@type']) ? $item['@type'] : [$item['@type']];
         $isArticle = !empty(array_intersect($types, $articleTypes));
 
@@ -1756,7 +1758,7 @@ TXT;
 - Website: {$this->getBaseUrl()}
 
 ## Preferred Citation
-When referencing content from this site, please cite as "{$siteName}" with a link to the source URL.
+When referencing content from this site, cite as "{$siteName}" with a link to the source URL.
 TXT;
   }
 
@@ -1767,7 +1769,7 @@ TXT;
    *   Cached check results keyed by check ID, or NULL if none.
    */
   protected function getCachedResults(): ?array {
-    $cached = $this->cacheData->get('ai_content_audit:technical_audit');
+    $cached = $this->cacheBackend->get('ai_content_audit_scoring:technical_audit');
     if (!$cached) {
       return NULL;
     }
@@ -1797,7 +1799,7 @@ TXT;
    */
   protected function cacheResults(array $results): void {
     $serialized = array_map(fn(TechnicalAuditResult $r) => $r->toArray(), $results);
-    $this->cacheData->set('ai_content_audit:technical_audit', $serialized, time() + static::CACHE_TTL);
+    $this->cacheBackend->set('ai_content_audit_scoring:technical_audit', $serialized, time() + static::CACHE_TTL);
   }
 
 }

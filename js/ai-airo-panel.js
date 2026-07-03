@@ -15,11 +15,9 @@
  *  3. airoPanelOffCanvasReanalyze — Re-analyze in the off-canvas footer (POST + reload).
  */
 (function (Drupal, once) {
-  'use strict';
-
   function airoAssessPostBody(el) {
-    var panel = el.closest('.airo-panel');
-    var rid =
+    const panel = el.closest('.airo-panel');
+    const rid =
       el.getAttribute('data-revision-id') ||
       (panel && panel.getAttribute('data-revision-id')) ||
       '';
@@ -36,56 +34,60 @@
    *   .airo-panel--accordion element (for node id).
    */
   function airoRefreshAfterAssess(panel) {
-    var analysisPage = document.querySelector('.airo-analysis-route');
+    const analysisPage = document.querySelector('.airo-analysis-route');
     if (!analysisPage || !panel) {
       window.location.reload();
       return;
     }
-    var nodeId = panel.getAttribute('data-node-id');
+    const nodeId = panel.getAttribute('data-node-id');
     if (!nodeId) {
       window.location.reload();
       return;
     }
     Drupal.ajax({
-      url: Drupal.url('node/' + nodeId + '/airo-analysis/panel-refresh'),
+      url: Drupal.url(`node/${nodeId}/airo-analysis/panel-refresh`),
     }).execute();
   }
 
   // ── 1. Tab switching ──────────────────────────────────────────────────────
   Drupal.behaviors.airoPanel = {
-    attach: function (context) {
-      once('airo-tab-switch', '.tabs__link[data-airo-tab]', context).forEach(function (tab) {
-        tab.addEventListener('click', function (e) {
-          e.preventDefault();
+    attach(context) {
+      once('airo-tab-switch', '.tabs__link[data-airo-tab]', context).forEach(
+        function (tab) {
+          tab.addEventListener('click', function (e) {
+            e.preventDefault();
 
-          var tabId = this.getAttribute('data-airo-tab');
-          var panel = this.closest('.airo-panel');
-          if (!panel || !tabId) {
-            return;
-          }
-
-          // ---- Update tab-button state (button + parent <li>) ----
-          panel.querySelectorAll('.tabs__link[data-airo-tab]').forEach(function (t) {
-            var active = t.getAttribute('data-airo-tab') === tabId;
-            t.classList.toggle('is-active', active);
-            t.setAttribute('aria-selected', active ? 'true' : 'false');
-            // Toggle is-active on the parent <li class="tabs__tab"> too.
-            if (t.parentElement) {
-              t.parentElement.classList.toggle('is-active', active);
+            const tabId = this.getAttribute('data-airo-tab');
+            const panel = this.closest('.airo-panel');
+            if (!panel || !tabId) {
+              return;
             }
-          });
 
-          // ---- Show the matching pane, hide all others ----
-          panel.querySelectorAll('[data-tab-pane]').forEach(function (pane) {
-            var show = pane.getAttribute('data-tab-pane') === tabId;
-            pane.hidden = !show;
-            pane.setAttribute('aria-hidden', show ? 'false' : 'true');
+            // ---- Update tab-button state (button + parent <li>) ----
+            panel
+              .querySelectorAll('.tabs__link[data-airo-tab]')
+              .forEach(function (t) {
+                const active = t.getAttribute('data-airo-tab') === tabId;
+                t.classList.toggle('is-active', active);
+                t.setAttribute('aria-selected', active ? 'true' : 'false');
+                // Toggle is-active on the parent <li class="tabs__tab"> too.
+                if (t.parentElement) {
+                  t.parentElement.classList.toggle('is-active', active);
+                }
+              });
+
+            // ---- Show the matching pane, hide all others ----
+            panel.querySelectorAll('[data-tab-pane]').forEach(function (pane) {
+              const show = pane.getAttribute('data-tab-pane') === tabId;
+              pane.hidden = !show;
+              pane.setAttribute('aria-hidden', show ? 'false' : 'true');
+            });
           });
-        });
-      });
+        },
+      );
     },
 
-    detach: function (context, settings, trigger) {
+    detach(context, settings, trigger) {
       if (trigger === 'unload') {
         once.remove('airo-tab-switch', '.tabs__link[data-airo-tab]', context);
       }
@@ -101,56 +103,59 @@
   //   c) On success or error, reload the page so the accordion item
   //      re-renders with fresh assessment data from the database.
   Drupal.behaviors.airoPanelAccordionReanalyze = {
-    attach: function (context) {
+    attach(context) {
       once(
         'airo-accordion-reanalyze',
         '[data-airo-action="accordion-reanalyze"]',
-        context
+        context,
       ).forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
 
-          var assessUrl = this.getAttribute('data-assess-url');
-          var panel     = this.closest('.airo-panel--accordion');
+          const assessUrl = this.getAttribute('data-assess-url');
+          const panel = this.closest('.airo-panel--accordion');
           if (!assessUrl || !panel) {
             return;
           }
 
           // Show an analyzing state that fills the panel body.
           panel.innerHTML =
-            '<div class="airo-panel__analyzing" role="status" aria-live="polite">' +
-              '<div class="airo-panel__analyzing-spinner" aria-hidden="true"></div>' +
-              '<div class="airo-panel__analyzing-label">' +
-                Drupal.t('Analyzing content\u2026') +
-              '</div>' +
-              '<div class="airo-panel__analyzing-sublabel">' +
-                Drupal.t('This may take a moment') +
-              '</div>' +
-            '</div>';
+            `<div class="airo-panel__analyzing" role="status" aria-live="polite">` +
+            `<div class="airo-panel__analyzing-spinner" aria-hidden="true"></div>` +
+            `<div class="airo-panel__analyzing-label">${Drupal.t(
+              'Analyzing content\u2026',
+            )}</div>` +
+            `<div class="airo-panel__analyzing-sublabel">${Drupal.t(
+              'This may take a moment',
+            )}</div>` +
+            `</div>`;
 
-          Drupal.airoContentAudit.postJson(assessUrl, airoAssessPostBody(this))
-          .then(function (response) { return response.json(); })
-          .then(function () {
-            airoRefreshAfterAssess(panel);
-          })
-          .catch(function () {
-            panel.innerHTML =
-              '<div class="messages messages--error" role="alert">' +
-                '<div class="messages__content">' +
-                  Drupal.t('Analysis failed. Please try again.') +
-                '</div>' +
-              '</div>';
-          });
+          Drupal.airoContentAudit
+            .postJson(assessUrl, airoAssessPostBody(this))
+            .then(function (response) {
+              return response.json();
+            })
+            .then(function () {
+              airoRefreshAfterAssess(panel);
+            })
+            .catch(function () {
+              panel.innerHTML =
+                `<div class="messages messages--error" role="alert">` +
+                `<div class="messages__content">${Drupal.t(
+                  'Analysis failed. Try again.',
+                )}</div>` +
+                `</div>`;
+            });
         });
       });
     },
 
-    detach: function (context, settings, trigger) {
+    detach(context, settings, trigger) {
       if (trigger === 'unload') {
         once.remove(
           'airo-accordion-reanalyze',
           '[data-airo-action="accordion-reanalyze"]',
-          context
+          context,
         );
       }
     },
@@ -158,21 +163,24 @@
 
   // ── 3. Off-canvas panel footer Re-analyze ─────────────────────────────────
   Drupal.behaviors.airoPanelOffCanvasReanalyze = {
-    attach: function (context) {
+    attach(context) {
       once(
         'airo-panel-offcanvas-reanalyze',
         '[data-airo-action="panel-reanalyze"]',
-        context
+        context,
       ).forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.preventDefault();
-          var assessUrl = this.getAttribute('data-assess-url');
+          const assessUrl = this.getAttribute('data-assess-url');
           if (!assessUrl) {
             return;
           }
           btn.disabled = true;
-          Drupal.airoContentAudit.postJson(assessUrl, airoAssessPostBody(btn))
-            .then(function (response) { return response.json(); })
+          Drupal.airoContentAudit
+            .postJson(assessUrl, airoAssessPostBody(btn))
+            .then(function (response) {
+              return response.json();
+            })
             .then(function () {
               window.location.reload();
             })
@@ -182,15 +190,14 @@
         });
       });
     },
-    detach: function (context, settings, trigger) {
+    detach(context, settings, trigger) {
       if (trigger === 'unload') {
         once.remove(
           'airo-panel-offcanvas-reanalyze',
           '[data-airo-action="panel-reanalyze"]',
-          context
+          context,
         );
       }
     },
   };
-
 })(Drupal, once);

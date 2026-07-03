@@ -12,6 +12,8 @@ use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\node\NodeInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -19,10 +21,9 @@ use PHPUnit\Framework\TestCase;
  *
  * A concrete anonymous class that uses the trait is created in each test so
  * that the protected methods can be called via thin public proxy methods.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Extractor\EntityContextTrait
  */
+#[Group('ai_content_audit')]
+#[CoversClass(EntityContextTrait::class)]
 class EntityContextTraitTest extends TestCase {
 
   /**
@@ -120,8 +121,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests that the metadata block includes title, content type, dates, and URL.
-   *
-   * @covers ::buildContentMetadataBlock
    */
   public function testBuildContentMetadataBlockIncludesAllFields(): void {
     // Arrange.
@@ -149,8 +148,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests fallback to /node/{nid} when toUrl() throws.
-   *
-   * @covers ::buildContentMetadataBlock
    */
   public function testBuildContentMetadataBlockHandlesUrlException(): void {
     // Arrange.
@@ -169,8 +166,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests that bundle machine name is used when no bundle entity is available.
-   *
-   * @covers ::buildContentMetadataBlock
    */
   public function testBuildContentMetadataBlockFallsBackToBundleName(): void {
     // Arrange.
@@ -194,8 +189,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests that a named author is present in the entity context block.
-   *
-   * @covers ::buildEntityContextBlock
    */
   public function testBuildEntityContextBlockIncludesAuthor(): void {
     // Arrange.
@@ -218,8 +211,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests that "Anonymous" is shown when the owner cannot be resolved.
-   *
-   * @covers ::buildEntityContextBlock
    */
   public function testBuildEntityContextBlockAnonymousAuthor(): void {
     // Arrange.
@@ -240,8 +231,6 @@ class EntityContextTraitTest extends TestCase {
    * Tests taxonomy term names in entity_reference fields.
    *
    * Covers fields whose target_type is taxonomy_term.
-   *
-   * @covers ::buildEntityContextBlock
    */
   public function testBuildEntityContextBlockIncludesTaxonomyTerms(): void {
     // Arrange.
@@ -284,8 +273,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Non-taxonomy entity references show "Related X: N items".
-   *
-   * @covers ::buildEntityContextBlock
    */
   public function testBuildEntityContextBlockIncludesRelatedEntityCounts(): void {
     // Arrange.
@@ -317,8 +304,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests that user entity reference fields are skipped entirely.
-   *
-   * @covers ::buildEntityContextBlock
    */
   public function testBuildEntityContextBlockSkipsUserReferenceFields(): void {
     // Arrange.
@@ -351,8 +336,6 @@ class EntityContextTraitTest extends TestCase {
 
   /**
    * Tests that empty entity reference fields are silently skipped.
-   *
-   * @covers ::buildEntityContextBlock
    */
   public function testBuildEntityContextBlockSkipsEmptyReferenceFields(): void {
     // Arrange.

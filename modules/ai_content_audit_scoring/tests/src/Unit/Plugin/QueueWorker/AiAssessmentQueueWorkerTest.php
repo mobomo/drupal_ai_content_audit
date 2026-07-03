@@ -102,7 +102,7 @@ class AiAssessmentQueueWorkerTest extends TestCase {
     $this->loggerFactory = $this->createMock(LoggerChannelFactoryInterface::class);
     $this->loggerFactory
       ->method('get')
-      ->with('ai_content_audit')
+      ->with('ai_content_audit_scoring')
       ->willReturn($this->logger);
 
     $time = $this->createMock(TimeInterface::class);

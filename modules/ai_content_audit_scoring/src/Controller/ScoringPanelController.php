@@ -88,7 +88,7 @@ final class ScoringPanelController extends ControllerBase {
       ]);
       return new JsonResponse([
         'status' => 'error',
-        'message' => $this->t('Assessment failed. Please try again.'),
+        'message' => $this->t('Assessment failed. Try again.'),
       ], 500);
     }
   }

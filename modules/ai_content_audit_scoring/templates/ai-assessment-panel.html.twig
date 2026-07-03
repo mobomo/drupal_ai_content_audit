@@ -46,7 +46,7 @@
     <{{ heading_level }} class="ai-assessment-panel__heading">{{ 'Suggestions'|t }}</{{ heading_level }}>
     <ul class="ai-suggestions">
       {% for item in suggestions %}
-        {# M-7: Whitelist priority values before using as CSS class names to
+        {# M-7: Allow list priority values before using as CSS class names to
            prevent injection of unexpected AI-returned values into HTML. #}
         {% set priority_class = item.priority in ['low', 'medium', 'high'] ? item.priority : 'unknown' %}
         <li class="ai-suggestions__item ai-suggestions__item--{{ priority_class }}">

@@ -6,6 +6,8 @@ namespace Drupal\Tests\ai_content_audit\Unit\Service;
 
 use Drupal\ai_content_audit\Plugin\ContentExtractor\FieldExtractor;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,10 +16,9 @@ use PHPUnit\Framework\TestCase;
  * The method is protected, so it is exercised via ReflectionMethod to keep the
  * tests focused on the conversion logic in isolation without the overhead of
  * mocking the full field extraction pipeline.
- *
- * @group ai_content_audit
- * @coversDefaultClass \Drupal\ai_content_audit\Plugin\ContentExtractor\FieldExtractor
  */
+#[Group('ai_content_audit')]
+#[CoversClass(FieldExtractor::class)]
 class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
@@ -64,8 +65,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that h1–h6 tags are converted to markdown-style heading markers.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlPreservesHeadings(): void {
     // Arrange.
@@ -90,8 +89,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that nested tags within a heading are stripped inside the marker.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlStripsTagsInsideHeadings(): void {
     // Arrange.
@@ -113,8 +110,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that an img with a non-empty alt attribute becomes [Image: alt].
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlExtractsImageAltText(): void {
     // Arrange.
@@ -130,8 +125,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that an img with an empty alt attribute becomes [Image: no alt text].
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlHandlesEmptyAlt(): void {
     // Arrange — alt attribute present but empty string.
@@ -146,8 +139,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that img with no alt attribute becomes [Image: no alt text].
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlHandlesMissingAlt(): void {
     // Arrange — no alt attribute on the img tag.
@@ -168,8 +159,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that anchor tags become [Link: text (href)] markers.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlExtractsLinks(): void {
     // Arrange.
@@ -185,8 +174,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that a link with only whitespace text falls back to the href.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlFallsBackToHrefForEmptyAnchorText(): void {
     // Arrange — anchor text is blank after strip_tags.
@@ -201,8 +188,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that anchor tags containing nested HTML are handled correctly.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlExtractsLinkTextFromNestedHtml(): void {
     // Arrange.
@@ -217,14 +202,12 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /*
    * ---------------------------------------------------------------------------
-   * Remaining-tag stripping and whitespace normalisation tests
+   * Remaining-tag stripping and whitespace normalization tests
    * ---------------------------------------------------------------------------
    */
 
   /**
    * Tests that non-converted HTML tags (div, span, p, etc.) are stripped.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlStripsRemainingTags(): void {
     // Arrange.
@@ -242,8 +225,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that excessive consecutive newlines are collapsed to at most two.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlNormalizesWhitespace(): void {
     // Arrange — HTML that produces multiple heading markers with blank lines.
@@ -262,8 +243,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that HTML entities are decoded in the final output.
-   *
-   * @covers ::convertAndStripHtml
    */
   public function testConvertAndStripHtmlDecodesHtmlEntities(): void {
     // Arrange.
@@ -286,8 +265,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
 
   /**
    * Tests that stripHtml() removes all HTML tags and collapses whitespace.
-   *
-   * @covers ::stripHtml
    */
   public function testStripHtmlRemovesAllTagsAndNormalizesWhitespace(): void {
     // Arrange.
@@ -306,8 +283,6 @@ class FieldExtractorConvertHtmlTest extends TestCase {
    * ConvertAndStripHtml() inserts [Image: ...] and [Link: ...] markers BEFORE
    * calling stripHtml().  stripHtml() must not touch those marker strings since
    * they contain no HTML tags.
-   *
-   * @covers ::stripHtml
    */
   public function testStripHtmlPreservesStructuralMarkers(): void {
     // Arrange — simulate post-conversion intermediate string.
