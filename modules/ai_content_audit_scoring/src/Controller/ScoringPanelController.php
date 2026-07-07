@@ -9,6 +9,7 @@ use Drupal\ai_content_audit_scoring\Repository\AiContentAssessmentRepository;
 use Drupal\ai_content_audit_scoring\Service\AiAssessmentService;
 use Drupal\ai_content_audit_scoring\Service\AiroActionItemCommand;
 use Drupal\ai_content_audit_scoring\Service\AiroInlineScoreWidgetBuilder;
+use Drupal\ai_content_audit_scoring\Service\AiroReadinessViewModelBuilder;
 use Drupal\ai_content_audit\Service\AiroNodeRevisionResolver;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
@@ -33,6 +34,7 @@ final class ScoringPanelController extends ControllerBase {
     private readonly AiroNodeRevisionResolver $revisionResolver,
     private readonly AiroActionItemCommand $actionItemCommand,
     private readonly AiroInlineScoreWidgetBuilder $inlineScoreWidgetBuilder,
+    private readonly AiroReadinessViewModelBuilder $readinessViewModelBuilder,
   ) {}
 
   /**
@@ -47,6 +49,7 @@ final class ScoringPanelController extends ControllerBase {
       $container->get('ai_content_audit.airo_node_revision_resolver'),
       $container->get('ai_content_audit_scoring.airo_action_item_command'),
       $container->get('ai_content_audit_scoring.airo_inline_score_widget_builder'),
+      $container->get('ai_content_audit_scoring.airo_readiness_view_model_builder'),
     );
   }
 
@@ -88,7 +91,7 @@ final class ScoringPanelController extends ControllerBase {
       ]);
       return new JsonResponse([
         'status' => 'error',
-        'message' => $this->t('Assessment failed. Try again.'),
+        'message' => $this->t('Assessment failed. Please try again.'),
       ], 500);
     }
   }
@@ -103,6 +106,43 @@ final class ScoringPanelController extends ControllerBase {
     $response = new AjaxResponse();
     $response->addCommand(new ReplaceCommand(
       '.airo-widget[data-node-id="' . $node->id() . '"]',
+      $html,
+    ));
+    $response->setAttachments($widgetBuild['#attached'] ?? []);
+    return $response;
+  }
+
+  /**
+   * Re-renders the Readiness Checkpoints widget.
+   */
+  public function refreshReadinessWidget(NodeInterface $node): AjaxResponse {
+    $viewModel = $this->readinessViewModelBuilder->build($node);
+    $widgetBuild = [
+      '#theme' => 'ai_readiness_checkpoints',
+      '#node_id' => $viewModel['node_id'],
+      '#revision_id' => $viewModel['revision_id'],
+      '#items' => $viewModel['items'],
+      '#has_assessment' => $viewModel['has_assessment'],
+      '#action_label' => $viewModel['action_label'],
+      '#assess_url' => $viewModel['assess_url'],
+      '#refresh_url' => $viewModel['refresh_url'],
+      '#full_breakdown_enabled' => $viewModel['full_breakdown_enabled'],
+      '#last_check_label' => $viewModel['last_check_label'],
+      '#attached' => [
+        'library' => [
+          'ai_content_audit_scoring/readiness-checkpoints',
+        ],
+      ],
+      '#cache' => [
+        'tags' => $viewModel['cache_tags'],
+        'contexts' => $viewModel['cache_contexts'],
+      ],
+    ];
+    $html = (string) $this->renderer->renderRoot($widgetBuild);
+
+    $response = new AjaxResponse();
+    $response->addCommand(new ReplaceCommand(
+      '.airo-readiness[data-node-id="' . $node->id() . '"]',
       $html,
     ));
     $response->setAttachments($widgetBuild['#attached'] ?? []);

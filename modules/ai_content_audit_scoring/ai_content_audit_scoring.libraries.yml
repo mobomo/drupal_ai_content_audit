@@ -20,6 +20,28 @@ inline-widget:
     - ai_content_audit/airo-csrf
     - ai_content_audit/design-tokens
 
+readiness-checkpoints:
+  version: 1.x
+  css:
+    component:
+      css/ai-readiness-checkpoints.css: {}
+  js:
+    js/ai-readiness-checkpoints.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/once
+    - ai_content_audit/airo-csrf
+    - ai_content_audit/design-tokens
+
+checkpoints-tab:
+  version: 1.x
+  css:
+    component:
+      css/ai-checkpoints-tab.css: {}
+  dependencies:
+    - ai_content_audit/design-tokens
+
 score-tab:
   version: 1.x
   css:

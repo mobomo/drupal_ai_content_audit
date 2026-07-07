@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ai_content_audit\Service;
 
 use Drupal\ai\AiProviderPluginManager;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Drupal\Core\Url;
@@ -22,6 +23,7 @@ final class AiroPreviewTabBuilder {
     private readonly PrivateTempStoreFactory $tempStoreFactory,
     private readonly ProviderModelChoices $providerModelChoices,
     private readonly AccountInterface $currentUser,
+    private readonly ModuleHandlerInterface $moduleHandler,
   ) {}
 
   /**
@@ -66,12 +68,13 @@ final class AiroPreviewTabBuilder {
       $selectedKeys = [$validKeys[0]];
     }
 
-    return [
+    $build = [
       '#theme' => 'ai_preview_tab',
       '#use_page_skin' => $pageSkin,
       '#model_choices' => $allChoices,
       '#selected_keys' => $selectedKeys,
       '#has_permission' => $hasPermission,
+      '#after_landing_content' => [],
       '#suggested_prompts' => [
         'What are the key points of this content?',
         'How would you summarize this page?',
@@ -90,9 +93,14 @@ final class AiroPreviewTabBuilder {
         ],
       ],
       '#cache' => [
-        'contexts' => ['user.permissions'],
+        'contexts' => ['route', 'user', 'user.permissions'],
+        'tags' => $node->getCacheTags(),
       ],
     ];
+
+    $this->moduleHandler->alter('airo_preview_tab', $build, $node, $pageSkin);
+
+    return $build;
   }
 
 }

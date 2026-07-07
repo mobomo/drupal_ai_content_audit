@@ -6,10 +6,12 @@
 #}
 {% set active_tab = active_tab|default('preview-tab') %}
 {% set use_page_skin = use_page_skin|default(false) %}
+{% set has_page_skin_tabs = use_page_skin and tab_definitions|length > 1 %}
 
 <div class="airo-panel airo-panel--accordion{% if use_page_skin %} airo-panel--page-skin{% endif %}"
   data-node-id="{{ node_id }}"
   data-revision-id="{{ revision_id }}"
+  {% if has_page_skin_tabs %}data-airo-has-tabs="1"{% endif %}
   {% if use_page_skin %}data-airo-ui-state="landing"{% endif %}>
 
   {% if use_page_skin %}
@@ -18,9 +20,16 @@
         <img class="airo-panel__brand-logo" src="{{ logo_url }}" width="40" height="40" alt="" aria-hidden="true">
       {% endif %}
       <div class="airo-panel__brand-text">
-        <h2 class="airo-panel__brand-title">{{ 'AIRO Preview'|t }}</h2>
+        <h2 class="airo-panel__brand-title">
+          {% if has_page_skin_tabs %}
+            {{ 'AIRO Analysis'|t }}
+          {% else %}
+            {{ 'AIRO Preview'|t }}
+          {% endif %}
+        </h2>
         <p class="airo-panel__brand-subtitle">{{ 'AI Readiness & Optimization - by Mobomo Labs'|t }}</p>
       </div>
+
     </header>
   {% endif %}
 
@@ -34,10 +43,36 @@
 
   <div class="airo-panel__body{% if use_page_skin %} airo-panel__body--chat-only{% endif %}">
     {% if use_page_skin %}
+      {% if has_page_skin_tabs %}
+        <nav class="airo-panel__tabs airo-panel__tabs--page-skin tabs-wrapper is-horizontal" aria-label="{{ 'AIRO Analysis tabs'|t }}">
+          <ul class="tabs tabs--primary is-horizontal clearfix" role="tablist">
+            {% for tab in tab_definitions %}
+              <li class="tabs__tab{% if active_tab == tab.id %} is-active{% endif %}">
+                <button type="button"
+                  id="{{ tab.id }}-btn--{{ node_id }}"
+                  class="tabs__link{% if active_tab == tab.id %} is-active{% endif %}"
+                  data-airo-tab="{{ tab.id }}"
+                  role="tab"
+                  aria-selected="{{ active_tab == tab.id ? 'true' : 'false' }}"
+                  aria-controls="{{ tab.id }}-pane--{{ node_id }}"
+                  tabindex="{{ active_tab == tab.id ? '0' : '-1' }}">
+                  {{ tab.label }}
+                </button>
+              </li>
+            {% endfor %}
+          </ul>
+        </nav>
+      {% endif %}
+
       {% for tab_id, pane in tab_panes %}
         <div class="airo-panel__content airo-panel__content--chat-only"
           id="{{ tab_id }}-pane--{{ node_id }}"
-          data-tab-pane="{{ tab_id }}">
+          data-tab-pane="{{ tab_id }}"
+          {% if has_page_skin_tabs %}
+            role="tabpanel"
+            aria-labelledby="{{ tab_id }}-btn--{{ node_id }}"
+            {% if tab_id != active_tab %}hidden{% endif %}
+          {% endif %}>
           {{ pane }}
         </div>
       {% endfor %}

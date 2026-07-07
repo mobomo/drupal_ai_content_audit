@@ -1,0 +1,66 @@
+{#
+/**
+ * @file
+ * Readiness Checkpoints widget for the AIRO Preview landing screen.
+ *
+ * Variables:
+ * - node_id: Node ID for scoped refresh replacement.
+ * - revision_id: Current node revision ID used by the assessment POST.
+ * - items: Normalized score rows.
+ * - has_assessment: Whether a saved assessment exists.
+ * - action_label: Label for the assessment action.
+ * - assess_url: URL for the assessment endpoint.
+ * - refresh_url: URL for refreshing only this widget.
+ * - full_breakdown_enabled: Whether the breakdown action is currently enabled.
+ * - last_check_label: Formatted last assessment timestamp, or N/A.
+ */
+#}
+<div class="airo-readiness{% if not has_assessment %} airo-readiness--empty{% endif %}"
+  data-node-id="{{ node_id }}"
+  data-revision-id="{{ revision_id }}"
+  data-readiness-refresh-url="{{ refresh_url }}">
+  <p class="airo-readiness__title">{{ 'Readiness Checkpoints'|t }}</p>
+
+  <div class="airo-readiness__card">
+    <div class="airo-readiness__list">
+      {% for item in items %}
+        <div class="airo-readiness__item">
+          <div class="airo-readiness__row">
+            <span class="airo-readiness__label">{{ item.label }}</span>
+            <span class="airo-readiness__score">{{ item.score_display }}</span>
+          </div>
+          <div class="airo-readiness__bar"
+            role="meter"
+            aria-label="{{ item.label }}"
+            aria-valuemin="0"
+            aria-valuemax="{{ item.max_score }}"
+            aria-valuenow="{{ item.score is null ? 0 : item.score }}">
+            {% if has_assessment %}
+              <div class="airo-readiness__bar-fill" style="width: {{ item.percentage }}%"></div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="airo-readiness__actions">
+      <button type="button"
+        class="airo-readiness__btn airo-readiness__btn--ghost"
+        {% if not full_breakdown_enabled %}disabled{% endif %}>
+        {{ 'Full Breakdown'|t }}
+      </button>
+
+      <button type="button"
+        class="airo-readiness__btn airo-readiness__btn--action"
+        data-assess-url="{{ assess_url }}"
+        data-airo-action="readiness-analyze">
+        {{ action_label }}
+      </button>
+    </div>
+
+    <p class="airo-readiness__last-check">
+      {{ 'Last check:'|t }}
+      <strong>{{ last_check_label }}</strong>
+    </p>
+  </div>
+</div>

@@ -173,6 +173,10 @@ final class AiroAnalysisPanelBuilder {
       '#show_assessment_actions' => $showAssessmentActions,
       '#assess_url' => $urls['assess_url'],
       '#full_report_url' => $urls['full_report_url'],
+      '#cache' => [
+        'contexts' => ['route', 'user.permissions'],
+        'tags' => $node->getCacheTags(),
+      ],
     ];
   }
 

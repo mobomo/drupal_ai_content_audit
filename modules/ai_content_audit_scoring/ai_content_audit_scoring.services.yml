@@ -72,3 +72,20 @@ services:
 
   Drupal\ai_content_audit_scoring\Hook\ScoringThemeHooks:
     class: Drupal\ai_content_audit_scoring\Hook\ScoringThemeHooks
+
+  ai_content_audit_scoring.airo_readiness_view_model_builder:
+    class: Drupal\ai_content_audit_scoring\Service\AiroReadinessViewModelBuilder
+  Drupal\ai_content_audit_scoring\Service\AiroReadinessViewModelBuilder: '@ai_content_audit_scoring.airo_readiness_view_model_builder'
+
+  ai_content_audit_scoring.airo_checkpoints_view_model_builder:
+    class: Drupal\ai_content_audit_scoring\Service\AiroCheckpointsViewModelBuilder
+  Drupal\ai_content_audit_scoring\Service\AiroCheckpointsViewModelBuilder: '@ai_content_audit_scoring.airo_checkpoints_view_model_builder'
+
+  ai_content_audit_scoring.airo_panel_tab.checkpoints:
+    class: Drupal\ai_content_audit_scoring\AiroPanel\Tab\CheckpointsTab
+    tags:
+      - { name: ai_content_audit.airo_panel_tab }
+  Drupal\ai_content_audit_scoring\AiroPanel\Tab\CheckpointsTab: '@ai_content_audit_scoring.airo_panel_tab.checkpoints'
+
+  Drupal\ai_content_audit_scoring\Hook\ScoringPreviewHooks:
+    class: Drupal\ai_content_audit_scoring\Hook\ScoringPreviewHooks

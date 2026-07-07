@@ -56,6 +56,7 @@ final class AiContentAuditThemeHooks {
           'model_choices' => [],
           'selected_keys' => [],
           'has_permission' => FALSE,
+          'after_landing_content' => [],
           'suggested_prompts' => [],
           'node_id' => NULL,
           'revision_id' => NULL,

@@ -17,7 +17,7 @@
     {# Screen 1: landing (full blue panel via CSS on parent). #}
     <div class="airo-panel__screen airo-panel__screen--landing">
       <div class="airo-preview__landing">
-        <p class="airo-preview__landing-title">{{ 'Ask an AI about this content'|t }}</p>
+        <p class="airo-preview__landing-title">{{ 'Ask an AI about this contents'|t }}</p>
 
         <div class="airo-preview__composer-card">
           {% if model_choices is not empty %}
@@ -59,6 +59,8 @@
             {{ 'These responses are generated based on your content analysis. They represent how AI systems might answer questions about your content.'|t }}
           </span>
         </div>
+
+        {{ after_landing_content }}
       </div>
     </div>
 

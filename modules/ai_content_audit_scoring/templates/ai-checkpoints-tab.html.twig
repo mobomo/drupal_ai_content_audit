@@ -1,0 +1,94 @@
+{#
+/**
+ * @file
+ * Page-skin Checkpoints tab for AIRO scoring.
+ *
+ * Variables:
+ * - has_assessment: Whether a saved assessment exists.
+ * - summary_items: Score rows for Technical SEO, Content Quality, Schema.
+ * - sections: Normalized checkpoint sections.
+ * - last_check_label: Formatted latest assessment timestamp, or N/A.
+ * - node_id: Node ID.
+ * - revision_id: Revision ID.
+ */
+#}
+<div class="airo-checkpoints" data-node-id="{{ node_id }}" data-revision-id="{{ revision_id }}">
+  <div class="airo-checkpoints__summary" aria-label="{{ 'Readiness checkpoint summary'|t }}">
+    {% for item in summary_items %}
+      <div class="airo-checkpoints__summary-item">
+        <div class="airo-checkpoints__summary-row">
+          <span class="airo-checkpoints__summary-label">{{ item.label }}</span>
+          <span class="airo-checkpoints__summary-score">{{ item.score_display }}</span>
+        </div>
+        <div class="airo-checkpoints__summary-bar"
+          role="meter"
+          aria-label="{{ item.label }}"
+          aria-valuemin="0"
+          aria-valuemax="{{ item.max_score }}"
+          aria-valuenow="{{ item.score is null ? 0 : item.score }}">
+          {% if has_assessment %}
+            <div class="airo-checkpoints__summary-fill" style="width: {{ item.percentage }}%"></div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="airo-checkpoints__summary-footer">
+      <span>{{ 'Last check:'|t }}</span>
+      <strong>{{ last_check_label }}</strong>
+    </div>
+  </div>
+
+  {% if has_assessment %}
+    <div class="airo-checkpoints__sections">
+      {% for section in sections %}
+        <details class="airo-checkpoints__section" {% if section.is_open %}open{% endif %}>
+          <summary class="airo-checkpoints__section-summary">
+            <span class="airo-checkpoints__section-title">{{ section.label }}</span>
+            <span class="airo-checkpoints__section-score">{{ section.summary.score_display }}</span>
+            <span class="airo-checkpoints__section-chevron" aria-hidden="true"></span>
+          </summary>
+
+          <div class="airo-checkpoints__section-body">
+            {% if section.groups is not empty %}
+              {% for group in section.groups %}
+                <div class="airo-checkpoints__group">
+                  <div class="airo-checkpoints__group-header">
+                    <span class="airo-checkpoints__group-title">{{ group.label }}</span>
+                    <span class="airo-checkpoints__group-count">
+                      {{ '@pass passing / @total total'|t({
+                        '@pass': group.pass_count,
+                        '@total': group.items|length
+                      }) }}
+                    </span>
+                  </div>
+
+                  <div class="airo-checkpoints__items">
+                    {% for checkpoint in group.items %}
+                      <div class="airo-checkpoints__item airo-checkpoints__item--{{ checkpoint.status }}">
+                        <span class="airo-checkpoints__item-icon" aria-hidden="true"></span>
+                        <span class="airo-checkpoints__item-label">{{ checkpoint.label }}</span>
+                        {% if checkpoint.priority == 'high' %}
+                          <span class="airo-checkpoints__priority">{{ checkpoint.priority_label }}</span>
+                        {% endif %}
+                        <span class="visually-hidden">{{ checkpoint.status_label }}</span>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="airo-checkpoints__section-empty">
+                {{ 'No checkpoints were reported for this section.'|t }}
+              </p>
+            {% endif %}
+          </div>
+        </details>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="airo-checkpoints__empty">
+      <p>{{ 'No checkpoint data yet. Run an analysis to generate readiness checkpoints.'|t }}</p>
+    </div>
+  {% endif %}
+</div>

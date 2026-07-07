@@ -76,6 +76,22 @@ ai_content_audit.widget.refresh:
       node:
         type: entity:node
 
+ai_content_audit_scoring.readiness.refresh:
+  path: '/admin/ai-content-audit/readiness/{node}/refresh'
+  defaults:
+    _controller: '\Drupal\ai_content_audit_scoring\Controller\ScoringPanelController::refreshReadinessWidget'
+    _title: 'Readiness Checkpoints Refresh'
+    _format: 'json'
+  requirements:
+    _permission: 'view ai content assessment+administer ai content audit'
+    _custom_access: '\Drupal\ai_content_audit\Controller\AiroNodeAnalysisController::viewAccess'
+    node: \d+
+  options:
+    _admin_route: TRUE
+    parameters:
+      node:
+        type: entity:node
+
 ai_content_audit.node.assessment_history:
   path: '/node/{node}/ai-assessment'
   defaults:

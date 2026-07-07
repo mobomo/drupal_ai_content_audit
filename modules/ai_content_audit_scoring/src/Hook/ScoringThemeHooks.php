@@ -55,6 +55,33 @@ final class ScoringThemeHooks {
         'template' => 'ai-inline-score-widget',
         'path' => $template_path,
       ],
+      'ai_readiness_checkpoints' => [
+        'variables' => [
+          'node_id' => NULL,
+          'revision_id' => NULL,
+          'items' => [],
+          'has_assessment' => FALSE,
+          'action_label' => NULL,
+          'assess_url' => NULL,
+          'refresh_url' => NULL,
+          'full_breakdown_enabled' => FALSE,
+          'last_check_label' => 'N/A',
+        ],
+        'template' => 'ai-readiness-checkpoints',
+        'path' => $template_path,
+      ],
+      'ai_checkpoints_tab' => [
+        'variables' => [
+          'has_assessment' => FALSE,
+          'summary_items' => [],
+          'sections' => [],
+          'last_check_label' => 'N/A',
+          'node_id' => NULL,
+          'revision_id' => NULL,
+        ],
+        'template' => 'ai-checkpoints-tab',
+        'path' => $template_path,
+      ],
       'ai_score_tab' => [
         'variables' => [
           'score' => NULL,

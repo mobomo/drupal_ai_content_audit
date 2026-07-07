@@ -1,0 +1,238 @@
+/**
+ * AIRO Readiness Checkpoints widget.
+ *
+ * Rendered by the scoring submodule into the generic AI Preview landing slot.
+ */
+
+.airo-readiness {
+  font-family: var(--airo-font, system-ui, -apple-system, sans-serif);
+}
+
+.airo-readiness__title {
+  margin: 0 0 0.875rem;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  text-align: center;
+  margin-top: 2.8rem;
+}
+
+.airo-readiness__card {
+  position: relative;
+  padding: 1rem 1rem 1.125rem;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 10px;
+  background: #0b2942;
+}
+
+.airo-readiness__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.airo-readiness__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.airo-readiness__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.airo-readiness__label {
+  color: #f1f5f9;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.airo-readiness__score {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.airo-readiness__bar {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #04101f;
+}
+
+.airo-readiness__bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #f5a623;
+  transform-origin: left center;
+  animation: airo-readiness-fill 700ms ease-out both;
+}
+
+.airo-readiness__actions {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 1.125rem;
+}
+
+.airo-readiness__btn {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.airo-readiness__btn--ghost {
+  border-color: rgb(255 255 255 / 65%);
+  background: transparent;
+  color: #fff;
+}
+
+.airo-readiness__btn--ghost:hover:not(:disabled) {
+  background: rgb(255 255 255 / 8%);
+}
+
+.airo-readiness__btn--ghost:disabled {
+  border-color: rgb(255 255 255 / 18%);
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.airo-readiness__btn--action {
+  background: #0550e6;
+  color: #fff;
+}
+
+.airo-readiness__btn--action:hover {
+  background: #1d4ed8;
+}
+
+.airo-readiness__last-check {
+  margin: 0.875rem 0 0;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.airo-readiness__last-check strong {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.airo-readiness__status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.875rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.airo-readiness__status--loading {
+  border: 1px solid rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 10%);
+  color: #e0f2fe;
+}
+
+.airo-readiness__status--loading::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid rgb(224 242 254 / 35%);
+  border-top-color: #e0f2fe;
+  border-radius: 50%;
+  animation: airo-readiness-spin 800ms linear infinite;
+}
+
+.airo-readiness__status--error {
+  border: 1px solid rgb(248 113 113 / 55%);
+  background: rgb(127 29 29 / 28%);
+  color: #fecaca;
+}
+
+.airo-readiness.is-analyzing .airo-readiness__card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: rgb(11 41 66 / 20%);
+}
+
+.airo-readiness.is-analyzing .airo-readiness__btn {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.airo-readiness.is-analyzing .airo-readiness__label,
+.airo-readiness.is-analyzing .airo-readiness__score {
+  opacity: 0.55;
+}
+
+.airo-readiness.is-analyzing .airo-readiness__bar {
+  background:
+    linear-gradient(
+      90deg,
+      #04101f 0%,
+      #123451 42%,
+      #1d4f76 52%,
+      #123451 62%,
+      #04101f 100%
+    );
+  background-size: 220% 100%;
+  animation: airo-readiness-skeleton 1.2s ease-in-out infinite;
+}
+
+.airo-readiness.is-analyzing .airo-readiness__bar-fill {
+  opacity: 0;
+}
+
+@keyframes airo-readiness-fill {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes airo-readiness-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes airo-readiness-skeleton {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .airo-readiness__bar-fill,
+  .airo-readiness__status--loading::before,
+  .airo-readiness.is-analyzing .airo-readiness__bar {
+    animation: none;
+  }
+}
