@@ -1,3 +1,8 @@
+# ARCHIVED 
+This repository is not longer needed, module code is contributed now: https://www.drupal.org/project/ai_content_audit
+
+Code now lives on d.org gitlab https://git.drupalcode.org/project/ai_content_audit/tree/1.0.x
+
 # AIRO Preview
 
 AIRO Preview adds a Drupal node edit panel where editors can ask an AI chat
